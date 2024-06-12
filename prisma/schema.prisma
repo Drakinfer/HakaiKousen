@@ -1,0 +1,269 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model attaques {
+  id                   Int                    @id
+  name                 String                 @db.VarChar(50)
+  attaques_breeding    attaques_breeding[]
+  attaques_ct          attaques_ct[]
+  attaques_dt          attaques_dt[]
+  attaques_generations attaques_generations[]
+  attaques_lvl         attaques_lvl[]
+  attaques_tutoring    attaques_tutoring[]
+
+  @@index([id], map: "attaques_index_24")
+}
+
+model attaques_breeding {
+  id                      Int                  @id
+  attaque_id              Int
+  pokemons_generations_id Int
+  attaques                attaques             @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_breeding_ibfk_1")
+  pokemons_generations    pokemons_generations @relation(fields: [pokemons_generations_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_breeding_ibfk_2")
+
+  @@index([id], map: "attaques_breeding_index_40")
+  @@index([attaque_id], map: "attaques_breeding_index_41")
+  @@index([pokemons_generations_id], map: "attaques_breeding_index_42")
+}
+
+model attaques_ct {
+  id                      Int                  @id
+  attaque_id              Int
+  pokemons_generations_id Int
+  number                  Int
+  attaques                attaques             @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_ct_ibfk_1")
+  pokemons_generations    pokemons_generations @relation(fields: [pokemons_generations_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_ct_ibfk_2")
+
+  @@index([id], map: "attaques_ct_index_31")
+  @@index([attaque_id], map: "attaques_ct_index_32")
+  @@index([pokemons_generations_id], map: "attaques_ct_index_33")
+}
+
+model attaques_dt {
+  id                      Int                  @id
+  attaque_id              Int
+  pokemons_generations_id Int
+  number                  Int
+  attaques                attaques             @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_dt_ibfk_1")
+  pokemons_generations    pokemons_generations @relation(fields: [pokemons_generations_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_dt_ibfk_2")
+
+  @@index([id], map: "attaques_dt_index_34")
+  @@index([attaque_id], map: "attaques_dt_index_35")
+  @@index([pokemons_generations_id], map: "attaques_dt_index_36")
+}
+
+model attaques_generations {
+  id            Int         @id
+  attaque_id    Int
+  generation_id Int
+  type_id       Int
+  energie1      Int
+  energie2      Int
+  category      String      @db.VarChar(20)
+  range         String      @db.VarChar(20)
+  precision     Int
+  damage_base   Int
+  description   String      @db.Text
+  attaques      attaques    @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_generations_ibfk_1")
+  generations   generations @relation(fields: [generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_generations_ibfk_2")
+  types         types       @relation(fields: [type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_generations_ibfk_3")
+
+  @@index([id], map: "attaques_generations_index_25")
+  @@index([attaque_id], map: "attaques_generations_index_26")
+  @@index([generation_id], map: "attaques_generations_index_27")
+  @@index([type_id], map: "type_id")
+}
+
+model attaques_lvl {
+  id                      Int                  @id
+  attaque_id              Int
+  pokemons_generations_id Int
+  learning_way            String               @db.VarChar(50)
+  attaques                attaques             @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_lvl_ibfk_1")
+  pokemons_generations    pokemons_generations @relation(fields: [pokemons_generations_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_lvl_ibfk_2")
+
+  @@index([id], map: "attaques_lvl_index_28")
+  @@index([attaque_id], map: "attaques_lvl_index_29")
+  @@index([pokemons_generations_id], map: "attaques_lvl_index_30")
+}
+
+model attaques_tutoring {
+  id                      Int                  @id
+  attaque_id              Int
+  pokemons_generations_id Int
+  attaques                attaques             @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_tutoring_ibfk_1")
+  pokemons_generations    pokemons_generations @relation(fields: [pokemons_generations_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_tutoring_ibfk_2")
+
+  @@index([id], map: "attaques_tutoring_index_37")
+  @@index([attaque_id], map: "attaques_tutoring_index_38")
+  @@index([pokemons_generations_id], map: "attaques_tutoring_index_39")
+}
+
+model evolutions {
+  id                    Int                  @id
+  pokemon_id            Int
+  pokemon_generation_id Int
+  evolution_way         String               @db.VarChar(50)
+  pokemons              pokemons             @relation(fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "evolutions_ibfk_1")
+  pokemons_generations  pokemons_generations @relation(fields: [pokemon_generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "evolutions_ibfk_2")
+
+  @@index([id], map: "evolutions_index_11")
+  @@index([pokemon_id], map: "evolutions_index_12")
+  @@index([pokemon_generation_id], map: "evolutions_index_13")
+}
+
+model formes {
+  id                    Int                  @id
+  pokemon_id            Int
+  pokemon_generation_id Int
+  form                  String?              @db.VarChar(50)
+  pokemons              pokemons             @relation(fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "formes_ibfk_1")
+  pokemons_generations  pokemons_generations @relation(fields: [pokemon_generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "formes_ibfk_2")
+
+  @@index([pokemon_generation_id], map: "formes_index_10")
+  @@index([id], map: "formes_index_8")
+  @@index([pokemon_id], map: "formes_index_9")
+}
+
+model generations {
+  id                   Int                    @id
+  name                 String                 @db.VarChar(20)
+  rank                 Int
+  attaques_generations attaques_generations[]
+  pokemons_generations pokemons_generations[]
+  talents_generations  talents_generations[]
+  types                types[]
+
+  @@index([id], map: "generations_index_1")
+}
+
+model pokemon_generations_has_talents {
+  id                   Int                  @id
+  talent_id            Int
+  pokemon_id           Int
+  talent_category      String               @db.VarChar(20)
+  talents              talents              @relation(fields: [talent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemon_generations_has_talents_ibfk_1")
+  pokemons_generations pokemons_generations @relation(fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemon_generations_has_talents_ibfk_2")
+
+  @@index([id], map: "pokemon_generations_has_talents_index_21")
+  @@index([talent_id], map: "pokemon_generations_has_talents_index_22")
+  @@index([pokemon_id], map: "pokemon_generations_has_talents_index_23")
+}
+
+model pokemons {
+  id                                                                   Int                    @id
+  name                                                                 String                 @db.VarChar(50)
+  category                                                             String                 @db.VarChar(50)
+  dex_number                                                           Int
+  main_picture                                                         String                 @db.Text
+  mini_picture                                                         String                 @db.Text
+  evolutions                                                           evolutions[]
+  formes                                                               formes[]
+  pokemons_generations_pokemons_generations_pokemon_idTopokemons       pokemons_generations[] @relation("pokemons_generations_pokemon_idTopokemons")
+  pokemons_generations_pokemons_generations_pre_evolution_idTopokemons pokemons_generations[] @relation("pokemons_generations_pre_evolution_idTopokemons")
+
+  @@index([id], map: "pokemons_index_0")
+}
+
+model pokemons_generations {
+  id                                                       Int                               @id
+  pokemon_id                                               Int
+  generation_id                                            Int
+  type1                                                    Int
+  type2                                                    Int
+  height                                                   Float                             @db.Float
+  weight                                                   Float                             @db.Float
+  breed_rating                                             String                            @db.VarChar(10)
+  vita                                                     Int
+  dex                                                      Int
+  for                                                      Int
+  conc                                                     Int
+  end                                                      Int
+  vol                                                      Int
+  pre_evolution_id                                         Int?
+  pre_evolution_way                                        String?                           @db.VarChar(50)
+  description                                              String?                           @db.Text
+  attaques_breeding                                        attaques_breeding[]
+  attaques_ct                                              attaques_ct[]
+  attaques_dt                                              attaques_dt[]
+  attaques_lvl                                             attaques_lvl[]
+  attaques_tutoring                                        attaques_tutoring[]
+  evolutions                                               evolutions[]
+  formes                                                   formes[]
+  pokemon_generations_has_talents                          pokemon_generations_has_talents[]
+  pokemons_pokemons_generations_pokemon_idTopokemons       pokemons                          @relation("pokemons_generations_pokemon_idTopokemons", fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_1")
+  generations                                              generations                       @relation(fields: [generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_2")
+  types_pokemons_generations_type1Totypes                  types                             @relation("pokemons_generations_type1Totypes", fields: [type1], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_3")
+  types_pokemons_generations_type2Totypes                  types                             @relation("pokemons_generations_type2Totypes", fields: [type2], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_4")
+  pokemons_pokemons_generations_pre_evolution_idTopokemons pokemons?                         @relation("pokemons_generations_pre_evolution_idTopokemons", fields: [pre_evolution_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_5")
+
+  @@index([id], map: "pokemons_generations_index_2")
+  @@index([pokemon_id], map: "pokemons_generations_index_3")
+  @@index([generation_id], map: "pokemons_generations_index_4")
+  @@index([type1], map: "pokemons_generations_index_5")
+  @@index([type2], map: "pokemons_generations_index_6")
+  @@index([pre_evolution_id], map: "pokemons_generations_index_7")
+}
+
+model talents {
+  id                              Int                               @id
+  name                            String                            @db.VarChar(50)
+  old_name                        Int?
+  pokemon_generations_has_talents pokemon_generations_has_talents[]
+  talents                         talents?                          @relation("talentsTotalents", fields: [old_name], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "talents_ibfk_1")
+  other_talents                   talents[]                         @relation("talentsTotalents")
+  talents_generations             talents_generations[]
+
+  @@index([id], map: "talents_index_16")
+  @@index([old_name], map: "talents_index_17")
+}
+
+model talents_generations {
+  id            Int         @id
+  talent_id     Int
+  generation_id Int
+  description   String      @db.Text
+  talents       talents     @relation(fields: [talent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "talents_generations_ibfk_1")
+  generations   generations @relation(fields: [generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "talents_generations_ibfk_2")
+
+  @@index([id], map: "talents_generations_index_18")
+  @@index([talent_id], map: "talents_generations_index_19")
+  @@index([generation_id], map: "talents_generations_index_20")
+}
+
+model types {
+  id                                                     Int                    @id
+  name                                                   String                 @db.VarChar(20)
+  bug                                                    Float                  @db.Float
+  dark                                                   Float                  @db.Float
+  dragon                                                 Float                  @db.Float
+  electric                                               Float                  @db.Float
+  fairy                                                  Float                  @db.Float
+  fighting                                               Float                  @db.Float
+  fire                                                   Float                  @db.Float
+  flying                                                 Float                  @db.Float
+  ghost                                                  Float                  @db.Float
+  grass                                                  Float                  @db.Float
+  ground                                                 Float                  @db.Float
+  ice                                                    Float                  @db.Float
+  normal                                                 Float                  @db.Float
+  poison                                                 Float                  @db.Float
+  psychic                                                Float                  @db.Float
+  rock                                                   Float                  @db.Float
+  steel                                                  Float                  @db.Float
+  water                                                  Float                  @db.Float
+  generation_id                                          Int
+  attaques_generations                                   attaques_generations[]
+  pokemons_generations_pokemons_generations_type1Totypes pokemons_generations[] @relation("pokemons_generations_type1Totypes")
+  pokemons_generations_pokemons_generations_type2Totypes pokemons_generations[] @relation("pokemons_generations_type2Totypes")
+  generations                                            generations            @relation(fields: [generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "types_ibfk_1")
+
+  @@index([id], map: "types_index_14")
+  @@index([generation_id], map: "types_index_15")
+}
