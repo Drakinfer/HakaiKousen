@@ -8,7 +8,7 @@ datasource db {
 }
 
 model attaques {
-  id                   Int                    @id
+  id                   Int                    @id @default(autoincrement())
   name                 String                 @db.VarChar(50)
   attaques_breeding    attaques_breeding[]
   attaques_ct          attaques_ct[]
@@ -21,7 +21,7 @@ model attaques {
 }
 
 model attaques_breeding {
-  id                      Int                  @id
+  id                      Int                  @id @default(autoincrement())
   attaque_id              Int
   pokemons_generations_id Int
   attaques                attaques             @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_breeding_ibfk_1")
@@ -33,7 +33,7 @@ model attaques_breeding {
 }
 
 model attaques_ct {
-  id                      Int                  @id
+  id                      Int                  @id @default(autoincrement())
   attaque_id              Int
   pokemons_generations_id Int
   number                  Int
@@ -46,7 +46,7 @@ model attaques_ct {
 }
 
 model attaques_dt {
-  id                      Int                  @id
+  id                      Int                  @id @default(autoincrement())
   attaque_id              Int
   pokemons_generations_id Int
   number                  Int
@@ -59,7 +59,7 @@ model attaques_dt {
 }
 
 model attaques_generations {
-  id            Int         @id
+  id            Int         @id @default(autoincrement())
   attaque_id    Int
   generation_id Int
   type_id       Int
@@ -81,7 +81,7 @@ model attaques_generations {
 }
 
 model attaques_lvl {
-  id                      Int                  @id
+  id                      Int                  @id @default(autoincrement())
   attaque_id              Int
   pokemons_generations_id Int
   learning_way            String               @db.VarChar(50)
@@ -94,7 +94,7 @@ model attaques_lvl {
 }
 
 model attaques_tutoring {
-  id                      Int                  @id
+  id                      Int                  @id @default(autoincrement())
   attaque_id              Int
   pokemons_generations_id Int
   attaques                attaques             @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_tutoring_ibfk_1")
@@ -106,12 +106,12 @@ model attaques_tutoring {
 }
 
 model evolutions {
-  id                    Int                  @id
+  id                    Int                  @id @default(autoincrement())
   pokemon_id            Int
   pokemon_generation_id Int
   evolution_way         String               @db.VarChar(50)
-  pokemons              pokemons             @relation(fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "evolutions_ibfk_1")
   pokemons_generations  pokemons_generations @relation(fields: [pokemon_generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "evolutions_ibfk_2")
+  pokemons              pokemons             @relation(fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "evolutions_ibfk_1")
 
   @@index([id], map: "evolutions_index_11")
   @@index([pokemon_id], map: "evolutions_index_12")
@@ -119,12 +119,12 @@ model evolutions {
 }
 
 model formes {
-  id                    Int                  @id
+  id                    Int                  @id @default(autoincrement())
   pokemon_id            Int
   pokemon_generation_id Int
   form                  String?              @db.VarChar(50)
-  pokemons              pokemons             @relation(fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "formes_ibfk_1")
   pokemons_generations  pokemons_generations @relation(fields: [pokemon_generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "formes_ibfk_2")
+  pokemons              pokemons             @relation(fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "formes_ibfk_1")
 
   @@index([pokemon_generation_id], map: "formes_index_10")
   @@index([id], map: "formes_index_8")
@@ -132,10 +132,11 @@ model formes {
 }
 
 model generations {
-  id                   Int                    @id
+  id                   Int                    @id @default(autoincrement())
   name                 String                 @db.VarChar(20)
   rank                 Int
   attaques_generations attaques_generations[]
+  pokemons             pokemons[]
   pokemons_generations pokemons_generations[]
   talents_generations  talents_generations[]
   types                types[]
@@ -144,12 +145,12 @@ model generations {
 }
 
 model pokemon_generations_has_talents {
-  id                   Int                  @id
+  id                   Int                  @id @default(autoincrement())
   talent_id            Int
   pokemon_id           Int
-  talent_category      String               @db.VarChar(20)
-  talents              talents              @relation(fields: [talent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemon_generations_has_talents_ibfk_1")
+  hidden               Boolean?
   pokemons_generations pokemons_generations @relation(fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemon_generations_has_talents_ibfk_2")
+  talents              talents              @relation(fields: [talent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemon_generations_has_talents_ibfk_1")
 
   @@index([id], map: "pokemon_generations_has_talents_index_21")
   @@index([talent_id], map: "pokemon_generations_has_talents_index_22")
@@ -157,22 +158,25 @@ model pokemon_generations_has_talents {
 }
 
 model pokemons {
-  id                                                                   Int                    @id
+  id                                                                   Int                    @id @default(autoincrement())
   name                                                                 String                 @db.VarChar(50)
   category                                                             String                 @db.VarChar(50)
-  dex_number                                                           Int
+  dex_number                                                           String?                @db.VarChar(10)
   main_picture                                                         String                 @db.Text
   mini_picture                                                         String                 @db.Text
+  first_generation                                                     Int?
+  generations                                                          generations?           @relation(fields: [first_generation], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_first_generation")
   evolutions                                                           evolutions[]
   formes                                                               formes[]
   pokemons_generations_pokemons_generations_pokemon_idTopokemons       pokemons_generations[] @relation("pokemons_generations_pokemon_idTopokemons")
   pokemons_generations_pokemons_generations_pre_evolution_idTopokemons pokemons_generations[] @relation("pokemons_generations_pre_evolution_idTopokemons")
 
+  @@index([first_generation], map: "fk_first_generation")
   @@index([id], map: "pokemons_index_0")
 }
 
 model pokemons_generations {
-  id                                                       Int                               @id
+  id                                                       Int                               @id @default(autoincrement())
   pokemon_id                                               Int
   generation_id                                            Int
   type1                                                    Int
@@ -189,6 +193,11 @@ model pokemons_generations {
   pre_evolution_id                                         Int?
   pre_evolution_way                                        String?                           @db.VarChar(50)
   description                                              String?                           @db.Text
+  generations                                              generations                       @relation(fields: [generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_2")
+  pokemons_pokemons_generations_pokemon_idTopokemons       pokemons                          @relation("pokemons_generations_pokemon_idTopokemons", fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_1")
+  pokemons_pokemons_generations_pre_evolution_idTopokemons pokemons?                         @relation("pokemons_generations_pre_evolution_idTopokemons", fields: [pre_evolution_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_5")
+  types_pokemons_generations_type1Totypes                  types                             @relation("pokemons_generations_type1Totypes", fields: [type1], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_3")
+  types_pokemons_generations_type2Totypes                  types                             @relation("pokemons_generations_type2Totypes", fields: [type2], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_4")
   attaques_breeding                                        attaques_breeding[]
   attaques_ct                                              attaques_ct[]
   attaques_dt                                              attaques_dt[]
@@ -197,11 +206,6 @@ model pokemons_generations {
   evolutions                                               evolutions[]
   formes                                                   formes[]
   pokemon_generations_has_talents                          pokemon_generations_has_talents[]
-  pokemons_pokemons_generations_pokemon_idTopokemons       pokemons                          @relation("pokemons_generations_pokemon_idTopokemons", fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_1")
-  generations                                              generations                       @relation(fields: [generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_2")
-  types_pokemons_generations_type1Totypes                  types                             @relation("pokemons_generations_type1Totypes", fields: [type1], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_3")
-  types_pokemons_generations_type2Totypes                  types                             @relation("pokemons_generations_type2Totypes", fields: [type2], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_4")
-  pokemons_pokemons_generations_pre_evolution_idTopokemons pokemons?                         @relation("pokemons_generations_pre_evolution_idTopokemons", fields: [pre_evolution_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_5")
 
   @@index([id], map: "pokemons_generations_index_2")
   @@index([pokemon_id], map: "pokemons_generations_index_3")
@@ -212,11 +216,11 @@ model pokemons_generations {
 }
 
 model talents {
-  id                              Int                               @id
+  id                              Int                               @id @default(autoincrement())
   name                            String                            @db.VarChar(50)
   old_name                        Int?
-  pokemon_generations_has_talents pokemon_generations_has_talents[]
   talents                         talents?                          @relation("talentsTotalents", fields: [old_name], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "talents_ibfk_1")
+  pokemon_generations_has_talents pokemon_generations_has_talents[]
   other_talents                   talents[]                         @relation("talentsTotalents")
   talents_generations             talents_generations[]
 
@@ -225,12 +229,12 @@ model talents {
 }
 
 model talents_generations {
-  id            Int         @id
+  id            Int         @id @default(autoincrement())
   talent_id     Int
   generation_id Int
   description   String      @db.Text
-  talents       talents     @relation(fields: [talent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "talents_generations_ibfk_1")
   generations   generations @relation(fields: [generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "talents_generations_ibfk_2")
+  talents       talents     @relation(fields: [talent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "talents_generations_ibfk_1")
 
   @@index([id], map: "talents_generations_index_18")
   @@index([talent_id], map: "talents_generations_index_19")
@@ -238,7 +242,7 @@ model talents_generations {
 }
 
 model types {
-  id                                                     Int                    @id
+  id                                                     Int                    @id @default(autoincrement())
   name                                                   String                 @db.VarChar(20)
   bug                                                    Float                  @db.Float
   dark                                                   Float                  @db.Float
@@ -259,10 +263,10 @@ model types {
   steel                                                  Float                  @db.Float
   water                                                  Float                  @db.Float
   generation_id                                          Int
+  generations                                            generations            @relation(fields: [generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "types_ibfk_1")
   attaques_generations                                   attaques_generations[]
   pokemons_generations_pokemons_generations_type1Totypes pokemons_generations[] @relation("pokemons_generations_type1Totypes")
   pokemons_generations_pokemons_generations_type2Totypes pokemons_generations[] @relation("pokemons_generations_type2Totypes")
-  generations                                            generations            @relation(fields: [generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "types_ibfk_1")
 
   @@index([id], map: "types_index_14")
   @@index([generation_id], map: "types_index_15")
