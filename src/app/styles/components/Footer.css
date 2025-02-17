@@ -23,7 +23,7 @@
   font-size: 0.7rem;
   width: 100%;
   box-sizing: border-box;
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   transition: bottom 0.3s ease-in-out;

@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import '../styles/components/NavBar.css'
+import '../styles/components/NavBar.css';
 
-const userRole = "super_admin"; // Remplacez par votre système d'authentification pour détecter le rôle utilisateur
+const userRole = 'super_admin'; // Remplacez par votre système d'authentification pour détecter le rôle utilisateur
 
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -21,9 +21,9 @@ const NavBar = () => {
         <Link href="/">Site Logo</Link>
       </div>
       <div className={`navbar-links ${isOpen ? 'open' : ''}`}>
-        <div 
-          className="navbar-item" 
-          onMouseEnter={() => setDexOpen(true)} 
+        <div
+          className="navbar-item"
+          onMouseEnter={() => setDexOpen(true)}
           onMouseLeave={() => setDexOpen(false)}
           onClick={() => setDexOpen(!dexOpen)}
         >
@@ -36,11 +36,13 @@ const NavBar = () => {
             </div>
           )}
         </div>
-        <Link href="/livres" className="navbar-item">Livres</Link>
-        {(userRole === "admin" || userRole === "super_admin") && (
-          <div 
+        <Link href="/livres" className="navbar-item">
+          Livres
+        </Link>
+        {(userRole === 'admin' || userRole === 'super_admin') && (
+          <div
             className="navbar-item"
-            onMouseEnter={() => setAdminOpen(true)} 
+            onMouseEnter={() => setAdminOpen(true)}
             onMouseLeave={() => setAdminOpen(false)}
             onClick={() => setAdminOpen(!adminOpen)}
           >
@@ -54,7 +56,9 @@ const NavBar = () => {
                 <Link href="/admin/generations">Générations</Link>
                 <Link href="/admin/livres">Livres</Link>
                 <Link href="/admin/site">Site</Link>
-                {userRole === "super_admin" && <Link href="/admin/utilisateurs">Utilisateurs</Link>}
+                {userRole === 'super_admin' && (
+                  <Link href="/admin/utilisateurs">Utilisateurs</Link>
+                )}
               </div>
             )}
           </div>
@@ -63,7 +67,9 @@ const NavBar = () => {
       <div className="navbar-auth">
         <Link href="/signup">S'inscrire</Link>
         <Link href="/login">Se connecter</Link>
-        <Link href="/profile" className="profile-icon">👤</Link>
+        <Link href="/profile" className="profile-icon">
+          👤
+        </Link>
       </div>
       <button className="burger-menu" onClick={toggleMenu}>
         ☰
