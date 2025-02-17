@@ -28,6 +28,11 @@ body {
     white;
 }
 
+.main-content {
+  flex: 1;
+  padding-bottom: 80px; /* Ajuste la hauteur pour éviter que le texte soit masqué */
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
