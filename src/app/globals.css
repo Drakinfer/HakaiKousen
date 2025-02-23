@@ -7,6 +7,24 @@
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
   --principal-color: 244, 67, 54;
+  --acier: #B7B7CE;
+  --combat: #C22E28;
+  --dragon: #6F35FC;
+  --eau: #6390F0;
+  --electrik: #F7D02C;
+  --fee: #D685AD;
+  --feu: #EE8130;
+  --glace: #96D9D6;
+  --insecte: #A6B91A;
+  --normal: #A8A77A;
+  --plante: #7AC74C;
+  --poison: #A33EA1;
+  --psy: #F95587;
+  --roche: #B6A136;
+  --sol: #E2BF65;
+  --spectre: #735797;
+  --tenebres: #705746;
+  --vol: #A98FF3;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -30,7 +48,97 @@ body {
 
 .main-content {
   flex: 1;
-  padding-bottom: 80px; /* Ajuste la hauteur pour éviter que le texte soit masqué */
+  padding-bottom: 80px;
+}
+
+.acier, .steel{
+  background-color: var(--acier);
+  color: black;
+}
+
+.combat, .fighting{
+  background-color: var(--fighting);
+  color: white;
+}
+
+.dragon{
+  background-color: var(--dragon);
+  color: white;
+}
+
+.eau, .water{
+  background-color: var(--eau);
+  color: black;
+}
+
+.électrik, .electrik, .electric{
+  background-color: var(--electrik);
+  color: black;
+}
+
+.fée, .fee, .fairy{
+  background-color: var(--fee);
+  color: black;
+}
+
+.feu, .fire{
+  background-color: var(--feu);
+  color: black;
+}
+
+.glace, .ice{
+  background-color: var(--glace);
+  color: black;
+}
+
+.insecte, .bug{
+  background-color: var(--insecte);
+  color: black;
+}
+
+.normal{
+  background-color: var(--normal);
+  color: black;
+}
+
+.plante, .grass{
+  background-color: var(--plante);
+  color: black;
+}
+
+.poison{
+  background-color: var(--poison);
+  color: white;
+}
+
+.psy, .psychic{
+  background-color: var(--psy);
+  color: black;
+}
+
+.roche, .rock{
+  background-color: var(--roche);
+  color: black;
+}
+
+.sol, .ground{
+  background-color: var(--sol);
+  color: black;
+}
+
+.spectre, .ghost{
+  background-color: var(--spectre);
+  color: white;
+}
+
+.tenebres, .ténèbres, .dark{
+  background-color: var(--tenebres);
+  color: white;
+}
+
+.vol, .flying{
+  background-color: var(--spectre);
+  color: black;
 }
 
 @layer utilities {
