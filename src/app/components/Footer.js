@@ -3,7 +3,11 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import {
+  faChevronUp,
+  faChevronDown,
+  faTimes,
+} from '@fortawesome/free-solid-svg-icons';
 import { faDiscord } from '@fortawesome/free-brands-svg-icons';
 import '../styles/components/Footer.css';
 
@@ -33,6 +37,12 @@ const Footer = () => {
         />
       </div>
       <footer className={`footer ${isFooterOpen ? 'open' : ''}`}>
+        <button
+          className="absolute top-2 right-2 text-white text-xl max-xl:block hidden"
+          onClick={() => setIsFooterOpen(false)}
+        >
+          <FontAwesomeIcon icon={faTimes} />
+        </button>
         <div className="footer-section footer-left">
           <p>
             Hakai Kousen est une encyclopédie Pokemon communautaire adaptant

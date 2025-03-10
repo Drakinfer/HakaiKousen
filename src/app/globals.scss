@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@debug "✅ SCSS chargé !";
+
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+  --principal-color: 244, 67, 54;
+  --acier: #B7B7CE;
+  --combat: #C22E28;
+  --dragon: #6F35FC;
+  --eau: #6390F0;
+  --electrik: #F7D02C;
+  --fee: #D685AD;
+  --feu: #EE8130;
+  --glace: #96D9D6;
+  --insecte: #A6B91A;
+  --normal: #A8A77A;
+  --plante: #7AC74C;
+  --poison: #A33EA1;
+  --psy: #F95587;
+  --roche: #B6A136;
+  --sol: #E2BF65;
+  --spectre: #735797;
+  --tenebres: #705746;
+  --vol: #A98FF3;
+}
+
+$types: (
+  acier: (steel),
+  combat: (fighting),
+  dragon: (),
+  eau: (water),
+  electrik: (électrik, electric),
+  fee: (fée, fairy),
+  feu: (fire),
+  glace: (ice),
+  insecte: (bug),
+  normal: (),
+  plante: (grass),
+  poison: (),
+  psy: (psychic),
+  roche: (rock),
+  sol: (ground),
+  spectre: (ghost),
+  tenebres: (ténèbres, dark),
+  vol: (flying)
+);
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  min-height: 100vh;
+  background: white;
+}
+
+@each $type, $aliases in $types {
+  .border-#{$type} {
+    border: solid 2px var(--#{$type});
+
+    &:focus {
+      outline: none;
+      box-shadow: none;
+      -webkit-focus-ring-color: transparent;
+    }
+  }
+
+  @each $alias in $aliases {
+    .border-#{$alias} {
+      border: solid 2px var(--#{$type});
+
+      &:focus {
+        outline: none;
+        box-shadow: none;
+        -webkit-focus-ring-color: transparent;
+      }
+    }
+  }
+}
+
+@each $type in $types {
+  #{$type} {
+    border: solid 2px var(--#{$type});
+
+    &:focus {
+      outline: none;
+      box-shadow: none;
+      -webkit-focus-ring-color: transparent;
+    }
+  }
+}
+
+.main-content {
+  flex: 1;
+  padding-bottom: 80px;
+}
+
+.main-content {
+  flex: 1;
+  padding-bottom: 80px;
+}
+
+$light-backgrounds: poison, spectre, tenebres, combat, dragon;
+
+@each $type, $aliases in $types {
+  .#{$type} {
+    background-color: var(--#{$type});
+    color: if(index($light-backgrounds, $type), white, black);
+  }
+
+  @each $alias in $aliases {
+    .#{$alias} {
+      background-color: var(--#{$type});
+      color: if(index($light-backgrounds, $type), white, black);
+    }
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}

@@ -166,6 +166,7 @@ model pokemons {
   main_picture                                                         String                 @db.Text
   mini_picture                                                         String                 @db.Text
   first_generation                                                     Int?
+  type                                                                 String?                @db.VarChar(255)
   generations                                                          generations?           @relation(fields: [first_generation], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_first_generation")
   evolutions                                                           evolutions[]
   formes                                                               formes[]
@@ -181,7 +182,7 @@ model pokemons_generations {
   pokemon_id                                               Int
   generation_id                                            Int
   type1                                                    Int
-  type2                                                    Int
+  type2                                                    Int?
   height                                                   Float                             @db.Float
   weight                                                   Float                             @db.Float
   breed_rating                                             String                            @db.VarChar(10)
@@ -198,7 +199,7 @@ model pokemons_generations {
   pokemons_pokemons_generations_pokemon_idTopokemons       pokemons                          @relation("pokemons_generations_pokemon_idTopokemons", fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_1")
   pokemons_pokemons_generations_pre_evolution_idTopokemons pokemons?                         @relation("pokemons_generations_pre_evolution_idTopokemons", fields: [pre_evolution_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_5")
   types_pokemons_generations_type1Totypes                  types                             @relation("pokemons_generations_type1Totypes", fields: [type1], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_3")
-  types_pokemons_generations_type2Totypes                  types                             @relation("pokemons_generations_type2Totypes", fields: [type2], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_4")
+  types_pokemons_generations_type2Totypes                  types?                            @relation("pokemons_generations_type2Totypes", fields: [type2], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_4")
   attaques_breeding                                        attaques_breeding[]
   attaques_ct                                              attaques_ct[]
   attaques_dt                                              attaques_dt[]
