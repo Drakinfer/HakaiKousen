@@ -28,7 +28,7 @@ export default function Information({ pokemon, selectedGeneration }) {
   console.log(pokemon);
 
   return (
-    <section className="w-full mt-1 overflow-y-auto h-[500px]">
+    <section className="w-full mt-1 h-[500px]">
       {Array.isArray(pokemon.pokemon_generations_has_talents) &&
       pokemon.pokemon_generations_has_talents.length > 0 ? (
         <div>

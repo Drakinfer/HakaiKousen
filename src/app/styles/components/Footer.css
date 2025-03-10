@@ -30,7 +30,7 @@
 }
 
 .footer.open {
-  bottom: 0; /* Affiche le footer */
+  bottom: 0;
 }
 
 .footer-links-container {
@@ -41,11 +41,11 @@
 }
 
   .footer-left {
-    flex: 2; /* La première colonne est plus large */
+    flex: 2;
     padding-right: 1rem;
   }
   .footer-section {
-    padding: 0.5rem; /* Réduit le padding interne des sections */
+    padding: 0.5rem;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -76,11 +76,11 @@
     margin-top: 0.5rem;
   }
   .license-logo img {
-    width: 35px; /* Taille réduite du logo */
+    width: 35px;
   }
-  @media (max-width: 768px) {
+  @media (max-width: 1024px) {
     .footer-toggle {
-      display: block; /* Affiche le bouton de toggle en mobile */
+      display: block;
     }
 
     .footer {
@@ -89,7 +89,7 @@
       text-align: center;
       position: fixed;
       padding: 1rem;
-      bottom: -100%; /* Masque le footer hors de la vue */
+      bottom: -100%;
     }
 
     .footer-links-container {

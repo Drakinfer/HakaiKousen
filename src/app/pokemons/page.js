@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import Footer from '../components/Footer';
 import PokemonTable from '../components/PokemonTable';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 
 export default function PokemonsPage() {
   const [pokemons, setPokemons] = useState([]);
@@ -60,7 +62,7 @@ export default function PokemonsPage() {
         return prev.filter((t) => t !== type);
       } else {
         if (searchMode === 'exact' && prev.length >= 2) {
-          return prev; // Ne pas ajouter plus de 2 types en mode "exact"
+          return prev;
         }
         return [...prev, type];
       }
@@ -69,8 +71,8 @@ export default function PokemonsPage() {
 
   return (
     <>
-      <div className="flex flex-col items-center bg-gray-100 p-6 min-h-screen">
-        <h1 className="text-3xl font-bold text-gray-800 mb-6">
+      <div className="flex flex-col items-center p-1 h-[calc(100vh-4rem)]">
+        <h1 className="text-3xl font-bold text-gray-800 mb-1 text-center">
           Liste des Pokémon
         </h1>
 
@@ -79,22 +81,21 @@ export default function PokemonsPage() {
 
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className="md:hidden bg-blue-500 text-white py-2 px-4 rounded-lg mb-4"
+          className="lg:hidden bg-red-500 text-white px-2 py-1 rounded-lg flex justify-center items-center mb-1"
         >
-          {showFilters ? 'Masquer les filtres' : 'Afficher les filtres'}
+          <FontAwesomeIcon
+            icon={showFilters ? faChevronUp : faChevronDown}
+            size="lg"
+          />
         </button>
-
-        <div className="flex flex-col md:flex-row w-full max-w-5xl justify-center items-center">
+        <div className="flex flex-col lg:flex-row w-full max-w-5xl justify-center items-center ">
           <div
-            className={`w-full md:w-1/3 p-4 bg-white shadow-md rounded-lg ${
-              showFilters ? 'block' : 'hidden md:block'
+            className={`w-full lg:w-1/3 p-4 bg-white mb-1 rounded-lg ${
+              showFilters ? 'block' : 'hidden lg:block'
             }`}
           >
             <h2 className="text-xl font-semibold mb-4">Filtrer par Type</h2>
             <div className="mb-4">
-              <label className="block text-gray-700 font-semibold mb-2">
-                Mode de recherche :
-              </label>
               <select
                 value={searchMode}
                 onChange={(e) => setSearchMode(e.target.value)}
@@ -127,7 +128,7 @@ export default function PokemonsPage() {
             </div>
             <button
               onClick={fetchPokemons}
-              className="mt-4 w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600"
+              className="mt-4 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-blue-600"
             >
               Rechercher
             </button>

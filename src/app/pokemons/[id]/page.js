@@ -113,11 +113,11 @@ export default function PokemonPage() {
           </Link>
         </aside>
 
-        <div className="flex flex-col flex-1 p-1 w-full h-full overflow-hidden">
+        <div className="flex flex-col flex-1 p-1 w-full h-full overflow-auto">
           <div className="flex justify-between items-center mx-1">
             {previousPokemon && (
               <div
-                className={`max-w-xs text-sm${
+                className={`text-sm ${
                   nextPokemon ? 'w-1/6' : 'w-1/4'
                 } rounded-lg border-${
                   previousPokemon
@@ -135,7 +135,10 @@ export default function PokemonPage() {
                     className="w-12 h-12 mx-auto"
                   />
                   <p>
-                    #{previousPokemon.dex_number} {previousPokemon.name}
+                    #{previousPokemon.dex_number}{' '}
+                    <span className="md:block hidden">
+                      {previousPokemon.name}
+                    </span>
                   </p>
                 </Link>
               </div>
@@ -150,7 +153,7 @@ export default function PokemonPage() {
                   : 'w-full'
               } text-center rounded-lg border-${
                 pokemon.type ? pokemon.type.toLowerCase() : 'gray-500 border-2'
-              } mr-1 ml-1 max-w-xs text-sm`}
+              } mr-1 ml-1 text-sm`}
             >
               {' '}
               <img
@@ -159,7 +162,8 @@ export default function PokemonPage() {
                 className="w-12 h-12 mx-auto"
               />
               <p className="font-bold">
-                #{pokemon.dex_number} {pokemon.name} - {pokemon.category}
+                #{pokemon.dex_number} {pokemon.name}
+                <span className="md:block hidden">- {pokemon.category}</span>
               </p>
             </div>
 
@@ -169,7 +173,7 @@ export default function PokemonPage() {
                   previousPokemon ? 'w-1/6' : 'w-1/4'
                 } rounded-lg border-${
                   nextPokemon.type ? nextPokemon.type.toLowerCase() : 'gray-300'
-                } mr-1 ml-1 max-w-xs text-sm`}
+                } mr-1 ml-1 text-sm`}
               >
                 <Link
                   href={`/pokemons/${nextPokemon.id}`}
@@ -181,7 +185,8 @@ export default function PokemonPage() {
                     className="w-12 h-12 mx-auto"
                   />
                   <p>
-                    #{nextPokemon.dex_number} {nextPokemon.name}
+                    #{nextPokemon.dex_number}{' '}
+                    <span className="md:block hidden">{nextPokemon.name}</span>
                   </p>
                 </Link>
               </div>
@@ -189,7 +194,7 @@ export default function PokemonPage() {
           </div>
 
           <div className="flex flex-col md:flex-row mt-1 w-full">
-            <div className="w-full md:w-1/3 p-1 bg-white rounded-lg flex flex-col items-center">
+            <div className="w-full md:w-1/4 p-1 bg-white rounded-lg flex flex-col items-center">
               <img
                 src={pokemon.main_picture}
                 alt={pokemon.name}
@@ -198,7 +203,7 @@ export default function PokemonPage() {
               <div className="flex justify-around items-center mt-2">
                 <select
                   id="generation"
-                  className={`p-2 rounded border-${pokemon.type.toLowerCase()} focus::ring-0 focus::border-${pokemon.type.toLowerCase()} focus::outline-none focus:ring-transparent`}
+                  className={`p-2 rounded border-${pokemon.type.toLowerCase()} focus::ring-0 focus::border-${pokemon.type.toLowerCase()} focus::outline-none focus:ring-transparent mr-1`}
                   value={selectedGeneration}
                   onChange={(e) => {
                     if (selectedGeneration !== e.target.value) {
@@ -249,7 +254,7 @@ export default function PokemonPage() {
                 ))}
               </div>
 
-              <div className="p-1 overflow-y-auto h-[calc(100vh-18rem)]">
+              <div className="p-1 overflow-y-auto h-[calc(100vh-17rem)] w-full bg-white">
                 {activeTab === 'Informations' && (
                   <Information
                     pokemon={selectedPokemonGeneration}

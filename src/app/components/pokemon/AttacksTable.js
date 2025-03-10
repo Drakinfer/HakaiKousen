@@ -5,7 +5,7 @@ export default function Information({ attacks, energySystem }) {
   }
 
   return (
-    <section className="w-full bg-white overflow-y-auto h-[500px]">
+    <section>
       <div className="overflow-x-auto">
         <table className="w-full border border-gray-300">
           <thead className="bg-gray-200"></thead>

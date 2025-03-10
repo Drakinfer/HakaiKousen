@@ -7,15 +7,7 @@ export default function Forms({ pokemon, forms }) {
 
   return (
     <section className="w-full bg-white">
-      <div className="flex justify-around items-center">
-        <div className={`border-${pokemon.type.toLowerCase()} rounded-lg`}>
-          <img
-            src={pokemon.main_picture}
-            alt={pokemon.name}
-            className="w-[150px] h-[150px] mx-auto"
-          />
-          <p className="text-center">{pokemon.name}</p>
-        </div>
+      <div className="flex justify-around items-center items-strech md:flex-row flex-col">
         {forms.map((form) => {
           return (
             <div
