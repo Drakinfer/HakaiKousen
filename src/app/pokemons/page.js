@@ -9,7 +9,7 @@ export default function PokemonsPage() {
   const [pokemons, setPokemons] = useState([]);
   const [types, setTypes] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
-  const [searchMode, setSearchMode] = useState('any'); // 'any' pour un seul type, 'exact' pour exactement ces types
+  const [searchMode, setSearchMode] = useState('any');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
