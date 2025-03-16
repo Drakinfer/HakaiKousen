@@ -2,12 +2,13 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Information from '../../components/pokemon/Information';
 import Evolutions from '../../components/pokemon/Evolutions';
 import Forms from '../../components/pokemon/Forms';
 import AttacksTable from '../../components/pokemon/AttacksTable';
+import Loading from '@/app/components/Loading';
+import Aside from '../../components/Aside';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 export default function PokemonPage() {
   const { id } = useParams();
@@ -23,6 +24,7 @@ export default function PokemonPage() {
   const [selectedPokemonGeneration, setSelectedPokemonGeneration] =
     useState(null);
   const [energySystem, setEnergySystem] = useState(true);
+  const actions = [{ href: '/pokemons', icon: faArrowLeft, title: 'Retour' }];
 
   useEffect(() => {
     async function fetchPokemon() {
@@ -46,7 +48,6 @@ export default function PokemonPage() {
               (gen) => gen.generations.name === uniqueGenerations[0],
             );
 
-          // Mettre à jour tout en un seul `setState`
           setPokemon(pokemonData);
           setGenerations(uniqueGenerations);
           setSelectedGeneration(uniqueGenerations[0]);
@@ -92,26 +93,13 @@ export default function PokemonPage() {
   }, [selectedGeneration, pokemon]);
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <img
-          src="/images/pokeball.png"
-          alt="Chargement..."
-          className="animate-spin w-16 h-16"
-        />
-      </div>
-    );
+    return <Loading />;
   }
-  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <>
       <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-        <aside className="bg-red-500 h-full w-16 flex flex-col text-center text-white flex-shrink-0">
-          <Link href="/pokemons" className="text-white mb-2 w-8 mx-auto mt-4">
-            <FontAwesomeIcon icon={faArrowLeft} size="lg" />
-          </Link>
-        </aside>
+        <Aside actions={actions} />
 
         <div className="flex flex-col flex-1 p-1 w-full h-full overflow-auto">
           <div className="flex justify-between items-center mx-1">
