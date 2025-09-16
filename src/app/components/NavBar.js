@@ -31,7 +31,7 @@ const NavBar = () => {
           {dexOpen && (
             <div className="dropdown-menu">
               <Link href="/pokemons">Pokémons</Link>
-              <Link href="/attaques">Attaques</Link>
+              <Link href="/attacks">Attaques</Link>
               <Link href="/talents">Talents</Link>
             </div>
           )}
@@ -50,7 +50,7 @@ const NavBar = () => {
             {adminOpen && (
               <div className="dropdown-menu">
                 <Link href="/admin/pokemons">Pokémons</Link>
-                <Link href="/admin/attaques">Attaques</Link>
+                <Link href="/admin/attacks">Attaques</Link>
                 <Link href="/admin/talents">Talents</Link>
                 <Link href="/admin/types">Types</Link>
                 <Link href="/admin/generations">Générations</Link>
