@@ -4,68 +4,65 @@ import { NextResponse } from 'next/server';
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const typeNames = searchParams.get('types')?.split(',') || [];
-    const searchMode = searchParams.get('mode') || 'any';
+    const rawTypes = searchParams.get('types')?.split(',') ?? [];
+    const searchMode = (searchParams.get('mode') ?? 'any').toLowerCase();
+
+    const typeNames = [
+      ...new Set(rawTypes.map((t) => t.trim()).filter(Boolean)),
+    ];
 
     let typeIds = [];
     if (typeNames.length > 0) {
-      const types = await prisma.types.findMany({
-        where: {
-          name: { in: typeNames },
-        },
-        select: { id: true },
+      const types = await prisma.type.findMany({
+        where: { name: { in: typeNames, mode: 'insensitive' } },
+        select: { id: true, name: true },
       });
-      typeIds = types.map((type) => type.id);
+      typeIds = types.map((t) => t.id);
     }
 
-    let allPokemons;
+    let wherePokemon = {};
     if (typeIds.length > 0) {
-      if (searchMode === 'exact' && typeNames.length === 2) {
-        allPokemons = await prisma.pokemons.findMany({
-          where: {
-            pokemons_generations_pokemons_generations_pokemon_idTopokemons: {
-              some: {
-                AND: [{ type1: { in: typeIds } }, { type2: { in: typeIds } }],
-              },
+      if (searchMode === 'exact' && typeIds.length === 2) {
+        const [a, b] = typeIds;
+        wherePokemon = {
+          pokemonGenerations: {
+            some: {
+              OR: [
+                { AND: [{ type1Id: a }, { type2Id: b }] },
+                { AND: [{ type1Id: b }, { type2Id: a }] },
+              ],
             },
           },
-        });
+        };
       } else {
-        allPokemons = await prisma.pokemons.findMany({
-          where: {
-            pokemons_generations_pokemons_generations_pokemon_idTopokemons: {
-              some: {
-                OR: [{ type1: { in: typeIds } }, { type2: { in: typeIds } }],
-              },
+        wherePokemon = {
+          pokemonGenerations: {
+            some: {
+              OR: [{ type1Id: { in: typeIds } }, { type2Id: { in: typeIds } }],
             },
           },
-        });
+        };
       }
-    } else {
-      allPokemons = await prisma.pokemons.findMany();
     }
 
-    const total = allPokemons.length;
-    const numericPokemons = [];
-    const alphanumericPokemons = [];
-
-    allPokemons.forEach((pokemon) => {
-      if (/^\d+$/.test(pokemon.dex_number)) {
-        numericPokemons.push(pokemon);
-      } else {
-        alphanumericPokemons.push(pokemon);
-      }
+    const allPokemons = await prisma.pokemon.findMany({
+      where: wherePokemon,
     });
 
-    numericPokemons.sort((a, b) => Number(a.dex_number) - Number(b.dex_number));
-    alphanumericPokemons.sort((a, b) =>
-      a.dex_number.localeCompare(b.dex_number, 'fr', { numeric: true }),
+    const numeric = [];
+    const alnum = [];
+    for (const p of allPokemons) {
+      if (/^\d+$/.test(p.dexNumber)) numeric.push(p);
+      else alnum.push(p);
+    }
+    numeric.sort((a, b) => Number(a.dexNumber) - Number(b.dexNumber));
+    alnum.sort((a, b) =>
+      a.dexNumber.localeCompare(b.dexNumber, 'fr', { numeric: true }),
     );
-
-    let sortedPokemons = [...numericPokemons, ...alphanumericPokemons];
+    const sortedPokemons = [...numeric, ...alnum];
 
     return NextResponse.json(
-      { pokemons: sortedPokemons, total },
+      { pokemons: sortedPokemons, total: sortedPokemons.length },
       { status: 200 },
     );
   } catch (error) {

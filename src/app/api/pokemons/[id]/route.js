@@ -1,9 +1,8 @@
 import prisma from '../../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 
-export async function GET(req, { params }) {
-  const id = params.id; // Récupère l'ID depuis l'URL dynamique
-
+export async function GET(_req, { params }) {
+  const id = Number(params?.id);
   if (!id) {
     return NextResponse.json(
       { error: 'Pokemon ID is required' },
@@ -12,100 +11,96 @@ export async function GET(req, { params }) {
   }
 
   try {
-    // Récupérer le Pokémon avec toutes les relations
-    const pokemon = await prisma.pokemons.findUnique({
-      where: { id: parseInt(id) },
+    const pokemon = await prisma.pokemon.findUnique({
+      where: { id },
       include: {
-        generations: true,
-        pokemons_generations_pokemons_generations_pokemon_idTopokemons: {
+        firstGeneration: true,
+        type: true,
+
+        pokemonGenerations: {
+          orderBy: { generation: { rank: 'desc' } },
           include: {
-            generations: true,
-            types_pokemons_generations_type1Totypes: true,
-            types_pokemons_generations_type2Totypes: true,
-            pokemons_pokemons_generations_pre_evolution_idTopokemons: true,
+            generation: true,
+            type1: true,
+            type2: true,
+            preEvolution: true,
             evolutions: {
               include: {
-                pokemons: true,
+                pokemon: {
+                  include: { type: true },
+                },
               },
             },
             formes: {
               include: {
-                pokemons: true,
+                pokemon: {
+                  include: { type: true },
+                },
               },
             },
-            pokemon_generations_has_talents: {
+            talentsLinks: {
               include: {
-                talents: {
+                talent: {
                   include: {
-                    talents_generations: {
+                    talentGenerations: {
                       include: {
-                        generations: true,
+                        generation: true,
                       },
                     },
                   },
                 },
               },
             },
-            attaques_lvl: {
+            attaquesLvl: {
               include: {
-                attaques: {
+                attaque: {
                   include: {
-                    attaques_generations: {
-                      include: {
-                        types: true,
-                      },
+                    attaqueGenerations: {
+                      include: { type: true, generation: true },
                     },
                   },
                 },
               },
             },
-            attaques_ct: {
+            attaquesCt: {
               include: {
-                attaques: {
+                attaque: {
                   include: {
-                    attaques_generations: {
-                      include: {
-                        types: true,
-                      },
+                    attaqueGenerations: {
+                      include: { type: true, generation: true },
                     },
                   },
                 },
               },
             },
-            attaques_dt: {
+            attaquesDt: {
               include: {
-                attaques: {
+                attaque: {
                   include: {
-                    attaques_generations: {
-                      include: {
-                        types: true,
-                      },
+                    attaqueGenerations: {
+                      include: { type: true, generation: true },
                     },
                   },
                 },
               },
             },
-            attaques_breeding: {
+            attaquesBreeding: {
               include: {
-                attaques: {
+                attaque: {
                   include: {
-                    attaques_generations: {
-                      include: {
-                        types: true,
-                      },
+                    attaqueGenerations: {
+                      include: { type: true, generation: true },
                     },
                   },
                 },
               },
             },
-            attaques_tutoring: {
+            attaquesTutoring: {
               include: {
-                attaques: {
+                attaque: {
                   include: {
-                    attaques_generations: {
-                      include: {
-                        types: true,
-                      },
+                    attaqueGenerations: {
+                      include: { type: true, generation: true },
                     },
                   },
                 },
@@ -122,11 +117,8 @@ export async function GET(req, { params }) {
 
     return NextResponse.json({ pokemon }, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      // { error: 'Failed to fetch pokemon' },
-      { error: error.message },
-      { status: 500 },
-    );
+    console.error('GET /pokemons/[id] error:', error);
+    return NextResponse.json({ error: error }, { status: 500 });
   }
 }
 

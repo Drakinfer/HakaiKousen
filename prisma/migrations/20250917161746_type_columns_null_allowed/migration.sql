@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "public"."Type" ALTER COLUMN "dark" DROP NOT NULL,
+ALTER COLUMN "fairy" DROP NOT NULL,
+ALTER COLUMN "steel" DROP NOT NULL;

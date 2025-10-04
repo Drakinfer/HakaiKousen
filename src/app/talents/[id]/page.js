@@ -15,35 +15,54 @@ export default function TalentPage() {
   const actions = [{ href: '/talents', icon: faArrowLeft, title: 'Retour' }];
 
   useEffect(() => {
+    if (!id) return;
+
+    let cancelled = false;
+
     async function fetchTalent() {
+      setLoading(true);
       try {
-        const response = await fetch(`/api/talents/${id}`);
-        const data = await response.json();
+        const res = await fetch(`/api/talents/${id}`, { cache: 'no-store' });
+        const data = await res.json();
 
-        if (response.ok) {
-          const talentData = data.talent;
+        if (!res.ok) {
+          throw new Error(data?.error || 'Erreur lors du chargement du Talent');
+        }
 
-          const uniqueGenerations = Array.from(
-            new Set(
-              talentData.talents_generations.map((gen) => gen.generations.name),
-            ),
-          ).sort();
+        const t = data.talent;
+        const list = Array.isArray(t?.talentGenerations)
+          ? t.talentGenerations
+          : [];
 
-          setTalent(talentData);
+        const uniqueGenerations = [
+          ...new Set(
+            list
+              .map((g) => g?.Generation?.name ?? g?.generation?.name)
+              .filter(Boolean),
+          ),
+        ].sort((a, b) => a.localeCompare(b, 'fr', { numeric: true }));
+
+        if (!cancelled) {
+          setTalent(t);
           setGenerations(uniqueGenerations);
-        } else {
-          setError(data.error || 'Erreur lors du chargement du Talent');
+          if (
+            typeof setSelectedGeneration === 'function' &&
+            uniqueGenerations.length
+          ) {
+            setSelectedGeneration(uniqueGenerations[0]);
+          }
         }
       } catch (err) {
-        setError("Erreur de connexion à l'API");
+        if (!cancelled) setError(err?.message || "Erreur de connexion à l'API");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     }
 
-    if (id) {
-      fetchTalent();
-    }
+    fetchTalent();
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (loading) {

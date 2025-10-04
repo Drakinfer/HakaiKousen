@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
-export default function Forms({ pokemon, forms }) {
-  if (!pokemon) {
+export default function Forms({ forms }) {
+  if (forms.length < 1) {
     return <p>Informations non disponible</p>;
   }
 
@@ -11,16 +11,20 @@ export default function Forms({ pokemon, forms }) {
         {forms.map((form) => {
           return (
             <div
-              className={`border-${form.pokemons.type.toLowerCase()} rounded-lg`}
+              className={`border-${form.pokemon.type?.name.toLowerCase()} rounded-lg p-2`}
             >
-              <Link href={`/pokemons/${form.pokemons.id}`}>
+              <Link href={`/pokemons/${form.pokemon.id}`}>
                 <img
-                  src={form.pokemons.main_picture}
-                  alt={form.pokemons.name}
-                  className="w-[150px] h-[150px] mx-auto"
+                  src={form.pokemon.mainPicture}
+                  alt={form.pokemon.name}
+                  className="w-[200px] h-[200px] mx-auto"
                 />
-                <p className="text-center">{form.pokemons.name}</p>
-                <p className="text-center">{form.form}</p>
+                <p className="inline-block max-w-[200px] whitespace-normal break-words [overflow-wrap:anywhere] hyphens-auto text-center">
+                  {form.pokemon.name}
+                </p>
+                <p className="text-center">
+                  <span className="font-bold">Région</span> : {form.form}
+                </p>
               </Link>
             </div>
           );
