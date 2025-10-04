@@ -1,14 +1,29 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-export default function TalentDetails({ talent, generations }) {
-  const [selectedGeneration, setSelectedGeneration] = useState(generations[0]);
-
-  const selectedTalentGeneration = talent.talents_generations.find(
-    (gen) => gen.generations.name === selectedGeneration,
+export default function TalentDetails({ talent, generations = [] }) {
+  const [selectedGeneration, setSelectedGeneration] = useState(
+    generations[0] ?? null,
   );
+
+  useEffect(() => {
+    if (!selectedGeneration && generations.length) {
+      setSelectedGeneration(generations[0]);
+    }
+  }, [generations, selectedGeneration]);
+
+  const tgList = Array.isArray(talent?.talentGenerations)
+    ? talent.talentGenerations
+    : [];
+
+  const selectedTalentGeneration =
+    tgList.find(
+      (gen) =>
+        (gen?.Generation?.name ?? gen?.generation?.name) === selectedGeneration,
+    ) || null;
 
   return (
     <div className="w-full bg-white">
+      {/* Tabs des générations */}
       <div className="flex border-b pb-2 mt-3 overflow-x-auto space-x-2">
         {generations.map((gen) => (
           <button
@@ -28,9 +43,9 @@ export default function TalentDetails({ talent, generations }) {
       <div className="w-full p-4 bg-white">
         {selectedTalentGeneration ? (
           <>
-            <p className="text-lg font-bold text-center">Description </p>
+            <p className="text-lg font-bold text-center">Description</p>
             <p className="text-center">
-              {selectedTalentGeneration.description}
+              {selectedTalentGeneration.description || 'Pas de description'}
             </p>
           </>
         ) : (

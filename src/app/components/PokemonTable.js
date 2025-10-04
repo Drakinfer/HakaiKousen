@@ -14,12 +14,12 @@ export default function PokemonTable({ pokemons }) {
               <Link href={`/pokemons/${pokemon.id}`} className="contents">
                 <td className="p-2 border-b flex justify-start items-center space-x-4">
                   <img
-                    src={pokemon.mini_picture || '/images/placeholder.png'}
+                    src={pokemon.miniPicture}
                     alt={pokemon.name}
                     className="w-12 h-12 object-contain"
                   />
                   <span className="text-gray-800 font-semibold">
-                    #{pokemon.dex_number} {pokemon.name}
+                    #{pokemon.dexNumber} {pokemon.name}
                   </span>
                 </td>
               </Link>
