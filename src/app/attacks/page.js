@@ -1,21 +1,20 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Footer from '../components/Footer';
-import TalentTable from '../components/TalentsTable';
+import AttacksTable from '../components/AttacksTable';
 
-export default function TalentsPage() {
-  const [talents, setTalents] = useState([]);
+export default function AttacksPage() {
+  const [attacks, setAttacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  async function fetchTalents() {
+  async function fetchAttacks() {
     try {
       setLoading(true);
-      const response = await fetch(`/api/talents`);
+      const response = await fetch(`/api/attacks`);
       const data = await response.json();
-
       if (response.ok) {
-        setTalents(data.talents);
+        setAttacks(data.attacks);
       } else {
         setError(data.error || 'Erreur lors du chargement');
       }
@@ -27,17 +26,17 @@ export default function TalentsPage() {
   }
 
   useEffect(() => {
-    fetchTalents();
+    fetchAttacks();
   }, []);
 
   return (
     <>
       <div className="flex flex-col items-center p-1 h-[calc(100vh-4rem)]">
         <h1 className="text-3xl font-bold text-gray-800 mb-1 text-center mb-5 mt-1">
-          Liste des Talents
+          Liste des Attaques
         </h1>
 
-        <TalentTable talents={talents} />
+        <AttacksTable attacks={attacks} />
       </div>
       <Footer />
     </>
