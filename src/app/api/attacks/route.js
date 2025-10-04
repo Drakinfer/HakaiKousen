@@ -3,7 +3,11 @@ import { NextResponse } from 'next/server';
 
 export async function GET(req) {
   try {
-    const attaques = await prisma.attaques.findMany({});
+    const attaques = await prisma.attaque.findMany({
+      include: {
+        lastType: true,
+      },
+    });
 
     return NextResponse.json({ attacks: attaques }, { status: 200 });
   } catch (error) {
