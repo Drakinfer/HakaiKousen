@@ -18,12 +18,11 @@ export default function TalentDetails({ talent, generations = [] }) {
   const selectedTalentGeneration =
     tgList.find(
       (gen) =>
-        (gen?.Generation?.name ?? gen?.generation?.name) === selectedGeneration,
+        (gen?.generation?.name ?? gen?.generation?.name) === selectedGeneration,
     ) || null;
 
   return (
     <div className="w-full bg-white">
-      {/* Tabs des générations */}
       <div className="flex border-b pb-2 mt-3 overflow-x-auto space-x-2">
         {generations.map((gen) => (
           <button
