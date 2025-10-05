@@ -14,26 +14,46 @@ export async function GET(req) {
     let typeIds = [];
     if (typeNames.length > 0) {
       const types = await prisma.type.findMany({
-        where: { name: { in: typeNames, mode: 'insensitive' } },
+        where: {
+          OR: typeNames.map((n) => ({
+            name: { equals: n, mode: 'insensitive' },
+          })),
+        },
         select: { id: true, name: true },
       });
       typeIds = types.map((t) => t.id);
     }
 
     let wherePokemon = {};
+
     if (typeIds.length > 0) {
-      if (searchMode === 'exact' && typeIds.length === 2) {
-        const [a, b] = typeIds;
-        wherePokemon = {
-          pokemonGenerations: {
-            some: {
-              OR: [
-                { AND: [{ type1Id: a }, { type2Id: b }] },
-                { AND: [{ type1Id: b }, { type2Id: a }] },
-              ],
+      if (searchMode === 'exact') {
+        if (typeNames.length === 1) {
+          const [a] = typeIds;
+          wherePokemon = {
+            pokemonGenerations: {
+              some: {
+                AND: [{ type1Id: { in: typeIds } }, { type2Id: null }],
+              },
             },
-          },
-        };
+          };
+        } else {
+          const ors = [];
+          for (let i = 0; i < typeIds.length; i++) {
+            for (let j = i + 1; j < typeIds.length; j++) {
+              const a = typeIds[i];
+              const b = typeIds[j];
+              ors.push({ AND: [{ type1Id: a }, { type2Id: b }] });
+              ors.push({ AND: [{ type1Id: b }, { type2Id: a }] });
+            }
+          }
+
+          wherePokemon = {
+            pokemonGenerations: {
+              some: { OR: ors },
+            },
+          };
+        }
       } else {
         wherePokemon = {
           pokemonGenerations: {
