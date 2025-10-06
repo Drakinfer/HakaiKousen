@@ -337,6 +337,6 @@ model PokemonHasCompetences {
   pokemonId    Int
   pokemon      Pokemon    @relation(fields: [pokemonId], references: [id])
   competenceId Int
-  comptence    Competence @relation(fields: [competenceId], references: [id])
+  competence    Competence @relation(fields: [competenceId], references: [id])
   points       Int
 }
