@@ -5,7 +5,6 @@ import { RANGE } from '@/lib/range';
 
 export default function Information({ attacks, energySystem }) {
   if (!attacks || attacks.length < 1) {
-    console.log(attacks);
     return <p>Informations non disponibles</p>;
   }
 
