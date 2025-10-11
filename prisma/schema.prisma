@@ -209,6 +209,7 @@ model Pokemon {
   pokemonGenerations    PokemonGeneration[]
   preEvolutionsOf       PokemonGeneration[]     @relation("PreEvolution")
   pokemonHasCompetences PokemonHasCompetences[]
+  pokemonHasLocations   PokemonHasLocations[]
 }
 
 model PokemonGeneration {
@@ -337,6 +338,21 @@ model PokemonHasCompetences {
   pokemonId    Int
   pokemon      Pokemon    @relation(fields: [pokemonId], references: [id])
   competenceId Int
-  comptence    Competence @relation(fields: [competenceId], references: [id])
+  competence    Competence @relation(fields: [competenceId], references: [id])
   points       Int
+}
+
+model Location{
+  id                  Int  @id @default(autoincrement())
+  name                String
+  icon                String?
+  pokemonHasLocations PokemonHasLocations[]  
+}
+
+model PokemonHasLocations {
+  id          Int        @id @default(autoincrement())
+  pokemonId   Int
+  pokemon     Pokemon    @relation(fields: [pokemonId], references: [id])
+  locationId  Int
+  location    Location @relation(fields: [locationId], references: [id])
 }

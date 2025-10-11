@@ -81,6 +81,17 @@ export default function PokemonsPage() {
     });
   };
 
+  const changeMode = (value) => {
+    if (value === 'exact') {
+      if (selectedTypes.length >= 3) {
+        alert(
+          'Veuillez ne sélectionner que 2 types. Votre sélection a été réinitialisée.',
+        );
+        setSelectedTypes([]);
+      }
+    }
+    setSearchMode(value);
+  };
   return loading ? (
     <Loading />
   ) : (
@@ -113,7 +124,7 @@ export default function PokemonsPage() {
             <div className="mb-4">
               <select
                 value={searchMode}
-                onChange={(e) => setSearchMode(e.target.value)}
+                onChange={(e) => changeMode(e.target.value)}
                 className="w-full border p-2 rounded-md"
               >
                 <option value="any">Un seul de ces types</option>
