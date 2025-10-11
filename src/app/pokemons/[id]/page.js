@@ -7,6 +7,7 @@ import Evolutions from '../../components/pokemon/Evolutions';
 import Forms from '../../components/pokemon/Forms';
 import AttacksTable from '../../components/pokemon/AttacksTable';
 import Competences from '../../components/pokemon/Competences';
+import Locations from '../../components/pokemon/Locations';
 import Loading from '@/app/components/Loading';
 import Aside from '../../components/Aside';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
@@ -243,6 +244,7 @@ export default function PokemonPage() {
                   'Informations',
                   'Formes',
                   'Evolutions',
+                  'Habitats',
                   'Compétences',
                   'Attaques par niveau',
                   'Attaques CT',
@@ -286,6 +288,9 @@ export default function PokemonPage() {
                 )}
                 {activeTab === 'Compétences' && (
                   <Competences competences={pokemon.pokemonHasCompetences} />
+                )}
+                {activeTab === 'Habitats' && (
+                  <Locations locations={pokemon.pokemonHasLocations} />
                 )}
                 {activeTab === 'Attaques par niveau' && (
                   <AttacksTable
