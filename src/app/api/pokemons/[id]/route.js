@@ -21,6 +21,11 @@ export async function GET(_req, { params }) {
             competence: true,
           },
         },
+        pokemonHasLocations: {
+          include: {
+            location: true,
+          },
+        },
 
         pokemonGenerations: {
           orderBy: { generation: { rank: 'desc' } },
