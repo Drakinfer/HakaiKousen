@@ -96,76 +96,77 @@ export default function PokemonsPage() {
     <Loading />
   ) : (
     <>
-      <div className="flex flex-col items-center p-1 h-[calc(100vh-4rem)]">
-        <h1 className="text-3xl font-bold text-gray-800 mb-1 text-center">
-          Liste des Pokémon
-        </h1>
+      <main className="items-center flex h-main-footer justify-center p-4">
+        <div className="flex items-center flex-col">
+          <h1 className="text-3xl font-bold text-gray-800 mb-1 text-center">
+            Liste des Pokémon
+          </h1>
 
-        {error && <p className="text-red-500">{error}</p>}
+          {error && <p className="text-red-500">{error}</p>}
 
-        <button
-          onClick={() => setShowFilters(!showFilters)}
-          className="lg:hidden bg-red-500 text-white px-2 py-1 rounded-lg flex justify-center items-center mb-1"
-        >
-          <FontAwesomeIcon
-            icon={showFilters ? faChevronUp : faChevronDown}
-            size="lg"
-          />
-        </button>
-
-        <div className="flex flex-col lg:flex-row w-full max-w-5xl justify-center items-center ">
-          <div
-            className={`w-full lg:w-1/3 p-4 bg-white mb-1 rounded-lg ${
-              showFilters ? 'block' : 'hidden lg:block'
-            }`}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="lg:hidden bg-red-500 text-white px-2 py-1 rounded-lg flex justify-center items-center mb-1"
           >
-            <h2 className="text-xl font-semibold mb-4">Filtrer par Type</h2>
+            <FontAwesomeIcon
+              icon={showFilters ? faChevronUp : faChevronDown}
+              size="lg"
+            />
+          </button>
 
-            <div className="mb-4">
-              <select
-                value={searchMode}
-                onChange={(e) => changeMode(e.target.value)}
-                className="w-full border p-2 rounded-md"
-              >
-                <option value="any">Un seul de ces types</option>
-                <option value="exact">Seulement ces types (max 2)</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              {types.map((type) => (
-                <div key={type.value} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id={type.value}
-                    checked={selectedTypes.includes(type.value)}
-                    onChange={() => toggleTypeSelection(type.value)}
-                    className="mr-2"
-                    disabled={
-                      searchMode === 'exact' &&
-                      selectedTypes.length >= 2 &&
-                      !selectedTypes.includes(type.value)
-                    }
-                  />
-                  <label htmlFor={type.value} className="text-gray-700">
-                    {type.labelFr}
-                  </label>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={fetchPokemons}
-              className="mt-4 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-blue-600"
+          <div className="flex flex-col lg:flex-row w-full max-w-5xl justify-center items-center ">
+            <div
+              className={`w-full lg:w-1/3 p-4 bg-white mb-1 rounded-lg ${
+                showFilters ? 'block' : 'hidden lg:block'
+              }`}
             >
-              Rechercher
-            </button>
+              <h2 className="text-xl font-semibold mb-4">Filtrer par Type</h2>
+
+              <div className="mb-4">
+                <select
+                  value={searchMode}
+                  onChange={(e) => changeMode(e.target.value)}
+                  className="w-full border p-2 rounded-md"
+                >
+                  <option value="any">Un seul de ces types</option>
+                  <option value="exact">Seulement ces types (max 2)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                {types.map((type) => (
+                  <div key={type.value} className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id={type.value}
+                      checked={selectedTypes.includes(type.value)}
+                      onChange={() => toggleTypeSelection(type.value)}
+                      className="mr-2"
+                      disabled={
+                        searchMode === 'exact' &&
+                        selectedTypes.length >= 2 &&
+                        !selectedTypes.includes(type.value)
+                      }
+                    />
+                    <label htmlFor={type.value} className="text-gray-700">
+                      {type.labelFr}
+                    </label>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={fetchPokemons}
+                className="mt-4 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-blue-600"
+              >
+                Rechercher
+              </button>
+            </div>
+
+            <PokemonTable pokemons={pokemons} />
           </div>
-
-          <PokemonTable pokemons={pokemons} />
         </div>
-      </div>
-
+      </main>
       <Footer />
     </>
   );

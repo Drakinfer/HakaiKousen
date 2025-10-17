@@ -116,7 +116,7 @@ export default function PokemonPage() {
 
   return (
     <>
-      <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+      <div className="flex h-main overflow-hidden">
         <Aside actions={actions} />
 
         <div className="flex flex-col flex-1 p-1 w-full h-full overflow-auto">

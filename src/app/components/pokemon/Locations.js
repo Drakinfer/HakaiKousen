@@ -7,7 +7,7 @@ function resolveLucideIcon(name) {
 
   const pascal = name
     .trim()
-    .replace(/\s+/g, '-') // espaces -> tirets
+    .replace(/\s+/g, '-')
     .toLowerCase()
     .split('-')
     .map((s) => (s ? s[0].toUpperCase() + s.slice(1) : s))
