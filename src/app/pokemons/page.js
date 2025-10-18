@@ -157,7 +157,7 @@ export default function PokemonsPage() {
 
               <button
                 onClick={fetchPokemons}
-                className="mt-4 w-full bg-red-500 text-white py-2 rounded-lg hover:bg-blue-600"
+                className="mt-4 w-full bg-red-500 text-white py-2 rounded-lg"
               >
                 Rechercher
               </button>

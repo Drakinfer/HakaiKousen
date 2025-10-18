@@ -65,62 +65,62 @@ export default function RegisterPage() {
 
   return (
     <>
-    <section className="h-main-footer flex items-center justify-center p-4">
-      <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4">
-        <h1 className="text-2xl font-bold">Créer un compte</h1>
+      <section className="h-main-footer flex items-center justify-center p-4">
+        <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4">
+          <h1 className="text-2xl font-bold">Créer un compte</h1>
 
-        {error ? <p className="text-red-600 text-sm">{error}</p> : null}
-        {ok ? <p className="text-green-600 text-sm">{ok}</p> : null}
+          {error ? <p className="text-red-600 text-sm">{error}</p> : null}
+          {ok ? <p className="text-green-600 text-sm">{ok}</p> : null}
 
-        <div className="space-y-2">
-          <label className="block text-sm">Pseudo</label>
-          <input
-            className="border rounded w-full p-2"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Votre nom"
-          />
-        </div>
+          <div className="space-y-2">
+            <label className="block text-sm">Pseudo</label>
+            <input
+              className="border rounded w-full p-2"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Votre nom"
+            />
+          </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm">Email (login)</label>
-          <input
-            className="border rounded w-full p-2"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="vous@exemple.com"
-            required
-          />
-        </div>
+          <div className="space-y-2">
+            <label className="block text-sm">Email (login)</label>
+            <input
+              className="border rounded w-full p-2"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="vous@exemple.com"
+              required
+            />
+          </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm">Mot de passe</label>
-          <input
-            className="border rounded w-full p-2"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            required
-            minLength={8}
-          />
-        </div>
+          <div className="space-y-2">
+            <label className="block text-sm">Mot de passe</label>
+            <input
+              className="border rounded w-full p-2"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+              minLength={8}
+            />
+          </div>
 
-        <button
-          type="submit"
-          className="w-full rounded p-2 border"
-          disabled={loading}
-        >
-          {loading ? "Création..." : "S'inscrire"}
-        </button>
+          <button
+            type="submit"
+            className="w-full rounded p-2 border bg-red-500 text-white"
+            disabled={loading}
+          >
+            {loading ? "Création..." : "S'inscrire"}
+          </button>
 
-        <p className="text-sm">
-          Déjà un compte ? <a className="underline" href="/login">Se connecter</a>
-        </p>
-      </form>
-    </section>
-    <Footer/>
+          <p className="text-sm">
+            Déjà un compte ? <a className="underline" href="/login">Se connecter</a>
+          </p>
+        </form>
+      </section>
+      <Footer />
     </>
   )
 }
