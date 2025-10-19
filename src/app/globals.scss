@@ -110,6 +110,14 @@ body {
   padding-bottom: 80px;
 }
 
+.h-main {
+    height: calc(100dvh - 4rem);
+  }
+
+.h-main-footer {
+  height: calc(100dvh - 4rem - 100px);
+}
+
 $light-backgrounds: poison, spectre, tenebres, combat, dragon;
 
 @each $type, $aliases in $types {

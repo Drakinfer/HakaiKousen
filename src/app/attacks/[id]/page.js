@@ -74,7 +74,7 @@ export default function AttackPage() {
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]  ">
+    <div className="flex h-main">
       <Aside actions={actions} />
       <div className="w-full p-1 overflow-hidden">
         <h1 className="w-full text-center font-bold text-2xl">{attack.name}</h1>

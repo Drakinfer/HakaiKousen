@@ -32,7 +32,7 @@ export default function TalentsPage() {
 
   return (
     <>
-      <div className="flex flex-col items-center p-1 h-[calc(100vh-4rem)]">
+      <div className="flex flex-col items-center p-1 h-main-footer">
         <h1 className="text-3xl font-bold text-gray-800 mb-1 text-center mb-5 mt-1">
           Liste des Talents
         </h1>
