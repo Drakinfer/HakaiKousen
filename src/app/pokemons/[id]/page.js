@@ -236,16 +236,6 @@ export default function PokemonPage() {
                   {energySystem ? 'Système remanié' : 'Système de base'}
                 </button>
               </div>
-              <div id="tools" className="mt-2">
-                <Link
-                  href={`/generators/pokemon/${selectedPokemonGeneration.id}`}
-                  className="text-white mb-4 mx-auto flex flex-col items-center"
-                >
-                  <button className="bg-red-500 rounded-lg text-white p-1">
-                    Générateur de fiche
-                  </button>
-                </Link>
-              </div>
             </div>
 
             <div className="flex-1 p-1 bg-white rounded-lg ml-3 overflow-hidden">

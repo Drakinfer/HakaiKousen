@@ -10,7 +10,6 @@ import { LogIn, LogOut, User } from '../../../lib/lucide';
 const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [dexOpen, setDexOpen] = useState(false);
-  const [generatorsOpen, setGeneratorsOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const { data: session, status } = useSession();
   const isEditor = session?.user.role === 'EDITOR' || false;
@@ -44,22 +43,6 @@ const NavBar = () => {
         <Link href="/livres" className="navbar-item">
           Livres
         </Link>
-        {isAuth && (
-          <div
-            className="navbar-item"
-            onMouseEnter={() => setGeneratorsOpen(true)}
-            onMouseLeave={() => setGeneratorsOpen(false)}
-            onClick={() => setGeneratorsOpen(!dexOpen)}
-          >
-            <span>Outils</span>
-            {generatorsOpen && (
-              <div className="dropdown-menu w-[300px]">
-                <Link href="/generators/pokemon">Générateur de Pokémon</Link>
-              </div>
-            )}
-          </div>
-        )}
-
         {(isAdmin || isEditor) && (
           <div
             className="navbar-item"

@@ -24,7 +24,6 @@ model User {
 
   // createdPokemons Pokemon[] @relation("CreatedBy")
   // updatedPokemons Pokemon[] @relation("UpdatedBy")
-  generatedPokemons GeneratedPokemon[]
 }
 
 model Account {
@@ -209,27 +208,6 @@ model Forme {
 
   @@index([pokemonGenerationId])
   @@index([pokemonId])
-}
-
-model GeneratedPokemon {
-  id     Int  @id @default(autoincrement())
-  user   User @relation(fields: [userId], references: [id])
-  userId Int
-
-  name         String
-  lvl          Int
-  sex          String?
-  nature       String?
-  subNature    String?
-  talent       String?
-  breedingMove String?
-  shiny        Boolean @default(false)
-  baron        Boolean @default(false)
-
-  stats Json
-  hash  String
-
-  createdAt DateTime @default(now())
 }
 
 model Generation {
