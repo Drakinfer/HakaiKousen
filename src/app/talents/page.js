@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import Footer from '../components/Footer';
 import TalentTable from '../components/TalentsTable';
 import TalentFilter from '../components/filters/TalentFilters';
+import Loading from '../components/Loading';
 
 export default function TalentsPage() {
   const [talents, setTalents] = useState([]);
@@ -46,6 +47,9 @@ export default function TalentsPage() {
   const handleSearch = () => {
     fetchTalents(nameFilter);
   };
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <>

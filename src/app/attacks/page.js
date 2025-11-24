@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Footer from '../components/Footer';
+import Loading from '../components/Loading';
 import AttacksTable from '../components/AttacksTable';
 import AttacksFilter from '../components/filters/AttackFilters';
 import { toFr } from '@/lib/types';
@@ -76,6 +77,9 @@ export default function AttacksPage() {
   const handleSearch = () => {
     fetchAttacks(nameFilter, typeFilter);
   };
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <>
