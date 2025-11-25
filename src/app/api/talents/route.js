@@ -3,12 +3,28 @@ import { NextResponse } from 'next/server';
 
 export async function GET(req) {
   try {
-    const talents = await prisma.talent.findMany({});
+    const { searchParams } = new URL(req.url);
+    const name = (searchParams.get('name') ?? '').trim();
+
+    const where = {};
+
+    if (name) {
+      where.name = {
+        contains: name,
+        mode: 'insensitive',
+      };
+    }
+
+    const talents = await prisma.talent.findMany({
+      where,
+      orderBy: { name: 'asc' },
+    });
 
     return NextResponse.json({ talents }, { status: 200 });
   } catch (error) {
+    console.error('Erreur Prisma talents :', error);
     return NextResponse.json(
-      { error: 'failed to fetch attaques' },
+      { error: 'failed to fetch talents' },
       { status: 500 },
     );
   }
