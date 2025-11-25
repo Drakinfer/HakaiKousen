@@ -3,16 +3,55 @@ import { NextResponse } from 'next/server';
 
 export async function GET(req) {
   try {
+    const { searchParams } = new URL(req.url);
+
+    const name = (searchParams.get('name') ?? '').trim();
+    const typeNameParam = searchParams.get('typeName');
+    const typeName = typeNameParam ? String(typeNameParam) : null;
+
+    const where = {};
+
+    let typeIds = [];
+
+    if (typeName) {
+      const types = await prisma.type.findMany({
+        where: {
+          name: { equals: typeName, mode: 'insensitive' },
+        },
+        select: { id: true, name: true },
+      });
+
+      typeIds = types.map((t) => t.id);
+    }
+
+    if (name) {
+      where.name = {
+        contains: name,
+        mode: 'insensitive',
+      };
+    }
+
+    if (Array.isArray(typeIds) && typeIds.length > 0) {
+      where.lastTypeId = {
+        in: typeIds,
+      };
+    }
+
     const attaques = await prisma.attaque.findMany({
+      where,
       include: {
         lastType: true,
+      },
+      orderBy: {
+        name: 'asc',
       },
     });
 
     return NextResponse.json({ attacks: attaques }, { status: 200 });
   } catch (error) {
+    console.error('Erreur Prisma attaques :', error);
     return NextResponse.json(
-      { error: 'failed to fetch attaques' + error },
+      { error: 'failed to fetch attaques' },
       { status: 500 },
     );
   }
