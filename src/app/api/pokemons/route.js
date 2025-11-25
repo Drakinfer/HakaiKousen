@@ -4,6 +4,13 @@ import { NextResponse } from 'next/server';
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
+
+    // ---- Récupération des nouveaux filtres ----
+    const name = (searchParams.get('name') ?? '').trim();
+    const firstGenParam = searchParams.get('firstGen');
+    const firstGenId = firstGenParam ? Number(firstGenParam) : null;
+
+    // ---- Filtres de types (déjà existants) ----
     const rawTypes = searchParams.get('types')?.split(',') ?? [];
     const searchMode = (searchParams.get('mode') ?? 'any').toLowerCase();
 
@@ -24,13 +31,16 @@ export async function GET(req) {
       typeIds = types.map((t) => t.id);
     }
 
+    // where global pour les Pokémon
     let wherePokemon = {};
 
+    // ---- Application du filtre de type ----
     if (typeIds.length > 0) {
       if (searchMode === 'exact') {
         if (typeNames.length === 1) {
           const [a] = typeIds;
           wherePokemon = {
+            ...wherePokemon,
             pokemonGenerations: {
               some: {
                 AND: [{ type1Id: { in: typeIds } }, { type2Id: null }],
@@ -49,6 +59,7 @@ export async function GET(req) {
           }
 
           wherePokemon = {
+            ...wherePokemon,
             pokemonGenerations: {
               some: { OR: ors },
             },
@@ -56,6 +67,7 @@ export async function GET(req) {
         }
       } else {
         wherePokemon = {
+          ...wherePokemon,
           pokemonGenerations: {
             some: {
               OR: [{ type1Id: { in: typeIds } }, { type2Id: { in: typeIds } }],
@@ -65,10 +77,42 @@ export async function GET(req) {
       }
     }
 
+    // ---- Filtre par nom ----
+    if (name) {
+      wherePokemon = {
+        ...wherePokemon,
+        name: {
+          contains: name,
+          mode: 'insensitive',
+        },
+      };
+    }
+
+    // ---- Filtre par première génération ----
+    if (firstGenId) {
+      // 👉 Si tu stockes la génération d’origine dans un champ sur pokemon :
+      wherePokemon = {
+        ...wherePokemon,
+        firstGenerationId: firstGenId,
+      };
+
+      // 👉 Variante si c’est via la relation pokemonGenerations :
+      // wherePokemon = {
+      //   ...wherePokemon,
+      //   pokemonGenerations: {
+      //     some: {
+      //       generationId: firstGenId,
+      //       // éventuellement un flag si tu as un champ du genre "isFirstGeneration: true"
+      //     },
+      //   },
+      // };
+    }
+
     const allPokemons = await prisma.pokemon.findMany({
       where: wherePokemon,
     });
 
+    // ---- Tri dexNumber (numérique puis alphanum) ----
     const numeric = [];
     const alnum = [];
     for (const p of allPokemons) {

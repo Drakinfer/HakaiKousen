@@ -6,12 +6,16 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { toFr } from '@/lib/types';
 import Loading from '../components/Loading';
+import PokemonFilters from '../components/filters/PokemonFilters';
 
 export default function PokemonsPage() {
   const [pokemons, setPokemons] = useState([]);
   const [types, setTypes] = useState([]);
+  const [generations, setGenerations] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [searchMode, setSearchMode] = useState('any');
+  const [nameFilter, setNameFilter] = useState('');
+  const [firstGen, setFirstGen] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
@@ -19,11 +23,25 @@ export default function PokemonsPage() {
   async function fetchPokemons() {
     try {
       setLoading(true);
-      let query = '';
+      setError(null);
+
+      const params = new URLSearchParams();
+
       if (selectedTypes.length > 0) {
-        query = `?types=${selectedTypes.join(',')}&mode=${searchMode}`;
+        params.set('types', selectedTypes.join(','));
+        params.set('mode', searchMode);
       }
-      const response = await fetch(`/api/pokemons${query}`);
+
+      if (nameFilter.trim() !== '') {
+        params.set('name', nameFilter.trim());
+      }
+
+      if (firstGen !== '') {
+        params.set('firstGen', firstGen);
+      }
+
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const response = await fetch(`/api/pokemons${queryString}`);
       const data = await response.json();
 
       if (response.ok) {
@@ -55,17 +73,28 @@ export default function PokemonsPage() {
         a.labelFr.localeCompare(b.labelFr, 'fr', { numeric: true }),
       );
 
-      console.log(list);
-
       setTypes(list);
     } catch (err) {
       console.error('Erreur lors de la récupération des types', err);
     }
   }
 
+  async function fetchGenerations() {
+    try {
+      const res = await fetch('/api/generations', { cache: 'no-store' });
+      if (!res.ok) throw new Error('Bad response');
+      const { generations = [] } = await res.json();
+      console.log(generations);
+      setGenerations(generations);
+    } catch (err) {
+      console.error('Erreur lors de la récupération des générations', err);
+    }
+  }
+
   useEffect(() => {
     fetchPokemons();
     fetchTypes();
+    fetchGenerations();
   }, []);
 
   const toggleTypeSelection = (type) => {
@@ -92,6 +121,7 @@ export default function PokemonsPage() {
     }
     setSearchMode(value);
   };
+
   return loading ? (
     <Loading />
   ) : (
@@ -104,6 +134,7 @@ export default function PokemonsPage() {
 
           {error && <p className="text-red-500">{error}</p>}
 
+          {/* Bouton pour afficher/masquer les filtres sur mobile */}
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="lg:hidden bg-red-500 text-white px-2 py-1 rounded-lg flex justify-center items-center mb-1"
@@ -115,53 +146,20 @@ export default function PokemonsPage() {
           </button>
 
           <div className="flex flex-col lg:flex-row w-full max-w-5xl justify-center items-center ">
-            <div
-              className={`w-full lg:w-1/3 p-4 bg-white mb-1 rounded-lg ${
-                showFilters ? 'block' : 'hidden lg:block'
-              }`}
-            >
-              <h2 className="text-xl font-semibold mb-4">Filtrer par Type</h2>
-
-              <div className="mb-4">
-                <select
-                  value={searchMode}
-                  onChange={(e) => changeMode(e.target.value)}
-                  className="w-full border p-2 rounded-md"
-                >
-                  <option value="any">Un seul de ces types</option>
-                  <option value="exact">Seulement ces types (max 2)</option>
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                {types.map((type) => (
-                  <div key={type.value} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={type.value}
-                      checked={selectedTypes.includes(type.value)}
-                      onChange={() => toggleTypeSelection(type.value)}
-                      className="mr-2"
-                      disabled={
-                        searchMode === 'exact' &&
-                        selectedTypes.length >= 2 &&
-                        !selectedTypes.includes(type.value)
-                      }
-                    />
-                    <label htmlFor={type.value} className="text-gray-700">
-                      {type.labelFr}
-                    </label>
-                  </div>
-                ))}
-              </div>
-
-              <button
-                onClick={fetchPokemons}
-                className="mt-4 w-full bg-red-500 text-white py-2 rounded-lg"
-              >
-                Rechercher
-              </button>
-            </div>
+            <PokemonFilters
+              types={types}
+              generations={generations}
+              searchMode={searchMode}
+              selectedTypes={selectedTypes}
+              nameFilter={nameFilter}
+              firstGen={firstGen}
+              showFilters={showFilters}
+              onNameChange={setNameFilter}
+              onFirstGenChange={setFirstGen}
+              onSearchModeChange={changeMode}
+              onToggleType={toggleTypeSelection}
+              onSubmit={fetchPokemons}
+            />
 
             <PokemonTable pokemons={pokemons} />
           </div>
