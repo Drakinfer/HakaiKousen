@@ -26,7 +26,7 @@ const NavBar = () => {
       </div>
       <div className={`navbar-links ${isOpen ? 'open' : ''}`}>
         <div
-          className="navbar-item"
+          className="navbar-item z-20"
           onMouseEnter={() => setDexOpen(true)}
           onMouseLeave={() => setDexOpen(false)}
           onClick={() => setDexOpen(!dexOpen)}
@@ -45,7 +45,7 @@ const NavBar = () => {
         </Link>
         {(isAdmin || isEditor) && (
           <div
-            className="navbar-item"
+            className="navbar-item z-20"
             onMouseEnter={() => setAdminOpen(true)}
             onMouseLeave={() => setAdminOpen(false)}
             onClick={() => setAdminOpen(!adminOpen)}
@@ -63,7 +63,7 @@ const NavBar = () => {
                 {isAdmin && (
                   <>
                     <Link href="/admin/site">Site</Link>
-                    <Link href="/admin/utilisateurs">Utilisateurs</Link>
+                    <Link href="/admin/users">Utilisateurs</Link>
                   </>
                 )}
               </div>
