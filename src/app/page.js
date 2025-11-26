@@ -31,6 +31,7 @@ export default function Home() {
     <>
       <main className="main-content">
         <div className="min-h-screen bg-gray-100 flex flex-col items-center p-6 mb-10">
+          <img src="/images/logo.png" />
           {announcement && (
             <div className="w-1/2 bg-red-500 text-white text-center p-3 shadow-md mt-3 mb-6">
               {announcement.map((announce) => (

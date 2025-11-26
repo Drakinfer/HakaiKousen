@@ -22,7 +22,9 @@ const NavBar = () => {
   return (
     <nav className="navbar">
       <div className="navbar-logo">
-        <Link href="/">Site Logo</Link>
+        <Link href="/">
+          <img src="/images/iconeHK.png" className="w-20" />
+        </Link>
       </div>
       <div className={`navbar-links ${isOpen ? 'open' : ''}`}>
         <div
