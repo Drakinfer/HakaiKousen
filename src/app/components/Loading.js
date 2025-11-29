@@ -1,6 +1,6 @@
-export default function Loading() {
+export default function Loading(heightClass) {
   return (
-    <div className="flex justify-center items-center h-screen">
+    <div className="flex justify-center items-center h-main">
       <img
         src="/images/pokeball.png"
         alt="Chargement..."
