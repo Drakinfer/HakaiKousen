@@ -6,16 +6,37 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 const Aside = ({ actions }) => {
   return (
     <aside className="bg-red-500 h-full w-16 flex flex-col text-center text-white flex-shrink-0 py-4">
-      {actions.map((action, index) => (
-        <Link
-          key={index}
-          href={action.href}
-          className="text-white mb-4 w-8 mx-auto flex flex-col items-center"
-          title={action.title}
-        >
-          <FontAwesomeIcon icon={action.icon} size="lg" />
-        </Link>
-      ))}
+      {actions.map((action, index) => {
+        const icon = (
+          <div className="text-white mb-4 w-8 mx-auto flex flex-col items-center cursor-pointer">
+            <FontAwesomeIcon icon={action.icon} size="lg" />
+          </div>
+        );
+
+        if (action.href) {
+          return (
+            <Link
+              key={index}
+              href={action.href}
+              title={action.title}
+              className="inline-block"
+            >
+              {icon}
+            </Link>
+          );
+        }
+
+        return (
+          <button
+            key={index}
+            title={action.title}
+            onClick={action.onClick}
+            className="inline-block focus:outline-none"
+          >
+            {icon}
+          </button>
+        );
+      })}
     </aside>
   );
 };

@@ -1,76 +1,104 @@
 import prisma from '../../../../../lib/prisma';
 import { NextResponse } from 'next/server';
+import { requireApiRole } from '../../../../../lib/apiAuth';
 
+export async function PUT(req, { params }) {
+  const { ok, res } = await requireApiRole(req, 'EDITOR');
+  if (!ok) return res;
 
-export async function GET(req, { params }) {
-  
-    const id = params.id;  // Récupère l'ID depuis l'URL dynamique
+  try {
+    const { id } = params;
+    const genId = Number(id);
 
-    if (!id) {
-        return NextResponse.json(
-            { error: 'Generation ID is required' },
-            { status: 400 }
-        );
+    if (Number.isNaN(genId)) {
+      return NextResponse.json(
+        { error: "L'identifiant de la génération est invalide" },
+        { status: 400 },
+      );
     }
 
-    try {
-        // Récupérer le Pokémon avec toutes les relations
-        const generation = await prisma.generations.findUnique({
-            where: { id: parseInt(id) },
-        });
-          
+    const body = await req.json();
+    const { name, rank } = body;
 
-        if (!generation) {
-            return NextResponse.json(
-                { error: 'Generation not found' },
-                { status: 404 }
-            );
-        }
+    const data = {};
 
+    if (name !== undefined) {
+      if (!name || typeof name !== 'string') {
         return NextResponse.json(
-            { generation },
-            { status: 200 }
+          { error: 'Le nom de la génération est invalide' },
+          { status: 400 },
         );
-    } catch (error) {
-        return NextResponse.json(
-            // { error: 'Failed to fetch generation' },
-            { error: error.message},
-            { status: 500 }
-        );
+      }
+      data.name = name;
     }
+
+    if (rank !== undefined) {
+      const parsedRank = Number(rank);
+      if (Number.isNaN(parsedRank)) {
+        return NextResponse.json(
+          { error: 'Le rank doit être un nombre' },
+          { status: 400 },
+        );
+      }
+      data.rank = parsedRank;
+    }
+
+    const generation = await prisma.generation.update({
+      where: { id: genId },
+      data,
+    });
+
+    return NextResponse.json({ generation }, { status: 200 });
+  } catch (error) {
+    console.error(error);
+
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Génération introuvable' },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Erreur lors de la mise à jour de la génération' },
+      { status: 500 },
+    );
+  }
 }
 
-export async function POST(req, { params }) {
-    try {
-        const data = await req.json();
+export async function DELETE(req, { params }) {
+  const { ok, res } = await requireApiRole(req, 'ADMIN');
+  if (!ok) return res;
 
-        const id = params.id;
+  try {
+    const { id } = params;
+    const genId = Number(id);
 
-        const { name, rank } = data.generation;
-
-        if (!id) {
-            return NextResponse.json(
-                { error: 'Generation ID is required' },
-                { status: 400 }
-            );
-        }
-
-        const updatedGeneration = await prisma.generations.update({
-            where: { id: parseInt(id) },
-            data: {
-                ...(name && { name }),
-                ...(rank && { rank }),
-            },
-        });
-
-        return NextResponse.json(
-            { generation: updatedGeneration },
-            { status: 200 }
-        );
-    } catch (error) {
-        return NextResponse.json(
-            { error: error.message },
-            { status: 500 }
-        );
+    if (Number.isNaN(genId)) {
+      return NextResponse.json(
+        { error: "L'identifiant de la génération est invalide" },
+        { status: 400 },
+      );
     }
+
+    await prisma.generation.delete({
+      where: { id: genId },
+    });
+
+    return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    console.error(error);
+
+    if (error.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'Génération introuvable' },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Erreur lors de la suppression de la génération' },
+      { status: 500 },
+    );
+  }
 }
