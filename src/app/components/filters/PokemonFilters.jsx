@@ -22,7 +22,6 @@ export default function PokemonFilters({
     >
       <h2 className="text-xl font-semibold mb-4">Filtres</h2>
 
-      {/* Filtre par nom */}
       <div className="mb-4">
         <label
           htmlFor="nameFilter"
@@ -40,7 +39,6 @@ export default function PokemonFilters({
         />
       </div>
 
-      {/* Filtre par première génération */}
       <div className="mb-4">
         <label
           htmlFor="firstGen"
@@ -63,7 +61,6 @@ export default function PokemonFilters({
         </select>
       </div>
 
-      {/* Filtre par type */}
       <label className="block text-sm font-medium text-gray-700 mb-1">Filtrer par Type</label>
 
       <div className="mb-4">

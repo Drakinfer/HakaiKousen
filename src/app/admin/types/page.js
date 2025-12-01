@@ -8,33 +8,32 @@ import Loading from '@/app/components/Loading';
 import { SquarePen, Trash } from '../../../../lib/lucide';
 
 import Aside from '@/app/components/Aside';
-import GenerationFormModal from '@/app/components/modal/GenerationFormModal';
+import TypeFormModal from '@/app/components/modal/TypeFormModal';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
-export default function AdminGenerationsPage() {
+export default function AdminTypesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [generations, setGenerations] = useState([]);
+  const [types, setTypes] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [openModal, setOpenModal] = useState(false);
-  const [selectedGeneration, setSelectedGeneration] = useState(null);
+  const [selectedType, setSelectedType] = useState(null);
 
   const isAdmin = session?.user?.role == 'ADMIN';
 
-  const fetchGenerations = async () => {
+  const fetchTypes = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/generations');
+      const res = await fetch('/api/types');
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(
-          data.error || 'Erreur lors du chargement des générations',
-        );
+        throw new Error(data.error || 'Erreur lors du chargement des types');
       }
       const data = await res.json();
-      setGenerations(data.generations || []);
+      console.log('Données reçues depuis /api/types :', data);
+      setTypes(data.types || []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -53,7 +52,7 @@ export default function AdminGenerationsPage() {
   useEffect(() => {
     if (!session || session.user?.role === 'USER') return;
 
-    fetchGenerations();
+    fetchTypes();
   }, [session]);
 
   if (
@@ -66,28 +65,28 @@ export default function AdminGenerationsPage() {
   }
 
   const handleAddClick = () => {
-    setSelectedGeneration(null);
+    setSelectedType(null);
     setOpenModal(true);
   };
 
-  const handleEditClick = (generation) => {
-    setSelectedGeneration(generation);
+  const handleEditClick = (type) => {
+    setSelectedType(type);
     setOpenModal(true);
   };
 
-  const handleDeleteGeneration = async (generationId) => {
+  const handleDeleteType = async (typeId) => {
     const confirmed = window.confirm(
-      'Es-tu sûr de vouloir supprimer cette génération ?',
+      'Es-tu sûr de vouloir supprimer ce type ?',
     );
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`/api/generations/${generationId}`, {
+      const res = await fetch(`/api/types/${typeId}`, {
         method: 'DELETE',
       });
 
       if (!res.ok) {
-        let message = 'Erreur lors de la suppression de la génération';
+        let message = 'Erreur lors de la suppression du type';
 
         try {
           const data = await res.json();
@@ -99,7 +98,7 @@ export default function AdminGenerationsPage() {
         return;
       }
 
-      await fetchGenerations();
+      await fetchTypes();
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erreur inattendue lors de la suppression');
@@ -108,16 +107,16 @@ export default function AdminGenerationsPage() {
 
   const handleCloseModal = () => {
     setOpenModal(false);
-    setSelectedGeneration(null);
+    setSelectedType(null);
   };
 
   return (
     <main className="flex h-main overflow-hidden">
       <Aside
-        title="Générations"
+        title="Types"
         actions={[
           {
-            label: 'Ajouter une génération',
+            label: 'Ajouter un type',
             onClick: handleAddClick,
             icon: faPlus,
           },
@@ -129,19 +128,19 @@ export default function AdminGenerationsPage() {
             <thead className="bg-red-500 text-white sticky top-0 z-10">
               <tr>
                 <th className="border px-3 py-2 text-left">Nom</th>
-                <th className="border px-3 py-2 text-left">Rang</th>
+                <th className="border px-3 py-2 text-left">Génération</th>
                 <th className="border px-3 py-2 text-left">Action</th>
               </tr>
             </thead>
             <tbody>
-              {generations.map((g) => (
-                <tr key={g.id}>
-                  <td className="border px-3 py-2">{g.name}</td>
-                  <td className="border px-3 py-2">{g.rank}</td>
+              {types.map((t) => (
+                <tr key={t.id}>
+                  <td className="border px-3 py-2">{t.labelFr}</td>
+                  <td className="border px-3 py-2">{t.type.generation.name}</td>
                   <td className="border px-3 py-2">
                     <button
                       type="button"
-                      onClick={() => handleEditClick(g)}
+                      onClick={() => handleEditClick(t.type)}
                       className="p-1 hover:scale-105 transition-transform"
                     >
                       <SquarePen color="red" />
@@ -149,7 +148,7 @@ export default function AdminGenerationsPage() {
                     {isAdmin && (
                       <button
                         type="button"
-                        onClick={() => handleDeleteGeneration(g.id)}
+                        onClick={() => handleDeleteType(t.id)}
                         className="p-1 hover:scale-105 transition-transform"
                       >
                         <Trash color="red" />
@@ -163,11 +162,11 @@ export default function AdminGenerationsPage() {
         </div>
 
         {openModal && (
-          <GenerationFormModal
+          <TypeFormModal
             isOpen={openModal}
             onClose={handleCloseModal}
-            generation={selectedGeneration}
-            onSaved={fetchGenerations}
+            type={selectedType}
+            onSaved={fetchTypes}
           />
         )}
       </div>
