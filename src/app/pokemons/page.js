@@ -64,8 +64,8 @@ export default function PokemonsPage() {
 
       const byValue = new Map();
       for (const t of types) {
-        const value = t.name;
-        const labelFr = t.labelFr ?? toFr(t.name);
+        const value = t.type.name;
+        const labelFr = t.labelFr ?? toFr(t.type.name);
         if (!byValue.has(value)) byValue.set(value, { value, labelFr });
       }
 
