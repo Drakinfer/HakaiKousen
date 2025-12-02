@@ -324,7 +324,7 @@ export default function PokemonGeneratorPage({
               Pokémon <span className="text-red-500">*</span>
             </label>
             <select
-              className="border rounded p-2"
+              className="border rounded p-2 w-full"
               value={pokemonId}
               onChange={(e) => {
                 setPokemonId(e.target.value);
@@ -488,7 +488,7 @@ export default function PokemonGeneratorPage({
           </div>
         </div>
 
-        <fieldset className="grid border rounded p-3 mt-3">
+        <fieldset className="grid border rounded p-3 mt-1">
           <legend className="px-1 text-sm font-semibold">
             IVs (optionnel)
           </legend>
@@ -557,12 +557,11 @@ export default function PokemonGeneratorPage({
           </div>
         </fieldset>
 
-        {/* SECTION 6 : boutons */}
         <div className="flex flex-wrap gap-3">
           <button
             type="submit"
             disabled={randomizing}
-            className="mt-4 bg-red-500 text-white p-2 rounded-lg"
+            className="mt-1 bg-red-500 text-white p-2 rounded-lg"
           >
             {randomizing
               ? 'Génération...'
@@ -573,7 +572,7 @@ export default function PokemonGeneratorPage({
 
           <button
             type="button"
-            className="mt-4 bg-red-500 text-white p-2 rounded-lg"
+            className="mt-1 bg-red-500 text-white p-2 rounded-lg"
             onClick={resetOptional}
           >
             Réinitialiser les options
@@ -582,7 +581,7 @@ export default function PokemonGeneratorPage({
           {data && (
             <button
               type="button"
-              className="mt-4 bg-red-500 text-white p-2 rounded-lg"
+              className="mt-1 bg-red-500 text-white p-2 rounded-lg"
               onClick={() => setIsModalOpen(true)}
             >
               Afficher les données générées

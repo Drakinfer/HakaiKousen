@@ -4,10 +4,10 @@ export default function UsersTable({ users, onUpdateRole }) {
   return (
     <div className="h-full overflow-y-auto">
       <table className="min-w-full text-sm">
-        <thead className="bg-gray-100 sticky top-0 z-10">
+        <thead className="bg-gray-100 sticky top-0 z-2">
           <tr>
             <th className="border px-3 py-2 text-left">Nom</th>
-            <th className="border px-3 py-2 text-left">Email</th>
+            <th className="border px-3 py-2 text-left hidden md:block">Email</th>
             <th className="border px-3 py-2 text-left">Rôle</th>
             <th className="border px-3 py-2 text-left">Action</th>
           </tr>
@@ -28,7 +28,7 @@ export default function UsersTable({ users, onUpdateRole }) {
             return (
               <tr key={u.id}>
                 <td className="border px-3 py-2">{u.name}</td>
-                <td className="border px-3 py-2">{u.email}</td>
+                <td className="border px-3 py-2 hidden md:block">{u.email}</td>
                 <td className="border px-3 py-2">{u.role}</td>
                 <td className="border px-3 py-2">
                   {actionType ? (

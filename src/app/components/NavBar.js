@@ -21,10 +21,10 @@ const NavBar = () => {
   const pathname = usePathname();
 
   return (
-    <nav className="navbar">
+    <nav className="navbar sticky top-0 z-[100]">
       <div className="navbar-logo">
         <Link href="/">
-          <img src="/images/iconeHK.png" className="w-20" />
+          <img src="/images/iconeHK.png" className="md:w-20 w-10" />
         </Link>
       </div>
       <div className={`navbar-links ${isOpen ? 'open' : ''}`}>
@@ -48,7 +48,7 @@ const NavBar = () => {
         </Link>
         {isAuth && (
           <div
-            className="navbar-item"
+            className="navbar-item z-20"
             onMouseEnter={() => setGeneratorsOpen(true)}
             onMouseLeave={() => setGeneratorsOpen(false)}
             onClick={() => setGeneratorsOpen(!dexOpen)}

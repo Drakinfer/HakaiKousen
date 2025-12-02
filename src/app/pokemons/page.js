@@ -126,7 +126,7 @@ export default function PokemonsPage() {
     <Loading />
   ) : (
     <>
-      <main className="items-center flex h-main-footer justify-center p-4">
+      <main className="items-center flex md:h-main-footer justify-center p-4 mb-50 md:mb-0">
         <div className="flex items-center flex-col">
           <h1 className="text-3xl font-bold text-gray-800 mb-1 text-center">
             Liste des Pokémon
@@ -134,7 +134,6 @@ export default function PokemonsPage() {
 
           {error && <p className="text-red-500">{error}</p>}
 
-          {/* Bouton pour afficher/masquer les filtres sur mobile */}
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="lg:hidden bg-red-500 text-white px-2 py-1 rounded-lg flex justify-center items-center mb-1"
