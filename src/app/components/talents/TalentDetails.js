@@ -6,7 +6,12 @@ export default function TalentDetails({ talent, generations = [] }) {
   );
 
   useEffect(() => {
-    if (!selectedGeneration && generations.length) {
+    if (!generations.length) {
+      setSelectedGeneration(null);
+      return;
+    }
+
+    if (!selectedGeneration || !generations.includes(selectedGeneration)) {
       setSelectedGeneration(generations[0]);
     }
   }, [generations, selectedGeneration]);
@@ -16,25 +21,22 @@ export default function TalentDetails({ talent, generations = [] }) {
     : [];
 
   const selectedTalentGeneration =
-    tgList.find(
-      (gen) =>
-        (gen?.generation?.name ?? gen?.generation?.name) === selectedGeneration,
-    ) || null;
+    tgList.find((tg) => tg?.generation?.name === selectedGeneration) || null;
 
   return (
     <div className="w-full bg-white">
       <div className="flex border-b pb-2 mt-3 overflow-x-auto space-x-2">
-        {generations.map((gen) => (
+        {generations.map((genName) => (
           <button
-            key={gen}
-            onClick={() => setSelectedGeneration(gen)}
+            key={genName}
+            onClick={() => setSelectedGeneration(genName)}
             className={`flex-grow px-4 py-2 text-sm font-semibold rounded-t-md text-center max-w-[200px] ${
-              selectedGeneration === gen
+              selectedGeneration === genName
                 ? 'bg-red-500 text-white'
                 : 'bg-gray-200 text-gray-600'
             }`}
           >
-            {gen}
+            {genName}
           </button>
         ))}
       </div>
