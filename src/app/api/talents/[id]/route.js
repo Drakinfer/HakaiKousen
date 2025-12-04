@@ -2,7 +2,7 @@ import prisma from '../../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 
 export async function GET(req, { params }) {
-  const id = params.id;
+  const id = Number(params.id);
   if (!id) {
     return NextResponse.json(
       { error: 'Talent ID is required' },
@@ -36,90 +36,128 @@ export async function GET(req, { params }) {
   }
 }
 
-export async function POST(req, { params }) {
+export async function PUT(req, { params }) {
+  const id = Number(params.id);
+
+  if (Number.isNaN(id)) {
+    return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+  }
+
   try {
-    const id = params.id;
-    const data = await req.json();
+    const body = await req.json();
+    const { name, talentGenerations = [] } = body;
 
-    const { name, old_name, talents_generations } = data.talent;
-
-    if (!id) {
+    if (!name || typeof name !== 'string') {
       return NextResponse.json(
-        { error: 'Talent ID is required for updating a talent' },
+        { error: 'Le nom du talent est requis' },
         { status: 400 },
       );
     }
 
-    // Mise à jour du talent
-    const updatedTalent = await prisma.talents.update({
-      where: { id: parseInt(id) },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(old_name !== undefined && { old_name }),
+    await prisma.talent.update({
+      where: { id },
+      data: { name },
+    });
+
+    const existing = await prisma.talentGeneration.findMany({
+      where: { talentId: id },
+    });
+
+    const incomingWithId = talentGenerations.filter((tg) => tg.id);
+    const incomingIds = incomingWithId.map((tg) => tg.id);
+
+    const toDeleteIds = existing
+      .filter((tg) => !incomingIds.includes(tg.id))
+      .map((tg) => tg.id);
+
+    if (toDeleteIds.length > 0) {
+      await prisma.talentGeneration.deleteMany({
+        where: {
+          id: { in: toDeleteIds },
+        },
+      });
+    }
+
+    const toCreate = talentGenerations.filter((tg) => !tg.id);
+    if (toCreate.length > 0) {
+      await prisma.talentGeneration.createMany({
+        data: toCreate.map((tg) => ({
+          talentId: id,
+          generationId: tg.generationId,
+          description: tg.description,
+        })),
+      });
+    }
+
+    await Promise.all(
+      incomingWithId.map((tg) =>
+        prisma.talentGeneration.update({
+          where: { id: tg.id },
+          data: {
+            generationId: tg.generationId,
+            description: tg.description,
+          },
+        }),
+      ),
+    );
+
+    const updatedTalent = await prisma.talent.findUnique({
+      where: { id },
+      include: {
+        talentGenerations: {
+          include: {
+            generation: true,
+          },
+        },
       },
     });
 
-    if (talents_generations) {
-      const existingTalentsGenerations =
-        await prisma.talents_generations.findMany({
-          where: { talent_id: parseInt(id) },
-        });
-      const idsFromInput = talents_generations
-        .map((tg) => tg.id)
-        .filter((id) => id !== undefined);
-      const talentsToDelete = existingTalentsGenerations.filter(
-        (existingTg) => !idsFromInput.includes(existingTg.id),
-      );
+    return NextResponse.json({ talent: updatedTalent }, { status: 200 });
+  } catch (error) {
+    console.error('Error updating talent:', error);
+    return NextResponse.json(
+      { error: 'Failed to update talent' },
+      { status: 500 },
+    );
+  }
+}
 
-      await prisma.talents_generations.deleteMany({
-        where: {
-          id: { in: talentsToDelete.map((tg) => tg.id) },
-        },
-      });
+export async function DELETE(req, { params }) {
+  const id = Number(params.id);
 
-      for (const tg of talents_generations) {
-        await prisma.talents_generations.upsert({
-          where: {
-            id: tg.id || 0,
-          },
-          update: {
-            ...(tg.description !== undefined && {
-              description: tg.description,
-            }),
-            ...(tg.generation_id !== undefined && {
-              generation_id: tg.generation_id,
-            }),
-          },
-          create: {
-            talents: {
-              connect: { id: parseInt(id) },
-            },
-            generations: {
-              connect: { id: parseInt(tg.generation_id) },
-            },
-            description: tg.description,
-          },
-        });
-      }
-    }
+  if (Number.isNaN(id)) {
+    return NextResponse.json({ error: 'Invalid id' }, { status: 400 });
+  }
 
-    // Récupérer le talent avec ses relations mises à jour
-    const talentWithUpdatedGenerations = await prisma.talents.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        talents_generations: {
-          include: {
-            generations: true,
-          },
-        },
-      },
+  try {
+    await prisma.talentGeneration.deleteMany({
+      where: { talentId: id },
+    });
+
+    await prisma.talent.delete({
+      where: { id },
     });
 
     return NextResponse.json(
-      { talent: talentWithUpdatedGenerations },
+      { message: 'Talent deleted successfully' },
       { status: 200 },
     );
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Error deleting talent:', error);
+
+    if (error.code === 'P2003') {
+      return NextResponse.json(
+        {
+          error:
+            'Impossible de supprimer ce talent car il est encore utilisé ailleurs.',
+        },
+        { status: 409 },
+      );
+    }
+
+    return NextResponse.json(
+      { error: 'Failed to delete talent' },
+      { status: 500 },
+    );
   }
 }

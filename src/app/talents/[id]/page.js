@@ -5,12 +5,13 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Loading from '@/app/components/Loading';
 import Aside from '@/app/components/Aside';
 import TalentDetails from '@/app/components/talents/TalentDetails';
+import { fetchTalent } from '@/lib/fetch';
 
 export default function TalentPage() {
   const { id } = useParams();
+  const router = useRouter();
   const [talent, setTalent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [generations, setGenerations] = useState([]);
   const actions = [{ href: '/talents', icon: faArrowLeft, title: 'Retour' }];
 
@@ -19,57 +20,33 @@ export default function TalentPage() {
 
     let cancelled = false;
 
-    async function fetchTalent() {
+    const loadTalent = async () => {
       setLoading(true);
-      try {
-        const res = await fetch(`/api/talents/${id}`, { cache: 'no-store' });
-        const data = await res.json();
 
-        if (!res.ok) {
-          throw new Error(data?.error || 'Erreur lors du chargement du Talent');
-        }
+      const t = await fetchTalent(setTalent, setGenerations, id);
 
-        const t = data.talent;
-        const list = Array.isArray(t?.talentGenerations)
-          ? t.talentGenerations
-          : [];
+      console.log(t);
 
-        const uniqueGenerations = [
-          ...new Set(
-            list
-              .map((g) => g?.Generation?.name ?? g?.generation?.name)
-              .filter(Boolean),
-          ),
-        ].sort((a, b) => a.localeCompare(b, 'fr', { numeric: true }));
+      if (cancelled) return;
 
-        if (!cancelled) {
-          setTalent(t);
-          setGenerations(uniqueGenerations);
-          if (
-            typeof setSelectedGeneration === 'function' &&
-            uniqueGenerations.length
-          ) {
-            setSelectedGeneration(uniqueGenerations[0]);
-          }
-        }
-      } catch (err) {
-        if (!cancelled) setError(err?.message || "Erreur de connexion à l'API");
-      } finally {
-        if (!cancelled) setLoading(false);
+      if (!t) {
+        router.push('/talents');
+        return;
       }
-    }
 
-    fetchTalent();
+      setLoading(false);
+    };
+
+    loadTalent();
+
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, router]);
 
   if (loading) {
     return <Loading />;
   }
-
-  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <div className="flex h-main">
