@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Modal from '@/app/components/Modal';
 import { toFr } from '@/lib/types';
+import { fetchGenerations } from '@/lib/fetch';
 
 const FLOAT_FIELDS = [
   'bug',
@@ -63,25 +64,7 @@ export default function TypeFormModal({ isOpen, onClose, type, onSaved }) {
   useEffect(() => {
     if (!isOpen) return;
 
-    const fetchGenerations = async () => {
-      try {
-        setLoadingGenerations(true);
-        const res = await fetch('/api/generations');
-        if (!res.ok) {
-          throw new Error('Erreur lors du chargement des générations');
-        }
-        const data = await res.json();
-        // adapte si la structure est différente
-        setGenerations(data.generations || data || []);
-      } catch (err) {
-        console.error(err);
-        setError(err.message || 'Erreur lors du chargement des générations');
-      } finally {
-        setLoadingGenerations(false);
-      }
-    };
-
-    fetchGenerations();
+    fetchGenerations(setGenerations);
   }, [isOpen]);
 
   useEffect(() => {
