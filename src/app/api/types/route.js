@@ -28,6 +28,9 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
+  const { ok, res } = await requireApiRole(req, 'EDITOR');
+  if (!ok) return res;
+
   try {
     const body = await req.json();
 

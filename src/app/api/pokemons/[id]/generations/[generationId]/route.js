@@ -1,7 +1,6 @@
 import prisma from '../../../../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 
-// usage in pokemonGenerator. Check relations and update if needed
 export async function GET(_req, { params }) {
   try {
     const pokemonId = Number(params?.id);
@@ -14,7 +13,6 @@ export async function GET(_req, { params }) {
       );
     }
 
-    // Récupération d'un seul PokemonGeneration + relations utiles
     const pg = await prisma.pokemonGeneration.findFirst({
       where: { pokemonId, generationId },
       include: {

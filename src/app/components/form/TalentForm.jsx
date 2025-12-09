@@ -94,13 +94,6 @@ export default function TalentForm({
             Ajouter une génération
           </button>
         </div>
-
-        {talentGenerations.length === 0 && (
-          <p className="text-xs text-gray-500">
-            Aucun détail de génération. Clique sur « Ajouter une génération » pour en créer un.
-          </p>
-        )}
-
         <div className="space-y-3">
           {talentGenerations.map((tg, index) => (
             <div

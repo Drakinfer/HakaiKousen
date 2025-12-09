@@ -134,7 +134,7 @@ export async function GET(_req, { params }) {
 
 export async function POST(req, { params }) {
   try {
-    const id = params.id; // Récupère l'ID depuis l'URL dynamique
+    const id = params.id;
 
     const data = await req.json();
 
@@ -148,7 +148,6 @@ export async function POST(req, { params }) {
       pokemons_generations,
     } = data;
 
-    // Validation des données essentielles
     if (!id) {
       return NextResponse.json(
         { error: 'Id is required for creating an attaque' },
@@ -192,7 +191,7 @@ export async function POST(req, { params }) {
 
         await prisma.pokemons_generations.upsert({
           where: {
-            id: pg.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
+            id: pg.id || 0,
           },
           update: {
             ...(pg.generation_id !== undefined && {
@@ -262,7 +261,7 @@ export async function POST(req, { params }) {
           for (const evo in pg.evolutions) {
             await prisma.evolutions.upsert({
               where: {
-                id: evo.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
+                id: evo.id || 0,
               },
               update: {
                 ...(evo.pokemon_id !== undefined && {
@@ -302,7 +301,7 @@ export async function POST(req, { params }) {
           for (const f in pg.forms) {
             await prisma.formes.upsert({
               where: {
-                id: f.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
+                id: f.id || 0,
               },
               update: {
                 ...(f.pokemon_id !== undefined && { pokemon_id: f.pokemon_id }),
@@ -339,7 +338,7 @@ export async function POST(req, { params }) {
           for (const talent in pg.pokemon_generations_has_talents) {
             await prisma.pokemon_generations_has_talents.upsert({
               where: {
-                id: talent.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
+                id: talent.id || 0,
               },
               update: {
                 ...(talent.talent_id !== undefined && {
@@ -377,7 +376,7 @@ export async function POST(req, { params }) {
           for (const att_lvl in pg.attaques_lvl) {
             await prisma.attaques_lvl.upsert({
               where: {
-                id: att_lvl.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
+                id: att_lvl.id || 0,
               },
               update: {
                 ...(att_lvl.attaque_id !== undefined && {
@@ -417,7 +416,7 @@ export async function POST(req, { params }) {
           for (const att_ct in pg.attaques_ct) {
             await prisma.attaques_ct.upsert({
               where: {
-                id: att_ct.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
+                id: att_ct.id || 0,
               },
               update: {
                 ...(att_ct.attaque_id !== undefined && {
@@ -455,7 +454,7 @@ export async function POST(req, { params }) {
           for (const att_dt in pg.attaques_dt) {
             await prisma.attaques_dt.upsert({
               where: {
-                id: att_dt.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
+                id: att_dt.id || 0,
               },
               update: {
                 ...(att_dt.attaque_id !== undefined && {
@@ -496,7 +495,7 @@ export async function POST(req, { params }) {
           for (const att_breed in pg.attaques_breeding) {
             await prisma.attaques_breed.upsert({
               where: {
-                id: att_breed.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
+                id: att_breed.id || 0,
               },
               update: {
                 ...(att_breed.attaque_id !== undefined && {
@@ -533,7 +532,7 @@ export async function POST(req, { params }) {
           for (const att_tuto in pg.attaques_tutoring) {
             await prisma.attaques_tutoring.upsert({
               where: {
-                id: att_tuto.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
+                id: att_tuto.id || 0,
               },
               update: {
                 ...(att_tuto.attaque_id !== undefined && {
