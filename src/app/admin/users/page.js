@@ -53,7 +53,7 @@ export default function AdminUsersPage() {
       const res = await fetch(`/api/users/${id}/role`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action }), // 'promote' | 'demote'
+        body: JSON.stringify({ action }),
       });
 
       if (!res.ok) {

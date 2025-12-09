@@ -7,9 +7,6 @@ import { NATURES } from '@/lib/natures';
 import { SUB_NATURES } from '@/lib/subNatures';
 import GeneratedPokemonModal from '@/app/components/modal/GeneratedPokemonModal';
 
-// ---------------------------------
-// HOOK : logique métier du générateur
-// ---------------------------------
 function usePokemonGenerator(initialPokemonGenerationId) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -48,7 +45,6 @@ function usePokemonGenerator(initialPokemonGenerationId) {
     '91-100',
   ];
 
-  // ---------- helpers fetch ----------
   async function fetchPokemons() {
     const response = await fetch('/api/pokemons');
     const res = await response.json();
@@ -132,7 +128,6 @@ function usePokemonGenerator(initialPokemonGenerationId) {
     setBaron(false);
   }
 
-  // ---------- Submit ----------
   async function onSubmit(e) {
     e.preventDefault();
     if (!pokemonGeneration || !levelRange) {
@@ -160,7 +155,7 @@ function usePokemonGenerator(initialPokemonGenerationId) {
       };
 
       const generated = await randomize(payload);
-      setData(generated); // 🔴 IMPORTANT : on garde l'objet, pas du JSON string
+      setData(generated);
     } catch (error) {
       console.error('Erreur lors de la génération du Pokémon :', error);
       alert("Erreur lors de la génération. Voir la console pour les détails.");
@@ -169,7 +164,6 @@ function usePokemonGenerator(initialPokemonGenerationId) {
     }
   }
 
-  // ---------- boot ----------
   useEffect(() => {
     let cancelled = false;
 
@@ -194,7 +188,6 @@ function usePokemonGenerator(initialPokemonGenerationId) {
     };
   }, [initialPokemonGenerationId]);
 
-  // ---------- sync génération/pokémon ----------
   useEffect(() => {
     if (
       !pokemonId ||
@@ -216,7 +209,6 @@ function usePokemonGenerator(initialPokemonGenerationId) {
   }, [pokemonId, generationId]);
 
   return {
-    // state
     data,
     loading,
     randomizing,
@@ -241,7 +233,6 @@ function usePokemonGenerator(initialPokemonGenerationId) {
     baron,
     levelRanges,
 
-    // setters
     setPokemonId,
     setGenerationId,
     setLevelRange,
@@ -257,7 +248,6 @@ function usePokemonGenerator(initialPokemonGenerationId) {
     setBaron,
     setIsModalOpen,
 
-    // actions
     onSubmit,
     resetOptional,
   };
@@ -594,7 +584,7 @@ export default function PokemonGeneratorPage({
       <GeneratedPokemonModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        data={data} // objet complet du Pokémon généré
+        data={data}
       />
     </main>
   );

@@ -21,7 +21,7 @@ function ClickableRow({ href, ariaLabel, children }) {
   );
 }
 
-export default function AttacksTable({ attacks }) {
+export default function AttacksTable({ attacks, basePath }) {
   return (
     <div className="md:ml-6 max-w-2xl overflow-y-auto h-[450px] border border-gray-300 rounded-lg bg-white">
       <table className="border-collapse text-center table-fixed w-full">
@@ -35,7 +35,7 @@ export default function AttacksTable({ attacks }) {
           {attacks.map((a) => (
             <ClickableRow
               key={a.id}
-              href={`/attacks/${a.id}`}
+              href={`${basePath}/${a.id}`}
               ariaLabel={`Voir ${a.name}`}
             >
               <td className="p-2 border-b">

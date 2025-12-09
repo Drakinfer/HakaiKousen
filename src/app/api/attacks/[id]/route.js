@@ -1,3 +1,4 @@
+import { requireApiRole } from '../../../../../lib/apiAuth';
 import prisma from '../../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 
@@ -34,102 +35,138 @@ export async function GET(req, { params }) {
   }
 }
 
-export async function POST(req, { params }) {
+export async function PUT(req, { params }) {
+  const { ok, res } = await requireApiRole(req, 'EDITOR');
+  if (!ok) return res;
+
   try {
-    const id = params.id;
+    const body = await req.json();
+    const { name, attaqueGenerations = [] } = body;
+    const id = Number(params.id);
 
-    const data = await req.json();
-
-    const { name, attaques_generations } = data.attaque;
-
-    // Validation des données essentielles
     if (!id) {
+      return NextResponse.json({ error: 'ID invalide' }, { status: 400 });
+    }
+
+    if (!name || name.trim() === '') {
       return NextResponse.json(
-        { error: 'Id is required to updating an attaque' },
+        { error: "Le nom de l'attaque est obligatoire." },
         { status: 400 },
       );
     }
 
-    const updatedAttaque = await prisma.attaques.update({
-      where: { id: parseInt(id) },
-      data: {
-        name,
-      },
-    });
+    const normalizedGenerations = (attaqueGenerations || [])
+      .filter((g) => g.generationId && g.typeId)
+      .map((g) => ({
+        generationId: Number(g.generationId),
+        typeId: Number(g.typeId),
+        energie1: Number(g.energie1) || 0,
+        energie2:
+          g.energie2 !== undefined && g.energie2 !== null
+            ? Number(g.energie2)
+            : null,
+        category: g.category,
+        range: g.range,
+        precision: Number(g.precision) || 0,
+        damage_base: Number(g.damage_base) || 0,
+        description: g.description?.trim() || '',
+      }));
 
-    const existingAttaquesGenerations =
-      await prisma.attaques_generations.findMany({
-        where: { attaque_id: parseInt(id) },
+    let lastTypeId = null;
+    if (normalizedGenerations.length > 0) {
+      const generationIds = [
+        ...new Set(normalizedGenerations.map((g) => g.generationId)),
+      ];
+
+      const generations = await prisma.generation.findMany({
+        where: { id: { in: generationIds } },
+        select: { id: true, rank: true },
       });
 
-    const idsFromInput = attaques_generations
-      .map((ag) => ag.id)
-      .filter((id) => id !== undefined);
+      if (generations.length > 0) {
+        const highestRankGen = generations.reduce((acc, g) =>
+          !acc || g.rank > acc.rank ? g : acc,
+        );
+        const selectedGenData = normalizedGenerations.find(
+          (g) => g.generationId === highestRankGen.id,
+        );
+        if (selectedGenData) {
+          lastTypeId = selectedGenData.typeId;
+        }
+      }
+    }
 
-    const attaquesToDelete = existingAttaquesGenerations.filter(
-      (existingAg) => !idsFromInput.includes(existingAg.id),
-    );
+    await prisma.attaqueGeneration.deleteMany({
+      where: { attaqueId: id },
+    });
 
-    await prisma.attaques_generations.deleteMany({
-      where: {
-        id: { in: attaquesToDelete.map((ag) => ag.id) },
+    await prisma.attaque.update({
+      where: { id },
+      data: {
+        name: name.trim(),
+        lastTypeId,
       },
     });
 
-    for (const ag of attaques_generations) {
-      await prisma.attaques_generations.upsert({
-        where: {
-          id: ag.id || 0,
-        },
-        update: {
-          ...(ag.generation_id !== undefined && {
-            generation_id: ag.generation_id,
-          }),
-          ...(ag.type_id !== undefined && { type_id: ag.type_id }),
-          ...(ag.energie1 !== undefined && { energie1: ag.energie1 }),
-          ...(ag.energie2 !== undefined && { energie2: ag.energie2 }),
-          ...(ag.category !== undefined && { category: ag.category }),
-          ...(ag.range !== undefined && { range: ag.range }),
-          ...(ag.precision !== undefined && { precision: ag.precision }),
-          ...(ag.damage_base !== undefined && { damage_base: ag.damage_base }),
-          ...(ag.precision !== undefined && { precision: ag.precision }),
-          ...(ag.description !== undefined && { description: ag.description }),
-        },
-        create: {
-          generations: {
-            connect: { id: parseInt(ag.generation_id) },
-          },
-          types: {
-            connect: { id: parseInt(ag.generation_id) },
-          },
-          energie1: ag.energie1,
-          energie2: ag.energie2,
-          category: ag.category,
-          range: ag.range,
-          precision: ag.precision,
-          damage_base: ag.damage_base,
-          description: ag.description,
-        },
+    if (normalizedGenerations.length > 0) {
+      await prisma.attaqueGeneration.createMany({
+        data: normalizedGenerations.map((g) => ({
+          ...g,
+          attaqueId: id,
+        })),
       });
     }
 
-    const atttaqueWithUpdatedGenerations = await prisma.attaques.findUnique({
-      where: { id: parseInt(id) },
+    const fullAttack = await prisma.attaque.findUnique({
+      where: { id },
       include: {
-        attaques_generations: {
+        lastType: true,
+        attaqueGenerations: {
           include: {
-            generations: true,
-            types: true,
+            generation: true,
+            type: true,
           },
         },
       },
     });
 
+    return NextResponse.json({ attack: fullAttack }, { status: 200 });
+  } catch (err) {
+    console.error('Erreur PUT /api/attacks/[id]', err);
     return NextResponse.json(
-      { attaque: atttaqueWithUpdatedGenerations },
-      { status: 201 },
+      { error: 'Erreur interne serveur.' },
+      { status: 500 },
     );
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req, { params }) {
+  const { ok, res } = await requireApiRole(req, 'ADMIN');
+  if (!ok) return res;
+
+  try {
+    const id = Number(params.id);
+    if (!id) {
+      return NextResponse.json({ error: 'ID invalide' }, { status: 400 });
+    }
+
+    await prisma.attaqueGeneration.deleteMany({
+      where: { attaqueId: id },
+    });
+
+    await prisma.attaque.delete({
+      where: { id },
+    });
+
+    return NextResponse.json(
+      { message: 'Attaque supprimée avec succès.' },
+      { status: 200 },
+    );
+  } catch (err) {
+    console.error('Erreur DELETE /api/attacks/[id]', err);
+    return NextResponse.json(
+      { error: "Impossible de supprimer l'attaque." },
+      { status: 500 },
+    );
   }
 }

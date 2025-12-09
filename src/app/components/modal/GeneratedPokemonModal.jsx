@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import Modal from '@/app/components//Modal';
+import Modal from '@/app/components/Modal';
 
 const STAT_KEYS = ['VITA', 'DEX', 'FOR', 'CONC', 'END', 'VOL'];
 

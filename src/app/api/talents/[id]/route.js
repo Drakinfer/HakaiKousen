@@ -28,15 +28,13 @@ export async function GET(req, { params }) {
 
     return NextResponse.json({ talent }, { status: 200 });
   } catch (error) {
-    return NextResponse.json(
-      // { error: 'Failed to fetch talent' },
-      { error: error.message },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
 export async function PUT(req, { params }) {
+  const { ok, res } = await requireApiRole(req, 'EDITOR');
+  if (!ok) return res;
   const id = Number(params.id);
 
   if (Number.isNaN(id)) {
@@ -123,6 +121,9 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
+  const { ok, res } = await requireApiRole(req, 'ADMIN');
+  if (!ok) return res;
+
   const id = Number(params.id);
 
   if (Number.isNaN(id)) {

@@ -1,17 +1,27 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Footer from '../components/Footer';
-import Loading from '../components/Loading';
-import AttacksTable from '../components/AttacksTable';
-import AttacksFilter from '../components/filters/AttackFilters';
-import { toFr } from '@/lib/types';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
-export default function AttacksPage() {
+import Loading from '@/app/components/Loading';
+import AttacksTable from '@/app/components/AttacksTable';
+import AttacksFilter from '@/app/components/filters/AttackFilters';
+import Aside from '@/app/components/Aside';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
+
+import { toFr } from '@/lib/types';
+import AttackFormModal from '@/app/components/modal/AttackFormModal';
+
+export default function AdminAttacksPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [attacks, setAttacks] = useState([]);
   const [types, setTypes] = useState([]);
   const [nameFilter, setNameFilter] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [loading, setLoading] = useState(true);
+
+  const [openModal, setOpenModal] = useState(false);
 
   async function fetchAttacks(nameParam, typeParam) {
     try {
@@ -54,9 +64,10 @@ export default function AttacksPage() {
 
       const byValue = new Map();
       for (const t of types) {
+        const id = Number(t.type.id);
         const value = String(t.type.name);
-        const labelFr = t.labelFr ?? toFr(t.name);
-        if (!byValue.has(value)) byValue.set(value, { value, labelFr });
+        const labelFr = t.labelFr ?? toFr(t.type.name);
+        if (!byValue.has(value)) byValue.set(value, { id, value, labelFr });
       }
 
       const list = [...byValue.values()].sort((a, b) =>
@@ -74,20 +85,47 @@ export default function AttacksPage() {
     fetchTypes();
   }, []);
 
+  const handleAddClick = () => {
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+  };
+
   const handleSearch = () => {
     fetchAttacks(nameFilter, typeFilter);
   };
+
+  useEffect(() => {
+    if (status === 'loading') return;
+
+    if (!session || session.user?.role === 'USER') {
+      router.push('/');
+    }
+  }, [status, session, router]);
+
+  const handleAttackSaved = () => {
+    fetchAttacks(nameFilter, typeFilter);
+  };
+
   if (loading) {
     return <Loading />;
   }
 
   return (
-    <>
-      <div className="flex flex-col items-center p-1 h-main-footer">
-        <h1 className="text-3xl font-bold text-gray-800 mb-1 text-center mb-1 mt-1">
-          Liste des Attaques
-        </h1>
-
+    <main className="flex h-main overflow-hidden">
+      <Aside
+        title="Attaques"
+        actions={[
+          {
+            label: 'Ajouter une attaque',
+            onClick: handleAddClick,
+            icon: faPlus,
+          },
+        ]}
+      />
+      <div className="flex-1 flex flex-col items-center p-1">
         <div className="w-full max-w-5xl mb-4">
           <AttacksFilter
             name={nameFilter}
@@ -99,9 +137,14 @@ export default function AttacksPage() {
           />
         </div>
 
-        <AttacksTable attacks={attacks} basePath={'/attacks'} />
+        <AttacksTable attacks={attacks} basePath="/admin/attacks" />
       </div>
-      <Footer />
-    </>
+
+      <AttackFormModal
+        isOpen={openModal}
+        onClose={handleCloseModal}
+        onAttackSaved={handleAttackSaved}
+      />
+    </main>
   );
 }

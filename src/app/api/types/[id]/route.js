@@ -2,14 +2,13 @@ import prisma from '../../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 
 export async function GET(req, { params }) {
-  const id = params.id; // Récupère l'ID depuis l'URL dynamique
+  const id = params.id;
 
   if (!id) {
     return NextResponse.json({ error: 'Type ID is required' }, { status: 400 });
   }
 
   try {
-    // Récupérer le type
     const type = await prisma.types.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -28,6 +27,9 @@ export async function GET(req, { params }) {
 }
 
 export async function PUT(req, { params }) {
+  const { ok, res } = await requireApiRole(req, 'EDITOR');
+  if (!ok) return res;
+
   try {
     const id = Number(params.id);
     if (Number.isNaN(id)) {
@@ -70,6 +72,9 @@ export async function PUT(req, { params }) {
 }
 
 export async function DELETE(req, { params }) {
+  const { ok, res } = await requireApiRole(req, 'ADMIN');
+  if (!ok) return res;
+
   try {
     const id = Number(params.id);
     if (isNaN(id)) {

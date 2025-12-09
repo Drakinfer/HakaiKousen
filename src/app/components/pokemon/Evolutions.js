@@ -95,7 +95,7 @@ function computeLayout({ hasPre, evosCount }) {
   if (hasPre && evosCount > 0) return 'pre+evos';
   if (hasPre && evosCount === 0) return 'pre-only';
   if (!hasPre && evosCount === 1) return 'one-evo';
-  return 'many-evos'; // !hasPre && evosCount > 1
+  return 'many-evos';
 }
 
 export default function Evolutions({
