@@ -1,25 +1,54 @@
 'use client';
 import { useEffect, useState } from 'react';
-import Footer from '../components/Footer';
-import PokemonTable from '../components/PokemonTable';
+import PokemonTable from '@/app/components/PokemonTable';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
-import Loading from '../components/Loading';
-import PokemonFilters from '../components/filters/PokemonFilters';
-import { fetchGenerations, fetchTypes, fetchPokemons } from '@/lib/fetch';
+import {
+  faChevronUp,
+  faChevronDown,
+  faPlus,
+} from '@fortawesome/free-solid-svg-icons';
+import Loading from '@/app/components/Loading';
+import PokemonFilters from '@/app/components/filters/PokemonFilters';
+import {
+  fetchGenerations,
+  fetchTypes,
+  fetchPokemons,
+  fetchTalents,
+  fetchAttacks,
+  fetchCompetences,
+  fetchLocations,
+} from '@/lib/fetch';
+import Aside from '@/app/components/Aside';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import PokemonFormModal from '@/app/components/modal/PokemonFormModal';
 
 export default function PokemonsPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const [pokemons, setPokemons] = useState([]);
-  const [pokemonsForm, setPokemonsForm] = useState([]);
-
+  const [pokemonOptions, setPokemonOptions] = useState([]); //complete list for form
   const [types, setTypes] = useState([]);
   const [generations, setGenerations] = useState([]);
+  const [talents, setTalents] = useState([]);
+  const [attacks, setAttacks] = useState([]);
+  const [competences, setCompetences] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [searchMode, setSearchMode] = useState('any');
   const [nameFilter, setNameFilter] = useState('');
   const [firstGen, setFirstGen] = useState('');
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [openModal, setOpenModal] = useState(false);
+
+  useEffect(() => {
+    if (status === 'loading') return;
+
+    if (!session || session.user?.role === 'USER') {
+      router.push('/');
+    }
+  }, [status, session, router]);
 
   useEffect(() => {
     setLoading(true);
@@ -78,16 +107,59 @@ export default function PokemonsPage() {
     fetchPokemons(setPokemons, queryString);
   };
 
+  const loadOptions = async () => {
+    const res = await fetch('/api/pokemons/lightAll');
+    const data = await res.json();
+    setPokemonOptions(data.pokemons);
+  };
+
+  const handleAddClick = () => {
+    fetchTalents(setTalents);
+    fetchAttacks(setAttacks);
+    fetchCompetences(setCompetences);
+    fetchLocations(setLocations);
+    loadOptions();
+    setOpenModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setOpenModal(false);
+  };
+
+  const handleSubmitPokemon = async (payload) => {
+    const res = await fetch('/api/pokemons', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      console.error(err);
+      alert(err?.error || 'Erreur lors de la création du Pokémon');
+      return;
+    }
+
+    handleCloseModal();
+    handleSearch();
+  };
+
   return loading ? (
     <Loading />
   ) : (
     <>
-      <main className="items-center flex md:h-main-footer justify-center p-4 mb-50 md:mb-0">
-        <div className="flex items-center flex-col">
-          <h1 className="text-3xl font-bold text-gray-800 mb-1 text-center">
-            Liste des Pokémon
-          </h1>
-
+      <main className="flex h-main overflow-hidden">
+        <Aside
+          title="Pokemons"
+          actions={[
+            {
+              label: 'Ajouter un pokemon',
+              onClick: handleAddClick,
+              icon: faPlus,
+            },
+          ]}
+        />
+        <div className="flex flex-1 items-center justify-center flex-col">
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="lg:hidden bg-red-500 text-white px-2 py-1 rounded-lg flex justify-center items-center mb-1"
@@ -117,8 +189,21 @@ export default function PokemonsPage() {
             <PokemonTable pokemons={pokemons} />
           </div>
         </div>
+        {openModal && (
+          <PokemonFormModal
+            isOpen={openModal}
+            onClose={handleCloseModal}
+            onSubmit={handleSubmitPokemon}
+            generations={generations}
+            types={types}
+            pokemons={pokemonOptions}
+            talentsRef={talents}
+            attaquesRef={attacks}
+            competencesRef={competences}
+            locationsRef={locations}
+          />
+        )}
       </main>
-      <Footer />
     </>
   );
 }

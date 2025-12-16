@@ -25,8 +25,8 @@ model User {
   accounts Account[]
   sessions Session[]
 
-  // createdPokemons Pokemon[] @relation("CreatedBy")
-  // updatedPokemons Pokemon[] @relation("UpdatedBy")
+  createdPokemons   Pokemon[]          @relation("CreatedBy")
+  updatedPokemons   Pokemon[]          @relation("UpdatedBy")
   generatedPokemons GeneratedPokemon[]
 }
 
@@ -271,12 +271,12 @@ model Pokemon {
   typeId                Int?
   evolutions            Evolution[]
   formes                Forme[]
-  // createdAt         DateTime    @default(now())
-  // createdBy         User        @relation("CreatedBy", fields: [createdById], references: [id])
-  // updatedAt         DateTime    @updatedAt
-  // createdById       Int
-  // updatedById       Int
-  // updatedBy         User        @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdAt             DateTime                @default(now())
+  createdBy             User                    @relation("CreatedBy", fields: [createdById], references: [id])
+  updatedAt             DateTime                @default(now())
+  createdById           Int
+  updatedById           Int
+  updatedBy             User                    @relation("UpdatedBy", fields: [updatedById], references: [id])
   pokemonGenerations    PokemonGeneration[]
   preEvolutionsOf       PokemonGeneration[]     @relation("PreEvolution")
   pokemonHasCompetences PokemonHasCompetences[]
