@@ -85,8 +85,9 @@ export default function LoginPage() {
           </button>
 
           <p className="text-sm">
-            Pas de compte ? <a className="underline" href="/register">Créer un compte</a>
+            Pas de compte ? <a className="underline hover:text-red-500" href="/register">Créer un compte</a>
           </p>
+          <p><a className="underline hover:text-red-500" href="/forgot-password" >Mot de passe oublié ?</a> </p>
         </form>
       </main>
       <Footer />
