@@ -208,12 +208,18 @@ export default function PokemonPage() {
               <img
                 src={pokemon.mainPicture}
                 alt={pokemon.name}
-                className={`border-${pokemon.type.name.toLowerCase()} rounded-lg w-2/3 md:w-full max-w-xs h-1/2`}
+                className={`border-${
+                  pokemon.type ? pokemon.type?.name.toLowerCase() : 'red'
+                } rounded-lg w-2/3 md:w-full max-w-xs h-1/2`}
               />
               <div className="flex justify-around items-center mt-2">
                 <select
                   id="generation"
-                  className={`p-2 rounded border-${pokemon.type.name.toLowerCase()} focus::ring-0 focus::border-${pokemon.type.name.toLowerCase()} focus::outline-none focus:ring-transparent mr-1`}
+                  className={`p-2 rounded border-${
+                    pokemon.type ? pokemon.type?.name.toLowerCase() : 'red'
+                  } focus::ring-0 focus::border-${
+                    pokemon.type ? pokemon.type?.name.toLowerCase() : 'red'
+                  } focus::outline-none focus:ring-transparent mr-1`}
                   value={selectedGeneration}
                   onChange={(e) => {
                     if (selectedGeneration !== e.target.value) {
