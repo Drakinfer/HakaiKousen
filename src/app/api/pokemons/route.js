@@ -4,6 +4,11 @@ import { NextResponse } from 'next/server';
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
+
+    const name = (searchParams.get('name') ?? '').trim();
+    const firstGenParam = searchParams.get('firstGen');
+    const firstGenId = firstGenParam ? Number(firstGenParam) : null;
+
     const rawTypes = searchParams.get('types')?.split(',') ?? [];
     const searchMode = (searchParams.get('mode') ?? 'any').toLowerCase();
 
@@ -31,6 +36,7 @@ export async function GET(req) {
         if (typeNames.length === 1) {
           const [a] = typeIds;
           wherePokemon = {
+            ...wherePokemon,
             pokemonGenerations: {
               some: {
                 AND: [{ type1Id: { in: typeIds } }, { type2Id: null }],
@@ -49,6 +55,7 @@ export async function GET(req) {
           }
 
           wherePokemon = {
+            ...wherePokemon,
             pokemonGenerations: {
               some: { OR: ors },
             },
@@ -56,6 +63,7 @@ export async function GET(req) {
         }
       } else {
         wherePokemon = {
+          ...wherePokemon,
           pokemonGenerations: {
             some: {
               OR: [{ type1Id: { in: typeIds } }, { type2Id: { in: typeIds } }],
@@ -63,6 +71,23 @@ export async function GET(req) {
           },
         };
       }
+    }
+
+    if (name) {
+      wherePokemon = {
+        ...wherePokemon,
+        name: {
+          contains: name,
+          mode: 'insensitive',
+        },
+      };
+    }
+
+    if (firstGenId) {
+      wherePokemon = {
+        ...wherePokemon,
+        firstGenerationId: firstGenId,
+      };
     }
 
     const allPokemons = await prisma.pokemon.findMany({

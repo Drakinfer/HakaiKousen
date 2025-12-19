@@ -3,7 +3,7 @@ import Link from 'next/link';
 
 export default function PokemonTable({ pokemons }) {
   return (
-    <div className="md:ml-6 max-w-2xl overflow-y-auto h-[450px] border border-gray-300 rounded-lg bg-white">
+    <div className="md:ml-6 max-w-xl overflow-y-auto h-[450px] border border-gray-300 rounded-lg bg-white">
       <table className="border-collapse text-center table-fixed w-full">
         <tbody>
           {pokemons.map((pokemon) => (

@@ -9,17 +9,67 @@ generator client {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  createdAt DateTime @default(now())
-  email     String   @unique
-  name      String?
-  role      Role     @default(USER)
+  id            Int       @id @default(autoincrement())
+  createdAt     DateTime  @default(now())
+  email         String    @unique
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  role          Role      @default(USER)
+
+  passwordHash String?
+
+  resetTokenHash      String?   @db.VarChar(64)
+  resetTokenExpiresAt DateTime?
+
+  accounts Account[]
+  sessions Session[]
+
   // createdPokemons Pokemon[] @relation("CreatedBy")
   // updatedPokemons Pokemon[] @relation("UpdatedBy")
+  generatedPokemons GeneratedPokemon[]
+}
+
+model Account {
+  id                 Int     @id @default(autoincrement())
+  userId             Int
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+  oauth_token_secret String?
+  oauth_token        String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 enum Role {
   USER
+  EDITOR
   ADMIN
 }
 
@@ -162,6 +212,27 @@ model Forme {
 
   @@index([pokemonGenerationId])
   @@index([pokemonId])
+}
+
+model GeneratedPokemon {
+  id     Int  @id @default(autoincrement())
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+
+  name         String
+  lvl          Int
+  sex          String?
+  nature       String?
+  subNature    String?
+  talent       String?
+  breedingMove String?
+  shiny        Boolean @default(false)
+  baron        Boolean @default(false)
+
+  stats Json
+  hash  String
+
+  createdAt DateTime @default(now())
 }
 
 model Generation {
@@ -338,21 +409,21 @@ model PokemonHasCompetences {
   pokemonId    Int
   pokemon      Pokemon    @relation(fields: [pokemonId], references: [id])
   competenceId Int
-  competence    Competence @relation(fields: [competenceId], references: [id])
+  competence   Competence @relation(fields: [competenceId], references: [id])
   points       Int
 }
 
-model Location{
-  id                  Int  @id @default(autoincrement())
+model Location {
+  id                  Int                   @id @default(autoincrement())
   name                String
   icon                String?
-  pokemonHasLocations PokemonHasLocations[]  
+  pokemonHasLocations PokemonHasLocations[]
 }
 
 model PokemonHasLocations {
-  id          Int        @id @default(autoincrement())
-  pokemonId   Int
-  pokemon     Pokemon    @relation(fields: [pokemonId], references: [id])
-  locationId  Int
-  location    Location @relation(fields: [locationId], references: [id])
+  id         Int      @id @default(autoincrement())
+  pokemonId  Int
+  pokemon    Pokemon  @relation(fields: [pokemonId], references: [id])
+  locationId Int
+  location   Location @relation(fields: [locationId], references: [id])
 }

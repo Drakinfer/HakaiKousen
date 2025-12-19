@@ -116,7 +116,7 @@ export default function PokemonPage() {
 
   return (
     <>
-      <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
+      <div className="flex h-main overflow-hidden">
         <Aside actions={actions} />
 
         <div className="flex flex-col flex-1 p-1 w-full h-full overflow-auto">
@@ -235,6 +235,16 @@ export default function PokemonPage() {
                 >
                   {energySystem ? 'Système remanié' : 'Système de base'}
                 </button>
+              </div>
+              <div id="tools" className="mt-2">
+                <Link
+                  href={`/generators/pokemon/${selectedPokemonGeneration.id}`}
+                  className="text-white mb-4 mx-auto flex flex-col items-center"
+                >
+                  <button className="bg-red-500 rounded-lg text-white p-1">
+                    Générateur de fiche
+                  </button>
+                </Link>
               </div>
             </div>
 
