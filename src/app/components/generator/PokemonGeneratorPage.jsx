@@ -593,7 +593,8 @@ export default function PokemonGeneratorPage({
       <GeneratedPokemonModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        data={data} // objet complet du Pokémon généré
+        data={data}
+        canSave={true}
       />
     </main>
   );
