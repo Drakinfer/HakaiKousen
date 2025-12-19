@@ -5,7 +5,7 @@ import Modal from '@/app/components//Modal';
 
 const STAT_KEYS = ['VITA', 'DEX', 'FOR', 'CONC', 'END', 'VOL'];
 
-export default function GeneratedPokemonModal({ isOpen, onClose, data }) {
+export default function GeneratedPokemonModal({ isOpen, onClose, data, canSave = false }) {
   if (!data) return null;
 
   const { name, lvl, sex, nature, subNature, talent, breedingMove, shiny, baron, stats } =
@@ -151,14 +151,14 @@ const handleSaveGeneratedPokemon = async () => {
   >
     Télécharger la fiche PDF
   </button>
-
+{canSave && (
   <button
     type="button"
     className="mt-4 bg-red-500 text-white p-2 rounded-lg"
     onClick={handleSaveGeneratedPokemon}
   >
     Sauvegarder ce Pokémon
-  </button>
+  </button>)}
 
       </section>
     </Modal>

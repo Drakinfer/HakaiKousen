@@ -4,6 +4,46 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../../../../lib/auth';
 import crypto from 'crypto';
 
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id;
+    if (!userId)
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const id = Number(userId);
+    if (Number.isNaN(id))
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const generatedPokemons = await prisma.generatedPokemon.findMany({
+      where: { userId: id },
+      orderBy: { createdAt: 'desc' },
+      select: {
+        id: true,
+        name: true,
+        createdAt: true,
+        lvl: true,
+        sex: true,
+        nature: true,
+        subNature: true,
+        talent: true,
+        breedingMove: true,
+        shiny: true,
+        baron: true,
+
+        stats: true,
+      },
+    });
+
+    return NextResponse.json({ generatedPokemons }, { status: 200 });
+  } catch {
+    return NextResponse.json(
+      { error: 'Failed to fetch generatedPokemons' },
+      { status: 500 },
+    );
+  }
+}
+
 function buildPokemonSignature(pokemon) {
   return {
     name: pokemon.name,
