@@ -65,7 +65,8 @@ export async function PATCH(req) {
       { user: { id: updated.id, email: updated.email, pseudo: updated.name } },
       { status: 200 },
     );
-  } catch {
+  } catch (e) {
+    console.error(e);
     return NextResponse.json(
       { error: 'Failed to update profile' },
       { status: 500 },
