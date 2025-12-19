@@ -121,7 +121,7 @@ export default function PokemonsPage() {
     }
     setSearchMode(value);
   };
-
+  
   return loading ? (
     <Loading />
   ) : (
