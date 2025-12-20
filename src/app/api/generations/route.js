@@ -15,27 +15,42 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
+  const { ok, res } = await requireApiRole(req, 'EDITOR');
+  if (!ok) return res;
+
   try {
-    const data = await req.json();
+    const body = await req.json();
+    const { name, rank } = body;
 
-    const generation = data;
-
-    if (!generation || !generation.name || !generation.rank) {
+    if (!name || typeof name !== 'string') {
       return NextResponse.json(
-        { error: 'Name and rank are required for a generation' },
+        { error: 'Le nom de la génération est requis' },
         { status: 400 },
       );
     }
 
-    const newGeneration = await prisma.generations.create({
+    console.log(body);
+    const parsedRank = Number(rank);
+    if (Number.isNaN(parsedRank)) {
+      return NextResponse.json(
+        { error: 'Le rank doit être un nombre' },
+        { status: 400 },
+      );
+    }
+
+    const generation = await prisma.generation.create({
       data: {
-        name: generation.name,
-        rank: generation.rank,
+        name,
+        rank: parsedRank,
       },
     });
 
-    return NextResponse.json({ generation: newGeneration }, { status: 201 });
+    return NextResponse.json({ generation }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error(error);
+    return NextResponse.json(
+      { error: 'Erreur lors de la création de la génération' },
+      { status: 500 },
+    );
   }
 }

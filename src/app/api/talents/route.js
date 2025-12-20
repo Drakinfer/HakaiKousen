@@ -31,45 +31,45 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
+  const { ok, res } = await requireApiRole(req, 'EDITOR');
+  if (!ok) return res;
+
   try {
-    const data = await req.json();
+    const body = await req.json();
+    const { name, talentGenerations = [] } = body;
 
-    const { name, old_name, talents_generations } = data.talent;
-
-    if (!name || !talents_generations) {
+    if (!name || typeof name !== 'string') {
       return NextResponse.json(
-        {
-          error:
-            'Name and talents by generation required for creating a talent',
-        },
+        { error: 'Le nom du talent est requis' },
         { status: 400 },
       );
     }
 
-    const newTalent = await prisma.talents.create({
+    const talent = await prisma.talent.create({
       data: {
         name,
-        old_name: old_name || null,
-        talents_generations: {
-          create: talents_generations.map((tg) => ({
-            generations: {
-              connect: { id: parseInt(tg.generation_id) },
-            },
+        talentGenerations: {
+          create: talentGenerations.map((tg) => ({
+            generationId: tg.generationId,
             description: tg.description,
           })),
         },
       },
       include: {
-        talents_generations: {
+        talentGenerations: {
           include: {
-            generations: true,
+            generation: true,
           },
         },
       },
     });
 
-    return NextResponse.json({ talent: newTalent }, { status: 201 });
+    return NextResponse.json({ talent }, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('Error creating talent:', error);
+    return NextResponse.json(
+      { error: 'Failed to create talent' },
+      { status: 500 },
+    );
   }
 }

@@ -1,5 +1,6 @@
 import prisma from '../../../../lib/prisma';
 import { NextResponse } from 'next/server';
+import { requireApiRole } from '../../../../lib/apiAuth';
 
 export async function GET(req) {
   try {
@@ -58,54 +59,85 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
+  const { ok, res } = await requireApiRole(req, 'EDITOR');
+  if (!ok) return res;
+
   try {
-    const data = await req.json();
+    const body = await req.json();
+    const { name, attaqueGenerations = [] } = body;
 
-    const { name, attaques_generations } = data.attaque;
-
-    if (!name || !attaques_generations) {
+    if (!name || name.trim() === '') {
       return NextResponse.json(
-        {
-          error:
-            'Name and attaques by generations are required for creating an attaque',
-        },
+        { error: "Le nom de l'attaque est obligatoire." },
         { status: 400 },
       );
     }
 
-    const newAttaque = await prisma.attaques.create({
+    const normalizedGenerations = (attaqueGenerations || [])
+      .filter((g) => g.generationId && g.typeId)
+      .map((g) => ({
+        generationId: Number(g.generationId),
+        typeId: Number(g.typeId),
+        energie1: Number(g.energie1) || 0,
+        energie2:
+          g.energie2 !== undefined && g.energie2 !== null
+            ? Number(g.energie2)
+            : null,
+        category: g.category,
+        range: g.range,
+        precision: Number(g.precision) || 0,
+        damage_base: Number(g.damage_base) || 0,
+        description: g.description?.trim() || '',
+      }));
+
+    let lastTypeId = null;
+    if (normalizedGenerations.length > 0) {
+      const generationIds = [
+        ...new Set(normalizedGenerations.map((g) => g.generationId)),
+      ];
+
+      const generations = await prisma.generation.findMany({
+        where: { id: { in: generationIds } },
+        select: { id: true, rank: true },
+      });
+
+      if (generations.length > 0) {
+        const highestRankGen = generations.reduce((acc, g) =>
+          !acc || g.rank > acc.rank ? g : acc,
+        );
+        const selectedGenData = normalizedGenerations.find(
+          (g) => g.generationId === highestRankGen.id,
+        );
+        if (selectedGenData) {
+          lastTypeId = selectedGenData.typeId;
+        }
+      }
+    }
+
+    const attack = await prisma.attaque.create({
       data: {
-        name,
-        attaques_generations: {
-          create: attaques_generations.map((ag) => ({
-            generations: {
-              connect: { id: parseInt(ag.generation_id) },
-            },
-            types: {
-              connect: { id: parseInt(ag.generation_id) },
-            },
-            energie1: ag.energie1,
-            energie2: ag.energie2,
-            category: ag.category,
-            range: ag.range,
-            precision: ag.precision,
-            damage_base: ag.damage_base,
-            description: ag.description,
-          })),
-        },
+        name: name.trim(),
+        lastTypeId,
+        attaqueGenerations: normalizedGenerations.length
+          ? {
+              createMany: {
+                data: normalizedGenerations,
+              },
+            }
+          : undefined,
       },
       include: {
-        attaques_generations: {
-          include: {
-            generations: true,
-            types: true,
-          },
-        },
+        lastType: true,
+        attaqueGenerations: true,
       },
     });
 
-    return NextResponse.json({ attack: newAttaque }, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ attack }, { status: 201 });
+  } catch (err) {
+    console.error('Erreur POST /api/attacks', err);
+    return NextResponse.json(
+      { error: 'Erreur interne serveur.' },
+      { status: 500 },
+    );
   }
 }

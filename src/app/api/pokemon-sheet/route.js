@@ -39,7 +39,7 @@ export async function GET(req) {
     const fontBytes = fs.readFileSync(fontPath);
     const font = await pdfDoc.embedFont(fontBytes);
 
-    const page = pdfDoc.addPage([595.28, 841.89]); // A4
+    const page = pdfDoc.addPage([595.28, 841.89]);
     const { width, height } = page.getSize();
 
     const drawText = (text, x, y, size = 12, options = {}) => {
@@ -107,7 +107,7 @@ export async function GET(req) {
 
     const timestamp = new Date()
       .toISOString()
-      .replace(/[:.]/g, '-') // évite les caractères non valides dans les noms de fichiers
+      .replace(/[:.]/g, '-')
       .replace('T', '_')
       .replace('Z', '');
 
