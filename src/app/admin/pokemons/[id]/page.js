@@ -2,16 +2,29 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Information from '../../components/pokemon/Information';
-import Evolutions from '../../components/pokemon/Evolutions';
-import Forms from '../../components/pokemon/Forms';
-import AttacksTable from '../../components/pokemon/AttacksTable';
-import Competences from '../../components/pokemon/Competences';
-import Locations from '../../components/pokemon/Locations';
+import Information from '@/app/components/pokemon/Information';
+import Evolutions from '@/app/components/pokemon/Evolutions';
+import Forms from '@/app/components/pokemon/Forms';
+import AttacksTable from '@/app/components/pokemon/AttacksTable';
+import Competences from '@/app/components/pokemon/Competences';
+import Locations from '@/app/components/pokemon/Locations';
 import Loading from '@/app/components/Loading';
-import Aside from '../../components/Aside';
-import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
-import { fetchPokemon } from '@/lib/fetch';
+import Aside from '@/app/components/Aside';
+import PokemonFormModal from '@/app/components/modal/PokemonFormModal';
+import {
+  faArrowLeft,
+  faSquarePen,
+  faTrash,
+} from '@fortawesome/free-solid-svg-icons';
+import {
+  fetchPokemon,
+  fetchTypes,
+  fetchTalents,
+  fetchAttacks,
+  fetchCompetences,
+  fetchLocations,
+  fetchGenerations,
+} from '@/lib/fetch';
 
 export default function PokemonPage() {
   const { id } = useParams();
@@ -26,7 +39,15 @@ export default function PokemonPage() {
   const [selectedPokemonGeneration, setSelectedPokemonGeneration] =
     useState(null);
   const [energySystem, setEnergySystem] = useState(true);
-  const actions = [{ href: '/pokemons', icon: faArrowLeft, title: 'Retour' }];
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const [types, setTypes] = useState([]);
+  const [pokemons, setPokemons] = useState([]);
+  const [generationOptions, setGenerationOptions] = useState([]);
+  const [talents, setTalents] = useState([]);
+  const [attacks, setAttacks] = useState([]);
+  const [competences, setCompetences] = useState([]);
+  const [locations, setLocations] = useState([]);
 
   useEffect(() => {
     if (!id) return;
@@ -73,6 +94,103 @@ export default function PokemonPage() {
       setSelectedPokemonGeneration(genData);
     }
   }, [selectedGeneration, pokemon]);
+
+  const loadOptions = async () => {
+    const res = await fetch('/api/pokemons/lightAll');
+    const data = await res.json();
+    setPokemons(data.pokemons);
+  };
+
+  const handleEditClick = () => {
+    fetchTypes(setTypes);
+    fetchGenerations(setGenerationOptions);
+    fetchTalents(setTalents);
+    fetchAttacks(setAttacks);
+    fetchCompetences(setCompetences);
+    fetchLocations(setLocations);
+    loadOptions();
+    setIsEditModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsEditModalOpen(false);
+  };
+
+  const handleSubmitEdit = async (payload) => {
+    try {
+      const res = await fetch(`/api/pokemons/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const rawText = await res.text();
+
+      if (!res.ok) {
+        console.error('Erreur API PUT /api/pokemons/[id] :', rawText);
+        alert('Erreur lors de la mise à jour du pokemon');
+        return;
+      }
+
+      let data;
+      try {
+        data = JSON.parse(rawText);
+      } catch (e) {
+        console.error(
+          'Réponse JSON invalide pour PUT /api/pokemons/[id] :',
+          rawText,
+        );
+        alert('Réponse serveur invalide lors de la mise à jour du pokemon');
+        return;
+      }
+      await fetchPokemon(
+        id,
+        setPokemon,
+        setGenerations,
+        setSelectedGeneration,
+        setSelectedPokemonGeneration,
+        setPreviousPokemon,
+        setNextPokemon,
+      );
+    } catch (error) {
+      console.error('Erreur lors de la mise à jour du pokemon', error);
+      alert('Erreur lors de la mise à jour');
+    } finally {
+      setIsEditModalOpen(false);
+    }
+  };
+
+  const handleDeleteClick = async () => {
+    const confirmDelete = window.confirm(
+      'Es-tu sûr de vouloir supprimer ce pokémon ? Cette action est irréversible.',
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`/api/pokemons/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error('Erreur API delete:', errorText);
+        alert('La suppression a échoué.');
+        return;
+      }
+
+      router.push('/admin/pokemons');
+    } catch (error) {
+      console.error('Erreur lors de la suppression du pokemon', error);
+      alert('Une erreur est survenue lors de la suppression.');
+    }
+  };
+
+  const actions = [
+    { href: '/admin/pokemons', icon: faArrowLeft, title: 'Retour' },
+    { onClick: handleEditClick, icon: faSquarePen, title: 'Modifier' },
+    { onClick: handleDeleteClick, icon: faTrash, title: 'Supprimer' },
+  ];
 
   if (loading) {
     return <Loading />;
@@ -308,6 +426,25 @@ export default function PokemonPage() {
             </div>
           </div>
         </div>
+        {isEditModalOpen && (
+          <PokemonFormModal
+            isOpen={isEditModalOpen}
+            onClose={handleCloseModal}
+            mode={'edit'}
+            initialData={{
+              pokemon: pokemon,
+              pokemonGenerations: pokemon.pokemonGenerations,
+            }}
+            onSubmit={handleSubmitEdit}
+            generations={generationOptions}
+            types={types}
+            pokemons={pokemons}
+            talentsRef={talents}
+            attaquesRef={attacks}
+            competencesRef={competences}
+            locationsRef={locations}
+          />
+        )}
       </div>
     </>
   );
