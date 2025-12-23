@@ -734,7 +734,7 @@ function EvolutionsSection({ evolutions, onChange, pokemons }) {
             </label>
             <select
               className="w-full border rounded px-2 py-1"
-              value={e.pokzmonId ?? ''}
+              value={e.pokemonId ?? ''}
               onChange={(e) =>
                 updateEvolution(index, {
                   ...e,

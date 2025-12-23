@@ -18,7 +18,6 @@ export default function PokemonFormModal({
   onSubmit,
   isSubmitting = false,
 }) {
-  console.log(competencesRef)
   if (!isOpen) return null;
 
   const title =

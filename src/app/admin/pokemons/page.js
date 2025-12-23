@@ -186,7 +186,7 @@ export default function PokemonsPage() {
               onSubmit={handleSearch}
             />
 
-            <PokemonTable pokemons={pokemons} />
+            <PokemonTable pokemons={pokemons} basePath={'/admin/pokemons'} />
           </div>
         </div>
         {openModal && (

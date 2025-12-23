@@ -38,6 +38,9 @@ export default function PokemonForm({
   useEffect(() => {
     if (!initialData) return;
 
+    console.log(initialData)
+
+
     if (initialData.pokemon) {
       setPokemon({
         id: initialData.pokemon.id,
@@ -50,6 +53,8 @@ export default function PokemonForm({
         typeId: initialData.pokemon.typeId ?? null,
       });
     }
+
+    console.log(pokemon)
 
     if (initialData.pokemonGenerations) {
       setPokemonGenerations(
