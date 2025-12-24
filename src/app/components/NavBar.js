@@ -78,6 +78,7 @@ const NavBar = () => {
                 <Link href="/admin/types">Types</Link>
                 <Link href="/admin/generations">Générations</Link>
                 <Link href="/admin/competences">Compétences</Link>
+                <Link href="/admin/locations">Habitats</Link>
                 <Link href="/admin/livres">Livres</Link>
 
                 {isAdmin && (

@@ -5,22 +5,22 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 
 import Loading from '@/app/components/Loading';
-import { SquarePen, Trash } from '../../../../lib/lucide';
+import { Icon, SquarePen, Trash } from '../../../../lib/lucide';
 
 import Aside from '@/app/components/Aside';
-import CompetenceFormModal from '@/app/components/modal/CompetenceFormModal';
+import LocationFormModal from '@/app/components/modal/LocationFormModal';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
-import { fetchCompetences } from '@/lib/fetch';
+import { fetchCompetences, fetchLocations } from '@/lib/fetch';
 
-export default function AdminCompetencesPage() {
+export default function AdminLocationsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
 
-  const [competences, setCompetences] = useState([]);
+  const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [openModal, setOpenModal] = useState(false);
-  const [selectedCompetence, setSelectedCompetence] = useState([]);
+  const [selectedLocation, setSelectedLocation] = useState([]);
 
   const isAdmin = session?.user?.role == 'ADMIN';
 
@@ -38,9 +38,9 @@ export default function AdminCompetencesPage() {
     const load = async () => {
       try {
         setLoading(true);
-        await fetchCompetences(setCompetences);
+        await fetchLocations(setLocations);
       } catch (e) {
-        console.error('Erreur lors du chargement des compétences', e);
+        console.error('Erreur lors du chargement des habitats', e);
       } finally {
         setLoading(false);
       }
@@ -58,28 +58,28 @@ export default function AdminCompetencesPage() {
   }
 
   const handleAddClick = () => {
-    setSelectedCompetence(null);
+    setSelectedLocation(null);
     setOpenModal(true);
   };
 
-  const handleEditClick = (competence) => {
-    setSelectedCompetence(competence);
+  const handleEditClick = (location) => {
+    setSelectedLocation(location);
     setOpenModal(true);
   };
 
-  const handleDeleteType = async (competenceId) => {
+  const handleDeleteType = async (locationId) => {
     const confirmed = window.confirm(
-      'Es-tu sûr de vouloir supprimer cette competence ?',
+      'Es-tu sûr de vouloir supprimer cet habitat ?',
     );
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`/api/competences/${competenceId}`, {
+      const res = await fetch(`/api/locations/${locationId}`, {
         method: 'DELETE',
       });
 
       if (!res.ok) {
-        let message = 'Erreur lors de la suppression de la compétence';
+        let message = "Erreur lors de la suppression de l'habitat";
 
         try {
           const data = await res.json();
@@ -91,7 +91,7 @@ export default function AdminCompetencesPage() {
         return;
       }
 
-      await fetchCompetences(setCompetences);
+      await fetchLocations(setLocations);
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erreur inattendue lors de la suppression');
@@ -100,17 +100,17 @@ export default function AdminCompetencesPage() {
 
   const handleCloseModal = async () => {
     setOpenModal(false);
-    setSelectedCompetence(null);
-    await fetchCompetences(setCompetences);
+    setSelectedLocation(null);
+    await fetchLocations(setLocations);
   };
 
   return (
     <main className="flex h-main overflow-hidden">
       <Aside
-        title="Competences"
+        title="Locations"
         actions={[
           {
-            label: 'Ajouter une compétence',
+            label: 'Ajouter un habitat',
             onClick: handleAddClick,
             icon: faPlus,
           },
@@ -122,19 +122,21 @@ export default function AdminCompetencesPage() {
             <thead className="bg-red-500 text-white sticky top-0 z-10">
               <tr>
                 <th className="border px-3 py-2 text-left">Nom</th>
-                <th className="border px-3 py-2 text-left">Description</th>
+                <th className="border px-3 py-2 text-left">Icon</th>
                 <th className="border px-3 py-2 text-left">Action</th>
               </tr>
             </thead>
             <tbody>
-              {competences.map((c) => (
-                <tr key={c.id}>
-                  <td className="border px-3 py-2">{c.name}</td>
-                  <td className="border px-3 py-2">{c.description}</td>
+              {locations.map((l) => (
+                <tr key={l.id}>
+                  <td className="border px-3 py-2">{l.name}</td>
+                  <td className="border px-3 py-2">
+                    <Icon name={l.icon} />
+                  </td>
                   <td className="border px-3 py-2">
                     <button
                       type="button"
-                      onClick={() => handleEditClick(c)}
+                      onClick={() => handleEditClick(l)}
                       className="p-1 hover:scale-105 transition-transform"
                     >
                       <SquarePen color="red" />
@@ -142,7 +144,7 @@ export default function AdminCompetencesPage() {
                     {isAdmin && (
                       <button
                         type="button"
-                        onClick={() => handleDeleteType(c.id)}
+                        onClick={() => handleDeleteType(l.id)}
                         className="p-1 hover:scale-105 transition-transform"
                       >
                         <Trash color="red" />
@@ -156,11 +158,11 @@ export default function AdminCompetencesPage() {
         </div>
 
         {openModal && (
-          <CompetenceFormModal
+          <LocationFormModal
             isOpen={openModal}
             onClose={handleCloseModal}
-            competence={selectedCompetence}
-            onSaved={fetchCompetences}
+            location={selectedLocation}
+            onSaved={fetchLocations}
           />
         )}
       </div>
