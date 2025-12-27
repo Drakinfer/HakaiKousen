@@ -3,6 +3,7 @@ import { requireApiRole } from '../../../../lib/apiAuth';
 import prisma from '../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 import { authOptions } from '../../../../lib/auth';
+import { uploadImageToBlob } from '@/lib/blobUpload';
 
 export async function GET(req) {
   try {
@@ -142,24 +143,36 @@ export async function POST(req) {
   if (!ok) return res;
 
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  if (!session?.user?.id)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
 
   const userId = Number(session.user.id);
-  if (Number.isNaN(userId)) {
+  if (Number.isNaN(userId))
     return NextResponse.json(
-      { error: 'Invalid session user id (expected number)' },
+      { error: 'Invalid session user id' },
       { status: 401 },
     );
+
+  let form;
+  try {
+    form = await req.formData();
+  } catch {
+    return badRequest('Invalid multipart form data.');
   }
+
+  const payloadRaw = form.get('payload');
+  if (!payloadRaw || typeof payloadRaw !== 'string')
+    return badRequest('Missing "payload" in formData.');
 
   let body;
   try {
-    body = await req.json();
+    body = JSON.parse(payloadRaw);
   } catch {
-    return badRequest('Invalid JSON body.');
+    return badRequest('Invalid JSON in "payload".');
   }
+
+  const mainFile = form.get('mainPictureFile');
+  const miniFile = form.get('miniPictureFile');
 
   const {
     pokemon,
@@ -167,22 +180,40 @@ export async function POST(req) {
     competences = [],
     locations = [],
   } = body || {};
-
-  if (!pokemon) return badRequest('Missing "pokemon" in body.');
+  if (!pokemon) return badRequest('Missing "pokemon" in payload.');
   if (!pokemon.name || String(pokemon.name).trim() === '')
     return badRequest('Pokemon name is required.');
 
-  const requiredFields = [
-    'category',
-    'dexNumber',
-    'mainPicture',
-    'miniPicture',
-  ];
-  for (const f of requiredFields) {
-    if (!pokemon[f] || String(pokemon[f]).trim() === '') {
+  for (const f of ['category', 'dexNumber']) {
+    if (!pokemon[f] || String(pokemon[f]).trim() === '')
       return badRequest(`Pokemon field "${f}" is required.`);
-    }
   }
+
+  let mainPictureUrl = pokemon.mainPicture
+    ? String(pokemon.mainPicture).trim()
+    : '';
+  let miniPictureUrl = pokemon.miniPicture
+    ? String(pokemon.miniPicture).trim()
+    : '';
+
+  try {
+    if (mainFile && typeof mainFile === 'object' && mainFile.name) {
+      mainPictureUrl = await uploadImageToBlob(mainFile, 'pokemons/main');
+    }
+    if (miniFile && typeof miniFile === 'object' && miniFile.name) {
+      miniPictureUrl = await uploadImageToBlob(miniFile, 'pokemons/mini');
+    }
+  } catch (e) {
+    return NextResponse.json(
+      { error: 'Image upload failed', details: String(e.message || e) },
+      { status: 400 },
+    );
+  }
+
+  if (!mainPictureUrl)
+    return badRequest('Pokemon field "mainPicture" is required.');
+  if (!miniPictureUrl)
+    return badRequest('Pokemon field "miniPicture" is required.');
 
   try {
     const created = await prisma.$transaction(async (tx) => {
@@ -191,14 +222,13 @@ export async function POST(req) {
           name: String(pokemon.name).trim(),
           category: String(pokemon.category).trim(),
           dexNumber: String(pokemon.dexNumber).trim(),
-          mainPicture: String(pokemon.mainPicture).trim(),
-          miniPicture: String(pokemon.miniPicture).trim(),
+          mainPicture: mainPictureUrl,
+          miniPicture: miniPictureUrl,
           firstGenerationId:
             pokemon.firstGenerationId == null
               ? null
               : Number(pokemon.firstGenerationId),
           typeId: pokemon.typeId == null ? null : Number(pokemon.typeId),
-
           createdById: userId,
           updatedById: userId,
         },
@@ -342,7 +372,6 @@ export async function POST(req) {
         createdPokemonGenerations.push(createdPg);
       }
 
-      // C) Competences
       if (Array.isArray(competences) && competences.length) {
         const data = competences
           .filter((c) => c?.competenceId != null)
