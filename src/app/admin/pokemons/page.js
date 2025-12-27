@@ -113,7 +113,7 @@ export default function PokemonsPage() {
     setPokemonOptions(data.pokemons);
   };
 
-  const handleAddClick = () => {
+  const handleAddClick = async () => {
     fetchTalents(setTalents);
     fetchAttacks(setAttacks);
     fetchCompetences(setCompetences);
@@ -126,19 +126,53 @@ export default function PokemonsPage() {
     setOpenModal(false);
   };
 
-  const handleSubmitPokemon = async (payload) => {
-    const res = await fetch('/api/pokemons', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
+  const MAX_FILE_SIZE = 4.5 * 1024 * 1024; // 4,5 Mo
 
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      console.error(err);
-      alert(err?.error || 'Erreur lors de la création du Pokémon');
-      return;
+  function assertSize(file) {
+    if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('Image trop lourde (max 4,5 Mo).');
     }
+  }
+
+  const handleSubmitPokemon = async ({
+    pokemon,
+    pokemonGenerations,
+    competences,
+    locations,
+  }) => {
+    const fd = new FormData();
+
+    const payload = {
+      pokemon: {
+        ...pokemon,
+        mainPictureFile: undefined,
+        miniPictureFile: undefined,
+      },
+      pokemonGenerations,
+      competences,
+      locations,
+    };
+
+    fd.append('payload', JSON.stringify(payload));
+
+    if (pokemon.mainPictureType === 'file' && pokemon.mainPictureFile) {
+      assertSize(pokemon.mainPictureFile);
+      fd.append('mainPictureFile', pokemon.mainPictureFile);
+    }
+
+    if (pokemon.miniPictureType === 'file' && pokemon.miniPictureFile) {
+      assertSize(pokemon.miniPictureFile);
+      fd.append('miniPictureFile', pokemon.miniPictureFile);
+    }
+
+    const url = `/api/pokemons`;
+    const method = 'POST';
+
+    const res = await fetch(url, { method, body: fd });
+
+    const raw = await res.text();
+    if (!res.ok) throw new Error(raw || 'Erreur API');
 
     handleCloseModal();
     handleSearch();

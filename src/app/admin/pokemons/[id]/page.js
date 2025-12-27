@@ -116,33 +116,90 @@ export default function PokemonPage() {
     setIsEditModalOpen(false);
   };
 
-  const handleSubmitEdit = async (payload) => {
+  const MAX_FILE_SIZE = 4.5 * 1024 * 1024;
+
+  function assertSize(file) {
+    if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      throw new Error('Image trop lourde (max 4,5 Mo).');
+    }
+  }
+
+  const handleSubmitEdit = async (payloadOrPokemon, pgArg, compArg, locArg) => {
+    const normalized =
+      payloadOrPokemon &&
+      payloadOrPokemon.pokemon &&
+      typeof payloadOrPokemon.pokemon === 'object'
+        ? {
+            pokemon: payloadOrPokemon.pokemon,
+            pokemonGenerations:
+              payloadOrPokemon.pokemonGenerations ?? pgArg ?? [],
+            competences: payloadOrPokemon.competences ?? compArg ?? [],
+            locations: payloadOrPokemon.locations ?? locArg ?? [],
+          }
+        : {
+            pokemon: payloadOrPokemon,
+            pokemonGenerations: pgArg ?? [],
+            competences: compArg ?? [],
+            locations: locArg ?? [],
+          };
+
+    const { pokemon, pokemonGenerations, competences, locations } = normalized;
+
+    if (!pokemon || typeof pokemon !== 'object') {
+      console.error('handleSubmitEdit: pokemon invalide', pokemon);
+      alert('Erreur : données Pokémon invalides.');
+      return;
+    }
+
+    const fd = new FormData();
+
+    const payload = {
+      pokemon: {
+        ...pokemon,
+        mainPictureFile: undefined,
+        miniPictureFile: undefined,
+      },
+      pokemonGenerations,
+      competences,
+      locations,
+    };
+
     try {
+      fd.append('payload', JSON.stringify(payload));
+
+      if (pokemon.mainPictureType === 'file' && pokemon.mainPictureFile) {
+        assertSize(pokemon.mainPictureFile);
+        fd.append('mainPictureFile', pokemon.mainPictureFile);
+      }
+
+      if (pokemon.miniPictureType === 'file' && pokemon.miniPictureFile) {
+        assertSize(pokemon.miniPictureFile);
+        fd.append('miniPictureFile', pokemon.miniPictureFile);
+      }
+
       const res = await fetch(`/api/pokemons/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: fd,
       });
 
       const rawText = await res.text();
 
       if (!res.ok) {
         console.error('Erreur API PUT /api/pokemons/[id] :', rawText);
-        alert('Erreur lors de la mise à jour du pokemon');
+        try {
+          const j = JSON.parse(rawText);
+          alert(
+            j?.error
+              ? `${j.error}${j.details ? ` - ${j.details}` : ''}`
+              : rawText,
+          );
+        } catch {
+          alert('Erreur lors de la mise à jour du pokemon');
+        }
         return;
       }
 
-      let data;
-      try {
-        data = JSON.parse(rawText);
-      } catch (e) {
-        console.error(
-          'Réponse JSON invalide pour PUT /api/pokemons/[id] :',
-          rawText,
-        );
-        alert('Réponse serveur invalide lors de la mise à jour du pokemon');
-        return;
-      }
       await fetchPokemon(
         id,
         setPokemon,
@@ -154,7 +211,7 @@ export default function PokemonPage() {
       );
     } catch (error) {
       console.error('Erreur lors de la mise à jour du pokemon', error);
-      alert('Erreur lors de la mise à jour');
+      alert(error);
     } finally {
       setIsEditModalOpen(false);
     }
