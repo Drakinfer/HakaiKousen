@@ -28,6 +28,8 @@ model User {
   createdPokemons   Pokemon[]          @relation("CreatedBy")
   updatedPokemons   Pokemon[]          @relation("UpdatedBy")
   generatedPokemons GeneratedPokemon[]
+  documentsCreated  Document[]         @relation("DocumentsCreated")
+  documentsUpdated  Document[]         @relation("DocumentsUpdated")
 }
 
 model Account {
@@ -426,4 +428,24 @@ model PokemonHasLocations {
   pokemon    Pokemon  @relation(fields: [pokemonId], references: [id])
   locationId Int
   location   Location @relation(fields: [locationId], references: [id])
+}
+
+model Document {
+  id Int @id @default(autoincrement())
+
+  name String
+  icon String?
+  link String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById Int
+  updatedById Int?
+
+  createdBy User  @relation("DocumentsCreated", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy User? @relation("DocumentsUpdated", fields: [updatedById], references: [id], onDelete: Restrict)
+
+  @@index([createdById])
+  @@index([updatedById])
 }
