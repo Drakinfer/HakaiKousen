@@ -8,20 +8,17 @@ import Loading from '@/app/components/Loading';
 import { SquarePen, Trash } from '../../../../lib/lucide';
 
 import Aside from '@/app/components/Aside';
-import CompetenceFormModal from '@/app/components/modal/CompetenceFormModal';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
-import { fetchCompetences } from '@/lib/fetch';
+import { fetchDocuments } from '@/lib/fetch';
+import LibraryFormModal from '@/app/components/modal/LibraryFormModal';
 
-export default function AdminCompetencesPage() {
+export default function AdminLibraryPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-
-  const [competences, setCompetences] = useState([]);
+  const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [openModal, setOpenModal] = useState(false);
-  const [selectedCompetence, setSelectedCompetence] = useState([]);
-
+  const [selectedDocument, setSelectedDocument] = useState(null);
   const isAdmin = session?.user?.role == 'ADMIN';
 
   useEffect(() => {
@@ -38,9 +35,9 @@ export default function AdminCompetencesPage() {
     const load = async () => {
       try {
         setLoading(true);
-        await fetchCompetences(setCompetences);
+        await fetchDocuments(setDocuments);
       } catch (e) {
-        console.error('Erreur lors du chargement des compétences', e);
+        console.error('Erreur lors du chargement des documents', e);
       } finally {
         setLoading(false);
       }
@@ -58,28 +55,28 @@ export default function AdminCompetencesPage() {
   }
 
   const handleAddClick = () => {
-    setSelectedCompetence(null);
+    setSelectedDocument(null);
     setOpenModal(true);
   };
 
-  const handleEditClick = (competence) => {
-    setSelectedCompetence(competence);
+  const handleEditClick = (document) => {
+    setSelectedDocument(document);
     setOpenModal(true);
   };
 
-  const handleDeleteCompetence = async (competenceId) => {
+  const handleDeleteDocument = async (documentId) => {
     const confirmed = window.confirm(
-      'Es-tu sûr de vouloir supprimer cette competence ?',
+      'Es-tu sûr de vouloir supprimer ce document ?',
     );
     if (!confirmed) return;
 
     try {
-      const res = await fetch(`/api/competences/${competenceId}`, {
+      const res = await fetch(`/api/library/${documentId}`, {
         method: 'DELETE',
       });
 
       if (!res.ok) {
-        let message = 'Erreur lors de la suppression de la compétence';
+        let message = 'Erreur lors de la suppression du document';
 
         try {
           const data = await res.json();
@@ -91,7 +88,7 @@ export default function AdminCompetencesPage() {
         return;
       }
 
-      await fetchCompetences(setCompetences);
+      await fetchDocuments(setDocuments);
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erreur inattendue lors de la suppression');
@@ -100,17 +97,17 @@ export default function AdminCompetencesPage() {
 
   const handleCloseModal = async () => {
     setOpenModal(false);
-    setSelectedCompetence(null);
-    await fetchCompetences(setCompetences);
+    setSelectedDocument(null);
+    await fetchDocuments(setDocuments);
   };
 
   return (
     <main className="flex h-main overflow-hidden">
       <Aside
-        title="Competences"
+        title="Documents"
         actions={[
           {
-            label: 'Ajouter une compétence',
+            label: 'Ajouter un document',
             onClick: handleAddClick,
             icon: faPlus,
           },
@@ -122,19 +119,29 @@ export default function AdminCompetencesPage() {
             <thead className="bg-red-500 text-white sticky top-0 z-10">
               <tr>
                 <th className="border px-3 py-2 text-left">Nom</th>
-                <th className="border px-3 py-2 text-left">Description</th>
+                <th className="border px-3 py-2 text-left">Icone</th>
+                <th className="border px-3 py-2 text-left">Lien</th>
+                <th className="border px-3 py-2 text-left">Créé par/le</th>
+                <th className="border px-3 py-2 text-left">Modifié par/le</th>
                 <th className="border px-3 py-2 text-left">Action</th>
               </tr>
             </thead>
             <tbody>
-              {competences.map((c) => (
-                <tr key={c.id}>
-                  <td className="border px-3 py-2">{c.name}</td>
-                  <td className="border px-3 py-2">{c.description}</td>
+              {documents.map((d) => (
+                <tr key={d.id}>
+                  <td className="border px-3 py-2">{d.name}</td>
+                  <td className="border px-3 py-2">{d.icon}</td>
+                  <td className="border px-3 py-2">{d.link}</td>
+                  <td className="border px-3 py-2">
+                    Par {d.createdBy.name} le {d.createdAt}
+                  </td>
+                  <td className="border px-3 py-2">
+                    Par {d.updatedBy.name} le {d.updatedAt}
+                  </td>
                   <td className="border px-3 py-2">
                     <button
                       type="button"
-                      onClick={() => handleEditClick(c)}
+                      onClick={() => handleEditClick(d)}
                       className="p-1 hover:scale-105 transition-transform"
                     >
                       <SquarePen color="red" />
@@ -142,7 +149,7 @@ export default function AdminCompetencesPage() {
                     {isAdmin && (
                       <button
                         type="button"
-                        onClick={() => handleDeleteCompetence(c.id)}
+                        onClick={() => handleDeleteDocument(d.id)}
                         className="p-1 hover:scale-105 transition-transform"
                       >
                         <Trash color="red" />
@@ -156,11 +163,11 @@ export default function AdminCompetencesPage() {
         </div>
 
         {openModal && (
-          <CompetenceFormModal
+          <LibraryFormModal
             isOpen={openModal}
             onClose={handleCloseModal}
-            competence={selectedCompetence}
-            onSaved={fetchCompetences}
+            document={selectedDocument}
+            onSaved={fetchDocuments}
           />
         )}
       </div>
