@@ -18,7 +18,7 @@ export default function AttacksPage() {
     setLoading(true);
     fetchAttacks(setAttacks, nameFilter, typeFilter);
     fetchTypes(setTypes);
-    setLoading(true);
+    setLoading(false);
   }, []);
 
   const handleSearch = () => {
