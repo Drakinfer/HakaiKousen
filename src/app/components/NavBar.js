@@ -43,7 +43,7 @@ const NavBar = () => {
             </div>
           )}
         </div>
-        <Link href="/livres" className="navbar-item">
+        <Link href="/library" className="navbar-item">
           Livres
         </Link>
         {isAuth && (
