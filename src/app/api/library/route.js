@@ -7,9 +7,6 @@ function badRequest(message) {
 }
 
 export async function GET(req) {
-  const { ok, res } = await requireApiRole(req, 'EDITOR');
-  if (!ok) return res;
-
   try {
     const documents = await prisma.document.findMany({
       orderBy: { createdAt: 'desc' },
