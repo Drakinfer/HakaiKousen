@@ -83,7 +83,7 @@ const NavBar = () => {
 
                 {isAdmin && (
                   <>
-                    <Link href="/admin/site">Site</Link>
+                    <Link href="/admin/homePage">Page d'accueil</Link>
                     <Link href="/admin/users">Utilisateurs</Link>
                   </>
                 )}

@@ -283,3 +283,19 @@ export async function fetchDocuments(setDocuments) {
     console.error("Erreur de connexion à l'API");
   }
 }
+
+export async function fetchParagraphs(setParagraphs) {
+  try {
+    const response = await fetch(`/api/homepage`);
+    const data = await response.json();
+
+    if (response.ok) {
+      setParagraphs(data.items);
+    } else {
+      console.error(data.error || 'Erreur lors du chargement');
+      alert('Erreur lors du chargement');
+    }
+  } catch (err) {
+    console.error("Erreur de connexion à l'API");
+  }
+}

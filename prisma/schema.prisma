@@ -25,11 +25,13 @@ model User {
   accounts Account[]
   sessions Session[]
 
-  createdPokemons   Pokemon[]          @relation("CreatedBy")
-  updatedPokemons   Pokemon[]          @relation("UpdatedBy")
+  createdPokemons   Pokemon[]           @relation("CreatedBy")
+  updatedPokemons   Pokemon[]           @relation("UpdatedBy")
   generatedPokemons GeneratedPokemon[]
-  documentsCreated  Document[]         @relation("DocumentsCreated")
-  documentsUpdated  Document[]         @relation("DocumentsUpdated")
+  documentsCreated  Document[]          @relation("DocumentsCreated")
+  documentsUpdated  Document[]          @relation("DocumentsUpdated")
+  ParagraphsCreated HomePageParagraph[] @relation("ParagraphsCreated")
+  ParagraphsUpdated HomePageParagraph[] @relation("ParagraphsUpdated")
 }
 
 model Account {
@@ -252,7 +254,7 @@ model PokemonGenerationHasTalents {
   id                  Int               @id @default(autoincrement())
   talentId            Int
   pokemonGenerationId Int
-  hidden              Boolean
+  hidden              Boolean           @default(false)
   pokemonGeneration   PokemonGeneration @relation(fields: [pokemonGenerationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   talent              Talent            @relation(fields: [talentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -445,6 +447,27 @@ model Document {
 
   createdBy User  @relation("DocumentsCreated", fields: [createdById], references: [id], onDelete: Restrict)
   updatedBy User? @relation("DocumentsUpdated", fields: [updatedById], references: [id], onDelete: Restrict)
+
+  @@index([createdById])
+  @@index([updatedById])
+}
+
+model HomePageParagraph {
+  id Int @id @default(autoincrement())
+
+  title          String?
+  text           String?
+  isNotification Boolean @default(false)
+  rank           Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById Int
+  updatedById Int?
+
+  createdBy User  @relation("ParagraphsCreated", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy User? @relation("ParagraphsUpdated", fields: [updatedById], references: [id], onDelete: Restrict)
 
   @@index([createdById])
   @@index([updatedById])
