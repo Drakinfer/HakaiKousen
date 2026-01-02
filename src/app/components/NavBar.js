@@ -85,6 +85,7 @@ const NavBar = () => {
                   <>
                     <Link href="/admin/homePage">Page d'accueil</Link>
                     <Link href="/admin/users">Utilisateurs</Link>
+                    <Link href="/admin/teams">L'équipe HK</Link>
                   </>
                 )}
               </div>
