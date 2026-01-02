@@ -87,7 +87,7 @@ const Footer = () => {
 
           <div className="footer-section footer-right">
             <Link href="/mentions-legales">Mentions Légales</Link>
-            <Link href="/equipe">L'Équipe Hakai Kousen</Link>
+            <Link href="/team">L'Équipe Hakai Kousen</Link>
             <div className="license-logo">
               <img
                 src="/images/licence_CC.png"

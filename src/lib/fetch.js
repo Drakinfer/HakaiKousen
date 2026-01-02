@@ -299,3 +299,35 @@ export async function fetchParagraphs(setParagraphs) {
     console.error("Erreur de connexion à l'API");
   }
 }
+
+export async function fetchMembers(setTeams) {
+  try {
+    const response = await fetch(`/api/teams`);
+    const data = await response.json();
+
+    if (response.ok) {
+      setTeams(data.teams);
+    } else {
+      console.error(data.error || 'Erreur lors du chargement');
+      alert('Erreur lors du chargement');
+    }
+  } catch (err) {
+    console.error("Erreur de connexion à l'API");
+  }
+}
+
+export async function fetchUsers(setUsers) {
+  try {
+    const res = await fetch('/api/users');
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(
+        data.error || 'Erreur lors du chargement des utilisateurs',
+      );
+    }
+    const data = await res.json();
+    setUsers(data.users || []);
+  } catch (err) {
+    console.error(err);
+  }
+}

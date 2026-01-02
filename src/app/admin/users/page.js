@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import UsersTable from '@/app/components/UsersTable';
 import Loading from '@/app/components/Loading';
+import { fetchUsers } from '@/lib/fetch';
 
 export default function AdminUsersPage() {
   const { data: session, status } = useSession();
@@ -24,25 +25,17 @@ export default function AdminUsersPage() {
   useEffect(() => {
     if (!session || session.user?.role !== 'ADMIN') return;
 
-    const fetchUsers = async () => {
+    const load = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
-        const res = await fetch('/api/users');
-        if (!res.ok) {
-          const data = await res.json().catch(() => ({}));
-          throw new Error(
-            data.error || 'Erreur lors du chargement des utilisateurs',
-          );
-        }
-        const data = await res.json();
-        setUsers(data.users || []);
+        fetchUsers(setUsers);
       } catch (err) {
         console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
+    load();
     fetchUsers();
   }, [session]);
 

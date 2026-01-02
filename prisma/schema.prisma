@@ -32,6 +32,9 @@ model User {
   documentsUpdated  Document[]          @relation("DocumentsUpdated")
   ParagraphsCreated HomePageParagraph[] @relation("ParagraphsCreated")
   ParagraphsUpdated HomePageParagraph[] @relation("ParagraphsUpdated")
+  teamsCreated      Team[]              @relation("TeamsCreated")
+  teamsUpdated      Team[]              @relation("TeamsUpdated")
+  teamsAsPseudo     Team[]              @relation("TeamPseudo")
 }
 
 model Account {
@@ -469,6 +472,27 @@ model HomePageParagraph {
   createdBy User  @relation("ParagraphsCreated", fields: [createdById], references: [id], onDelete: Restrict)
   updatedBy User? @relation("ParagraphsUpdated", fields: [updatedById], references: [id], onDelete: Restrict)
 
+  @@index([createdById])
+  @@index([updatedById])
+}
+
+model Team {
+  id Int @id @default(autoincrement())
+
+  role String
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  pseudoId    Int
+  createdById Int
+  updatedById Int?
+
+  createdBy User  @relation("TeamsCreated", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy User? @relation("TeamsUpdated", fields: [updatedById], references: [id], onDelete: Restrict)
+  pseudo    User  @relation("TeamPseudo", fields: [pseudoId], references: [id], onDelete: Restrict)
+
+  @@unique([pseudoId])
+  @@index([pseudoId])
   @@index([createdById])
   @@index([updatedById])
 }
