@@ -6,6 +6,7 @@ import { STATS } from '@/lib/stats';
 import { NATURES } from '@/lib/natures';
 import { SUB_NATURES } from '@/lib/subNatures';
 import GeneratedPokemonModal from '@/app/components/modal/GeneratedPokemonModal';
+import { fetchPokemonGenerationById } from '@/lib/fetch';
 
 function usePokemonGenerator(initialPokemonGenerationId) {
   const [data, setData] = useState(null);
@@ -61,19 +62,6 @@ function usePokemonGenerator(initialPokemonGenerationId) {
       throw new Error(res.error || 'Erreur lors du chargement des générations');
     }
     setGenerations(res.generations);
-  }
-
-  async function fetchPokemonGenerationById(id) {
-    const res = await fetch(`/api/pokemon-generation/${id}`);
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(
-        data.error || 'Erreur lors du chargement du Pokémon génération',
-      );
-    }
-    setPokemonGeneration(data.pokemonGeneration);
-    setPokemonId(data.pokemonGeneration.pokemonId);
-    setGenerationId(data.pokemonGeneration.generationId);
   }
 
   async function fetchPokemonGenerationBySelection() {
@@ -169,10 +157,11 @@ function usePokemonGenerator(initialPokemonGenerationId) {
 
     async function boot() {
       setLoading(true);
+      let pg = null
       try {
         const tasks = [fetchPokemons(), fetchGenerations()];
         if (initialPokemonGenerationId) {
-          tasks.push(fetchPokemonGenerationById(initialPokemonGenerationId));
+          tasks.push([pg = fetchPokemonGenerationById(initialPokemonGenerationId), setGenerationId(pg.generationId), setPokemonGeneration(pg), setPokemonId(pg.pokemon.id)]);
         }
         await Promise.all(tasks);
       } catch (err) {
@@ -584,6 +573,7 @@ export default function PokemonGeneratorPage({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         data={data}
+        pokemonGeneration={pokemonGeneration}
         canSave={true}
       />
     </main>

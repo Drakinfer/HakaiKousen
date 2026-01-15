@@ -79,6 +79,17 @@ export async function fetchPokemon(
   }
 }
 
+export async function fetchPokemonGenerationById(id) {
+  const res = await fetch(`/api/pokemon-generation/${id}`);
+  const data = await res.json();
+  if (!res.ok) {
+    throw new Error(
+      data.error || 'Erreur lors du chargement du Pokémon génération',
+    );
+  }
+  return data.pokemonGeneration;
+}
+
 export async function fetchTalents(setTalents, nameParam = '') {
   try {
     const effectiveName =

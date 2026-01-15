@@ -1,129 +1,195 @@
 import { NextResponse } from 'next/server';
-import { PDFDocument, rgb } from 'pdf-lib';
-import fontkit from '@pdf-lib/fontkit';
-import fs from 'fs';
-import path from 'path';
+import puppeteer from 'puppeteer-core';
+import chromium from '@sparticuz/chromium-min';
 
-export async function GET(req) {
+import prisma from '../../../../lib/prisma';
+import PokemonSheet from '../../../../public/templates/PokemonSheet';
+
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
+function safeFilename(name) {
+  return String(name ?? 'pokemon').replace(/[^\w\-]+/g, '_');
+}
+
+async function getBrowserLaunchOptions() {
+  const isVercel = !!process.env.VERCEL;
+
+  if (isVercel) {
+    return {
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+    };
+  }
+
+  // Local dev (Windows/macOS/Linux)
+  const localPath = process.env.CHROME_EXECUTABLE_PATH;
+  if (!localPath) {
+    throw new Error(
+      'Missing CHROME_EXECUTABLE_PATH in .env.local. Example: C:\\\\Program Files\\\\Google\\\\Chrome\\\\Application\\\\chrome.exe',
+    );
+  }
+
+  return {
+    executablePath: localPath,
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  };
+}
+
+function buildPokemonGenerationPayload(pg) {
+  return {
+    pokemonGeneration: {
+      id: pg.id,
+      pokemonId: pg.pokemonId,
+      generationId: pg.generationId,
+      height: pg.height,
+      weight: pg.weight,
+      breedRating: pg.breedRating,
+      stats: {
+        vita: pg.vita,
+        dex: pg.dex,
+        for: pg.for,
+        conc: pg.conc,
+        end: pg.end,
+        vol: pg.vol,
+      },
+      types: {
+        type1: pg.type1,
+        type2: pg.type2,
+      },
+      attaques: {
+        breeding: pg.attaquesBreeding,
+        lvl: pg.attaquesLvl,
+      },
+      talentsLinks: pg.talentsLinks,
+      pokemon: {
+        id: pg.pokemon.id,
+        name: pg.pokemon.name,
+        category: pg.pokemon.category,
+        dexNumber: pg.pokemon.dexNumber,
+        mainPicture: pg.pokemon.mainPicture,
+        miniPicture: pg.pokemon.miniPicture,
+        competences: pg.pokemon.pokemonHasCompetences,
+        locations: pg.pokemon.pokemonHasLocations,
+      },
+    },
+  };
+}
+
+export async function POST(req) {
   try {
-    const url = new URL(req.url);
-    const raw = url.searchParams.get('data');
-
-    let pokemon = JSON.parse(raw);
-    console.log(pokemon);
-
-    if (typeof pokemon === 'string') {
-      try {
-        pokemon = JSON.parse(pokemon);
-      } catch (e) {
-        console.error('Error parsing pokemon JSON string:', e);
-      }
+    let body;
+    try {
+      body = await req.json();
+    } catch {
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    if (!pokemon) {
+    const { pgId, data } = body ?? {};
+
+    if (pgId === undefined || pgId === null || pgId === '') {
       return NextResponse.json(
-        { error: 'Missing pokemon data' },
+        { error: "L'identifiant du PokémonGeneration est requis (pgId)." },
         { status: 400 },
       );
     }
 
-    const pdfDoc = await PDFDocument.create();
-    pdfDoc.registerFontkit(fontkit);
+    const id = Number(pgId);
+    if (!Number.isFinite(id) || id <= 0) {
+      return NextResponse.json(
+        {
+          error: '"pgId" doit être un nombre (ou une string numérique) valide.',
+        },
+        { status: 400 },
+      );
+    }
 
-    const fontPath = path.join(
-      process.cwd(),
-      'public',
-      'fonts',
-      'DejaVuSans.ttf',
-    );
-    const fontBytes = fs.readFileSync(fontPath);
-    const font = await pdfDoc.embedFont(fontBytes);
+    if (data === undefined) {
+      return NextResponse.json(
+        { error: 'Missing generated data (data).' },
+        { status: 400 },
+      );
+    }
 
-    const page = pdfDoc.addPage([595.28, 841.89]);
-    const { width, height } = page.getSize();
-
-    const drawText = (text, x, y, size = 12, options = {}) => {
-      page.drawText(String(text), {
-        x,
-        y,
-        size,
-        font,
-        color: options.color ?? rgb(0, 0, 0),
-      });
-    };
-
-    let cursorY = height - 60;
-
-    drawText(`Fiche Pokémon : ${pokemon.name ?? 'Inconnu'}`, 50, cursorY, 22);
-    cursorY -= 30;
-
-    drawText(`Niveau : ${pokemon.lvl ?? '?'}`, 50, cursorY);
-    cursorY -= 16;
-    drawText(`Sexe : ${pokemon.sex ?? '—'}`, 50, cursorY);
-    cursorY -= 16;
-    drawText(`Nature : ${pokemon.nature ?? '—'}`, 50, cursorY);
-    cursorY -= 16;
-    drawText(`Sous-nature : ${pokemon.subNature ?? '—'}`, 50, cursorY);
-    cursorY -= 16;
-    drawText(`Talent : ${pokemon.talent ?? '—'}`, 50, cursorY);
-    cursorY -= 16;
-    drawText(`Shiny : ${pokemon.shiny ? 'Oui ✨' : 'Non'}`, 50, cursorY);
-    cursorY -= 16;
-    drawText(`Baron : ${pokemon.baron ? 'Oui 🟥' : 'Non'}`, 50, cursorY);
-    cursorY -= 28;
-
-    const stats = pokemon.stats ?? {};
-    const base = stats.base ?? {};
-    const ivs = stats.ivs ?? {};
-    const evs = stats.evs ?? {};
-    const evsLevel = stats.evsLevel ?? {};
-
-    const STAT_KEYS = ['VITA', 'DEX', 'FOR', 'CONC', 'END', 'VOL'];
-
-    drawText('Stats', 50, cursorY, 16);
-    cursorY -= 20;
-
-    drawText('Stat', 50, cursorY);
-    drawText('Base', 120, cursorY);
-    drawText('IVs', 180, cursorY);
-    drawText('EVs', 240, cursorY);
-    drawText('EVs lvl', 300, cursorY);
-    cursorY -= 14;
-
-    STAT_KEYS.forEach((key) => {
-      if (cursorY < 60) {
-        cursorY = height - 60;
-      }
-
-      drawText(key, 50, cursorY);
-      drawText(base[key] ?? 0, 120, cursorY);
-      drawText(ivs[key] ?? 0, 180, cursorY);
-      drawText(evs[key] ?? 0, 240, cursorY);
-      drawText(evsLevel[key] ?? 0, 300, cursorY);
-      cursorY -= 14;
+    // ✅ Prisma fetch (comme ton exemple)
+    const pg = await prisma.pokemonGeneration.findUnique({
+      where: { id },
+      include: {
+        pokemon: {
+          include: {
+            pokemonHasCompetences: { include: { competence: true } },
+          },
+        },
+        type1: true,
+        type2: true,
+        attaquesBreeding: { include: { attaque: true } },
+        attaquesLvl: { include: { attaque: true } },
+        talentsLinks: {
+          include: { talent: { include: { talentGenerations: true } } },
+        },
+      },
     });
 
-    const pdfBytes = await pdfDoc.save();
+    if (!pg) {
+      return NextResponse.json(
+        { error: 'Aucun PokémonGeneration trouvé pour cet identifiant.' },
+        { status: 404 },
+      );
+    }
 
-    const timestamp = new Date()
-      .toISOString()
-      .replace(/[:.]/g, '-')
-      .replace('T', '_')
-      .replace('Z', '');
+    // Payload normalisé (comme ton endpoint)
+    const payload = buildPokemonGenerationPayload(pg);
 
-    const filename = `fiche_pokemon_${pokemon.name}_${timestamp}.pdf`;
+    // Render JSX -> HTML
+    const React = (await import('react')).default;
+    const { renderToStaticMarkup } = await import('react-dom/server');
 
-    return new NextResponse(Buffer.from(pdfBytes), {
+    const html = renderToStaticMarkup(
+      React.createElement(PokemonSheet, {
+        // ⚠️ Ton template peut consommer ce que tu veux.
+        // Je te passe :
+        // - generated : ce que tu envoies dans data
+        // - pokemonGeneration : payload normalisé identique à ton API
+        generated: data,
+        pokemon: payload.pokemonGeneration,
+        // si ton template attend "pokemon" au lieu de "pokemonGeneration", adapte ici
+      }),
+    );
+
+    // Puppeteer
+    const browser = await puppeteer.launch(await getBrowserLaunchOptions());
+
+    const page = await browser.newPage();
+    await page.setContent('<!doctype html>' + html, { waitUntil: 'load' });
+
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: { top: '10mm', bottom: '10mm', left: '10mm', right: '10mm' },
+    });
+
+    await page.close();
+    await browser.close();
+
+    const filename = `fiche_pokemon_${safeFilename(
+      payload?.pokemonGeneration?.pokemon?.name ?? 'pokemon',
+    )}.pdf`;
+
+    return new NextResponse(pdfBuffer, {
       status: 200,
       headers: {
         'Content-Type': 'application/pdf',
         'Content-Disposition': `attachment; filename="${filename}"`,
+        'X-Filename': filename,
       },
     });
   } catch (err) {
-    console.error('Error generating PDF:', err);
+    console.error('[POST /api/pokemon-sheet] Error:', err);
     return NextResponse.json(
-      { error: 'Error generating PDF' },
+      { error: String(err?.message ?? err ?? 'Error generating PDF') },
       { status: 500 },
     );
   }

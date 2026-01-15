@@ -5,7 +5,7 @@ import Modal from '@/app/components/Modal';
 
 const STAT_KEYS = ['VITA', 'DEX', 'FOR', 'CONC', 'END', 'VOL'];
 
-export default function GeneratedPokemonModal({ isOpen, onClose, data, canSave = false }) {
+export default function GeneratedPokemonModal({ isOpen, onClose, data, pokemonGeneration, canSave = false }) {
   if (!data) return null;
 
   const { name, lvl, sex, nature, subNature, talent, breedingMove, shiny, baron, stats } =
@@ -16,10 +16,33 @@ export default function GeneratedPokemonModal({ isOpen, onClose, data, canSave =
   const evs = stats?.evs ?? {};
   const evsLevel = stats?.evsLevel ?? {};
 
-  const handleDownloadPdf = () => {
-    const payload = JSON.stringify(data);
-    window.open(`/api/pokemon-sheet?data=${payload}`, '_blank');
-  };
+const downloadPokemonSheet = async () => {
+   const res = await fetch('/api/pokemon-sheet', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pgId: String(pokemonGeneration.id), data: data }),
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    console.error('PDF error:', txt);
+    alert('Erreur génération PDF');
+    return;
+  }
+
+  const blob = await res.blob();
+  const filename = res.headers.get('X-Filename') || 'fiche_pokemon.pdf';
+
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}
+
 
 const handleSaveGeneratedPokemon = async () => {
   if (!data) return;
@@ -147,7 +170,7 @@ const handleSaveGeneratedPokemon = async () => {
   <button
     type="button"
     className="mt-4 mr-2 bg-red-500 text-white p-2 rounded-lg"
-    onClick={handleDownloadPdf}
+    onClick={downloadPokemonSheet}
   >
     Télécharger la fiche PDF
   </button>
