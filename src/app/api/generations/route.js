@@ -29,7 +29,6 @@ export async function POST(req) {
       );
     }
 
-    console.log(body);
     const parsedRank = Number(rank);
     if (Number.isNaN(parsedRank)) {
       return NextResponse.json(

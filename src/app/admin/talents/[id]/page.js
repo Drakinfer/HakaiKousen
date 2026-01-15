@@ -31,8 +31,6 @@ export default function AdminTalentPage() {
 
       const t = await fetchTalent(setTalent, setGenerations, id);
 
-      console.log(t);
-
       if (cancelled) return;
 
       if (!t) {

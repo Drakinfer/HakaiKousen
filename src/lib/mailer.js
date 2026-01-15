@@ -20,6 +20,6 @@ export async function sendResetEmail(email, resetUrl) {
     throw new Error(result.error.message || 'Resend send failed');
   }
 
-  console.log('RESEND OK:', result.data);
+  console.log('RESEND OK');
   return result;
 }

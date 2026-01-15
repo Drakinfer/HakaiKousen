@@ -121,7 +121,6 @@ export default function Evolutions({
   const layout = computeLayout({ hasPre: !!pre, evosCount: evos.length });
 
   if (evolutions.length < 1 && !pre) {
-    console.log(evolutions);
     return <p>Informations non disponibles</p>;
   }
 

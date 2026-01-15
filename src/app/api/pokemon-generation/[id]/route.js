@@ -56,14 +56,14 @@ export async function GET(_req, { params }) {
           lvl: pg.attaquesLvl,
         },
         talentsLinks: pg.talentsLinks,
-      },
-      pokemon: {
-        id: pg.pokemon.id,
-        name: pg.pokemon.name,
-        category: pg.pokemon.category,
-        dexNumber: pg.pokemon.dexNumber,
-        mainPicture: pg.pokemon.mainPicture,
-        miniPicture: pg.pokemon.miniPicture,
+        pokemon: {
+          id: pg.pokemon.id,
+          name: pg.pokemon.name,
+          category: pg.pokemon.category,
+          dexNumber: pg.pokemon.dexNumber,
+          mainPicture: pg.pokemon.mainPicture,
+          miniPicture: pg.pokemon.miniPicture,
+        },
       },
     };
 
