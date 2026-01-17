@@ -39,6 +39,7 @@ export default function AdminTypesPage() {
       try {
         setLoading(true);
         let t = await fetchTypes();
+        console.log(t);
         setTypes(t);
       } catch (e) {
         console.error(e);

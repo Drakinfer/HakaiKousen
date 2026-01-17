@@ -35,7 +35,7 @@ export default function AdminGenerationsPage() {
   const load = async () => {
     try {
       setLoading(true);
-      let g = fetchGenerations();
+      let g = await fetchGenerations();
       setGenerations(g);
     } catch (e) {
       console.error(e);

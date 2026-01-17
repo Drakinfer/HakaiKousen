@@ -15,7 +15,7 @@ export default function LibraryPage() {
       try {
         setLoading(true);
         let m = await fetchMembers();
-        setTeams(m);
+        setMembers(m);
       } catch (e) {
         console.error('Erreur lors du chargement des membres', e);
       } finally {

@@ -26,8 +26,13 @@ export default function PokemonsPage() {
       try {
         await handleSearch();
         let t = await fetchTypes();
-        setTypes(t);
-        let g = fetchGenerations();
+        const uniqueSortedTypes = [
+          ...new Map(t.map((type) => [type.value, type])).values(),
+        ].sort((a, b) =>
+          a.labelFr.localeCompare(b.labelFr, 'fr', { numeric: true }),
+        );
+        setTypes(uniqueSortedTypes);
+        let g = await fetchGenerations();
         setGenerations(g);
       } catch (e) {
         console.error('Erreur lors du chargement des talents', e);

@@ -55,10 +55,15 @@ export default function PokemonsPage() {
       try {
         setLoading(true);
         let t = await fetchTypes();
-        setTypes(t);
+        const uniqueSortedTypes = [
+          ...new Map(t.map((type) => [type.value, type])).values(),
+        ].sort((a, b) =>
+          a.labelFr.localeCompare(b.labelFr, 'fr', { numeric: true }),
+        );
+        setTypes(uniqueSortedTypes);
         let g = await fetchGenerations();
         setGenerations(g);
-        handleSearch();
+        await handleSearch();
       } catch (e) {
         console.error(e);
       } finally {
@@ -113,9 +118,9 @@ export default function PokemonsPage() {
     return params.toString() ? `?${params.toString()}` : '';
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     const queryString = buildQueryString();
-    let result = fetchPokemons(queryString);
+    let result = await fetchPokemons(queryString);
     setPokemons(result);
   };
 
