@@ -13,7 +13,8 @@ export default function Home() {
     const load = async () => {
       try {
         setLoading(true);
-        await fetchParagraphs(setParagraphs);
+        let p = await fetchParagraphs(setParagraphs);
+        setParagraphs(p);
         setAnnouncements(paragraphs.filter((p) => p.isNotification));
         setDescriptions(paragraphs.filter((p) => !p.isNotification));
       } catch (e) {

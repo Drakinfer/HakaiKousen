@@ -11,9 +11,18 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    fetchDocuments(setDocuments);
-    setLoading(false);
+    const load = async () => {
+      try {
+        setLoading(true);
+        let d = await fetchDocuments();
+        setDocuments(d);
+      } catch (e) {
+        console.error('Erreur lors du chargement des documents', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, []);
 
   return loading ? (

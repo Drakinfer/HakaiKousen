@@ -27,7 +27,11 @@ export default function AttackPage() {
     const load = async () => {
       try {
         setLoading(true);
-        await fetchAttack(setAttack, setGenerations, id);
+        const result = await fetchAttack(id);
+
+        setAttack(result.attack);
+        setGenerations(result.generations);
+        setSelectedGeneration(result.selectedGeneration);
       } catch (e) {
         console.error('Erreur lors du chargement de l’attaque', e);
       } finally {

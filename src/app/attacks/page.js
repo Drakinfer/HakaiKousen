@@ -15,14 +15,27 @@ export default function AttacksPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    fetchAttacks(setAttacks, nameFilter, typeFilter);
-    fetchTypes(setTypes);
-    setLoading(false);
+    const load = async () => {
+      try {
+        setLoading(true);
+        let a = await fetchAttacks(nameFilter, typeFilter);
+        setAttacks(a);
+
+        let t = await fetchTypes();
+        setTypes(t);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, []);
 
-  const handleSearch = () => {
-    fetchAttacks(nameFilter, typeFilter);
+  const handleSearch = async () => {
+    let a = await fetchAttacks(nameFilter, typeFilter);
+    setAttacks(a);
   };
   if (loading) {
     return <Loading />;

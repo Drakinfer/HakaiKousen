@@ -57,15 +57,19 @@ export default function PokemonPage() {
     const load = async () => {
       setLoading(true);
       try {
-        await fetchPokemon(
-          id,
-          (p) => !cancelled && setPokemon(p),
-          (g) => !cancelled && setGenerations(g),
-          (sg) => !cancelled && setSelectedGeneration(sg),
-          (spg) => !cancelled && setSelectedPokemonGeneration(spg),
-          (pp) => !cancelled && setPreviousPokemon(pp),
-          (np) => !cancelled && setNextPokemon(np),
-        );
+        const result = await fetchPokemon(id);
+        if (cancelled) return;
+
+        setPokemon(result.pokemon);
+        setGenerations(result.generations);
+        setSelectedGeneration(result.selectedGeneration);
+        setSelectedPokemonGeneration(result.selectedPokemonGeneration);
+        setPreviousPokemon(result.previousPokemon);
+        setNextPokemon(result.nextPokemon);
+      } catch (e) {
+        console.error(e);
+        if (cancelled) return;
+        setError(e.message || 'Erreur lors du chargement');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -101,13 +105,19 @@ export default function PokemonPage() {
     setPokemons(data.pokemons);
   };
 
-  const handleEditClick = () => {
-    fetchTypes(setTypes);
-    fetchGenerations(setGenerationOptions);
-    fetchTalents(setTalents);
-    fetchAttacks(setAttacks);
-    fetchCompetences(setCompetences);
-    fetchLocations(setLocations);
+  const handleEditClick = async () => {
+    let ty = await fetchTypes();
+    setTypes(ty);
+    let g = await fetchGenerations();
+    setGenerationOptions(g);
+    let ta = await fetchTalents();
+    setTalents(ta);
+    let a = await fetchAttacks();
+    setAttacks(a);
+    let c = await fetchCompetences();
+    setCompetences(c);
+    let l = await fetchLocations();
+    setLocations(l);
     loadOptions();
     setIsEditModalOpen(true);
   };
@@ -200,15 +210,15 @@ export default function PokemonPage() {
         return;
       }
 
-      await fetchPokemon(
-        id,
-        setPokemon,
-        setGenerations,
-        setSelectedGeneration,
-        setSelectedPokemonGeneration,
-        setPreviousPokemon,
-        setNextPokemon,
-      );
+      const result = await fetchPokemon(id);
+      if (cancelled) return;
+
+      setPokemon(result.pokemon);
+      setGenerations(result.generations);
+      setSelectedGeneration(result.selectedGeneration);
+      setSelectedPokemonGeneration(result.selectedPokemonGeneration);
+      setPreviousPokemon(result.previousPokemon);
+      setNextPokemon(result.nextPokemon);
     } catch (error) {
       console.error('Erreur lors de la mise à jour du pokemon', error);
       alert(error);

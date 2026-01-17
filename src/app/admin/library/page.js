@@ -35,7 +35,8 @@ export default function AdminLibraryPage() {
     const load = async () => {
       try {
         setLoading(true);
-        await fetchDocuments(setDocuments);
+        let d = await fetchDocuments();
+        setDocuments(d);
       } catch (e) {
         console.error('Erreur lors du chargement des documents', e);
       } finally {
@@ -88,7 +89,8 @@ export default function AdminLibraryPage() {
         return;
       }
 
-      await fetchDocuments(setDocuments);
+      let d = await fetchDocuments();
+      setDocuments(d);
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erreur inattendue lors de la suppression');
@@ -98,7 +100,8 @@ export default function AdminLibraryPage() {
   const handleCloseModal = async () => {
     setOpenModal(false);
     setSelectedDocument(null);
-    await fetchDocuments(setDocuments);
+    let d = await fetchDocuments();
+    setDocuments(d);
   };
 
   return (

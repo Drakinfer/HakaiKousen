@@ -6,7 +6,7 @@ import { STATS } from '@/lib/stats';
 import { NATURES } from '@/lib/natures';
 import { SUB_NATURES } from '@/lib/subNatures';
 import GeneratedPokemonModal from '@/app/components/modal/GeneratedPokemonModal';
-import { fetchPokemonGenerationById } from '@/lib/fetch';
+import { fetchPokemons, fetchPokemonGenerationById, fetchGenerations, fetchPokemonGenerationBySelection } from '@/lib/fetch';
 
 function usePokemonGenerator(initialPokemonGenerationId) {
   const [data, setData] = useState(null);
@@ -46,39 +46,22 @@ function usePokemonGenerator(initialPokemonGenerationId) {
     '91-100',
   ];
 
-  async function fetchPokemons() {
-    const response = await fetch('/api/pokemons');
-    const res = await response.json();
-    if (!response.ok) {
-      throw new Error(res.error || 'Erreur lors du chargement des Pokémon');
-    }
-    setPokemons(res.pokemons);
-  }
+async function loadPokemonGenerationBySelection() {
+  try {
+    const pg = await fetchPokemonGenerationBySelection(pokemonId, generationId);
 
-  async function fetchGenerations() {
-    const response = await fetch('/api/generations');
-    const res = await response.json();
-    if (!response.ok) {
-      throw new Error(res.error || 'Erreur lors du chargement des générations');
-    }
-    setGenerations(res.generations);
-  }
-
-  async function fetchPokemonGenerationBySelection() {
-    const res = await fetch(
-      `/api/pokemons/${pokemonId}/generations/${generationId}`,
+    setPokemonGeneration(pg);
+    setPokemonId(pg.pokemonId);
+    setGenerationId(pg.generationId);
+  } catch (err) {
+    console.error('Erreur lors du fetch du Pokémon génération :', err);
+    setGenerationId(null);
+    setPokemonGeneration(null);
+    alert(
+      "Pas d'information pour cette génération, merci d'en choisir une autre.",
     );
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(`HTTP ${res.status} – ${text.slice(0, 200)}`);
-    }
-
-    const data = await res.json();
-    setPokemonGeneration(data.pokemonGeneration);
-    setPokemonId(data.pokemonGeneration.pokemonId);
-    setGenerationId(data.pokemonGeneration.generationId);
   }
-
+}
   async function randomize(payload) {
     const res = await fetch(`/api/pokemon-generator/${pokemonGeneration.id}`, {
       method: 'POST',
@@ -158,10 +141,11 @@ function usePokemonGenerator(initialPokemonGenerationId) {
     async function boot() {
       setLoading(true);
       let pg = null
+      let result = null
       try {
-        const tasks = [fetchPokemons(), fetchGenerations()];
+        const tasks = [result = await fetchPokemons(), setPokemons(result), gen = await fetchGenerations(), setGenerations(gen)];
         if (initialPokemonGenerationId) {
-          tasks.push([pg = fetchPokemonGenerationById(initialPokemonGenerationId), setGenerationId(pg.generationId), setPokemonGeneration(pg), setPokemonId(pg.pokemon.id)]);
+          tasks.push([pg = await fetchPokemonGenerationById(initialPokemonGenerationId), setGenerationId(pg.generationId), setPokemonGeneration(pg), setPokemonId(pg.pokemon.id)]);
         }
         await Promise.all(tasks);
       } catch (err) {
@@ -187,14 +171,7 @@ function usePokemonGenerator(initialPokemonGenerationId) {
       return;
     }
 
-    fetchPokemonGenerationBySelection().catch((err) => {
-      console.error('Erreur lors du fetch du Pokémon génération :', err);
-      setGenerationId(null);
-      setPokemonGeneration(null);
-      alert(
-        "Pas d'information pour cette génération, merci d'en choisir une autre.",
-      );
-    });
+    loadPokemonGenerationBySelection();
   }, [pokemonId, generationId]);
 
   return {

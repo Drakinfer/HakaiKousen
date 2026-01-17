@@ -28,7 +28,8 @@ export default function AdminUsersPage() {
     const load = async () => {
       setLoading(true);
       try {
-        fetchUsers(setUsers);
+        let u = await fetchUsers();
+        setUsers(u);
       } catch (err) {
         console.error(err);
       } finally {
@@ -36,7 +37,6 @@ export default function AdminUsersPage() {
       }
     };
     load();
-    fetchUsers();
   }, [session]);
 
   const handleUpdateRole = async (id, action) => {

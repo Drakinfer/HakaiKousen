@@ -11,9 +11,18 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    fetchMembers(setMembers);
-    setLoading(false);
+    const load = async () => {
+      try {
+        setLoading(true);
+        let m = await fetchMembers();
+        setTeams(m);
+      } catch (e) {
+        console.error('Erreur lors du chargement des membres', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, []);
 
   return loading ? (

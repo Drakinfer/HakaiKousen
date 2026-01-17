@@ -35,7 +35,8 @@ export default function AdminSitePage() {
     const load = async () => {
       try {
         setLoading(true);
-        await fetchParagraphs(setParagraphs);
+        let p = await fetchParagraphs(setParagraphs);
+        setParagraphs(p);
       } catch (e) {
         console.error('Erreur lors du chargement des textes', e);
       } finally {
@@ -88,7 +89,8 @@ export default function AdminSitePage() {
         return;
       }
 
-      await fetchParagraphs(setParagraphs);
+      let p = await fetchParagraphs(setParagraphs);
+      setParagraphs(p);
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erreur inattendue lors de la suppression');
@@ -98,7 +100,8 @@ export default function AdminSitePage() {
   const handleCloseModal = async () => {
     setOpenModal(false);
     setSelectedParagraph(null);
-    await fetchParagraphs(setParagraphs);
+    let p = await fetchParagraphs(setParagraphs);
+    setParagraphs(p);
   };
 
   return (

@@ -38,7 +38,8 @@ export default function AdminCompetencesPage() {
     const load = async () => {
       try {
         setLoading(true);
-        await fetchCompetences(setCompetences);
+        let c = await fetchCompetences();
+        setCompetences(c);
       } catch (e) {
         console.error('Erreur lors du chargement des compétences', e);
       } finally {
@@ -91,7 +92,8 @@ export default function AdminCompetencesPage() {
         return;
       }
 
-      await fetchCompetences(setCompetences);
+      let c = await fetchCompetences();
+      setCompetences(c);
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erreur inattendue lors de la suppression');
@@ -101,7 +103,8 @@ export default function AdminCompetencesPage() {
   const handleCloseModal = async () => {
     setOpenModal(false);
     setSelectedCompetence(null);
-    await fetchCompetences(setCompetences);
+    let c = await fetchCompetences();
+    setCompetences(c);
   };
 
   return (

@@ -10,6 +10,7 @@ import { SquarePen, Trash } from '../../../../lib/lucide';
 import Aside from '@/app/components/Aside';
 import TypeFormModal from '@/app/components/modal/TypeFormModal';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { fetchTypes } from '@/lib/fetch';
 
 export default function AdminTypesPage() {
   const { data: session, status } = useSession();
@@ -23,24 +24,6 @@ export default function AdminTypesPage() {
 
   const isAdmin = session?.user?.role == 'ADMIN';
 
-  const fetchTypes = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch('/api/types');
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Erreur lors du chargement des types');
-      }
-      const data = await res.json();
-      console.log('Données reçues depuis /api/types :', data);
-      setTypes(data.types || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (status === 'loading') return;
 
@@ -52,7 +35,19 @@ export default function AdminTypesPage() {
   useEffect(() => {
     if (!session || session.user?.role === 'USER') return;
 
-    fetchTypes();
+    const load = async () => {
+      try {
+        setLoading(true);
+        let t = await fetchTypes();
+        setTypes(t);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, [session]);
 
   if (
@@ -98,7 +93,8 @@ export default function AdminTypesPage() {
         return;
       }
 
-      await fetchTypes();
+      let t = await fetchTypes();
+      setTypes(t);
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erreur inattendue lors de la suppression');

@@ -36,7 +36,8 @@ export default function AdminTeamsPage() {
     const load = async () => {
       try {
         setLoading(true);
-        await fetchMembers(setTeams);
+        let m = await fetchMembers();
+        setTeams(m);
       } catch (e) {
         console.error('Erreur lors du chargement des membres', e);
       } finally {
@@ -50,14 +51,16 @@ export default function AdminTeamsPage() {
     return <Loading />;
   }
 
-  const handleAddClick = () => {
-    fetchUsers(setUsers);
+  const handleAddClick = async () => {
+    let u = await fetchUsers();
+    setUsers(u);
     setSelectedMember(null);
     setOpenModal(true);
   };
 
-  const handleEditClick = (member) => {
-    fetchUsers(setUsers);
+  const handleEditClick = async (member) => {
+    let u = await fetchUsers();
+    setUsers(u);
     setSelectedMember(member);
     setOpenModal(true);
   };
@@ -86,7 +89,8 @@ export default function AdminTeamsPage() {
         return;
       }
 
-      await fetchMembers(setTeams);
+      let m = await fetchMembers();
+      setTeams(m);
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erreur inattendue lors de la suppression');
@@ -96,7 +100,8 @@ export default function AdminTeamsPage() {
   const handleCloseModal = async () => {
     setOpenModal(false);
     setSelectedMember(null);
-    await fetchMembers(setTeams);
+    let m = await fetchMembers();
+    setTeams(m);
   };
 
   return (

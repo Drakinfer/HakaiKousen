@@ -36,15 +36,19 @@ export default function PokemonPage() {
     const load = async () => {
       setLoading(true);
       try {
-        await fetchPokemon(
-          id,
-          (p) => !cancelled && setPokemon(p),
-          (g) => !cancelled && setGenerations(g),
-          (sg) => !cancelled && setSelectedGeneration(sg),
-          (spg) => !cancelled && setSelectedPokemonGeneration(spg),
-          (pp) => !cancelled && setPreviousPokemon(pp),
-          (np) => !cancelled && setNextPokemon(np),
-        );
+        const result = await fetchPokemon(id);
+        if (cancelled) return;
+
+        setPokemon(result.pokemon);
+        setGenerations(result.generations);
+        setSelectedGeneration(result.selectedGeneration);
+        setSelectedPokemonGeneration(result.selectedPokemonGeneration);
+        setPreviousPokemon(result.previousPokemon);
+        setNextPokemon(result.nextPokemon);
+      } catch (e) {
+        console.error(e);
+        if (cancelled) return;
+        setError(e.message || 'Erreur lors du chargement');
       } finally {
         if (!cancelled) setLoading(false);
       }

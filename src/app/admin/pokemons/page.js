@@ -51,11 +51,22 @@ export default function PokemonsPage() {
   }, [status, session, router]);
 
   useEffect(() => {
-    setLoading(true);
-    fetchTypes(setTypes);
-    fetchGenerations(setGenerations);
-    handleSearch();
-    setLoading(false);
+    const load = async () => {
+      try {
+        setLoading(true);
+        let t = await fetchTypes();
+        setTypes(t);
+        let g = await fetchGenerations();
+        setGenerations(g);
+        handleSearch();
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, []);
 
   const toggleTypeSelection = (type) => {
@@ -104,7 +115,8 @@ export default function PokemonsPage() {
 
   const handleSearch = () => {
     const queryString = buildQueryString();
-    fetchPokemons(setPokemons, queryString);
+    let result = fetchPokemons(queryString);
+    setPokemons(result);
   };
 
   const loadOptions = async () => {
@@ -114,10 +126,14 @@ export default function PokemonsPage() {
   };
 
   const handleAddClick = async () => {
-    fetchTalents(setTalents);
-    fetchAttacks(setAttacks);
-    fetchCompetences(setCompetences);
-    fetchLocations(setLocations);
+    let t = await fetchTalents();
+    setTalents(t);
+    let a = await fetchAttacks();
+    setAttacks(a);
+    let c = await fetchCompetences();
+    setCompetences(c);
+    let l = await fetchLocations();
+    setLocations(l);
     loadOptions();
     setOpenModal(true);
   };

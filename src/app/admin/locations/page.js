@@ -10,7 +10,7 @@ import { Icon, SquarePen, Trash } from '../../../../lib/lucide';
 import Aside from '@/app/components/Aside';
 import LocationFormModal from '@/app/components/modal/LocationFormModal';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
-import { fetchCompetences, fetchLocations } from '@/lib/fetch';
+import { fetchLocations } from '@/lib/fetch';
 
 export default function AdminLocationsPage() {
   const { data: session, status } = useSession();
@@ -38,7 +38,8 @@ export default function AdminLocationsPage() {
     const load = async () => {
       try {
         setLoading(true);
-        await fetchLocations(setLocations);
+        let l = await fetchLocations();
+        setLocations(l);
       } catch (e) {
         console.error('Erreur lors du chargement des habitats', e);
       } finally {
@@ -91,7 +92,8 @@ export default function AdminLocationsPage() {
         return;
       }
 
-      await fetchLocations(setLocations);
+      let l = await fetchLocations();
+      setLocations(l);
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erreur inattendue lors de la suppression');
@@ -101,7 +103,8 @@ export default function AdminLocationsPage() {
   const handleCloseModal = async () => {
     setOpenModal(false);
     setSelectedLocation(null);
-    await fetchLocations(setLocations);
+    let l = await fetchLocations();
+    setLocations(l);
   };
 
   return (

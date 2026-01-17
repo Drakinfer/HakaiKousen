@@ -21,18 +21,25 @@ export default function TalentPage() {
     let cancelled = false;
 
     const loadTalent = async () => {
-      setLoading(true);
+      try {
+        setLoading(true);
 
-      const t = await fetchTalent(setTalent, setGenerations, id);
+        const { talent, generations } = await fetchTalent(id);
+        if (cancelled) return;
 
-      if (cancelled) return;
+        setTalent(talent);
+        setGenerations(generations);
 
-      if (!t) {
-        router.push('/talents');
-        return;
+        if (!talent) {
+          router.push('/talents');
+          return;
+        }
+      } catch (e) {
+        console.error(e);
+        if (cancelled) return;
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     };
 
     loadTalent();
