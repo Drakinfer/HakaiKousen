@@ -1,4 +1,4 @@
-import { toFr } from '@/lib/types'; // si tu l'utilises déjà
+import { toFr } from '@/lib/types';
 
 export async function fetchJson(url, options = {}) {
   const res = await fetch(url, { cache: 'no-store', ...options });
@@ -27,7 +27,7 @@ export async function fetchJson(url, options = {}) {
 
 export async function fetchPokemons(queryString = '') {
   const data = await fetchJson(`/api/pokemons${queryString}`, {
-    cache: 'default', // ou no-store si tu veux éviter tout cache
+    cache: 'default',
   });
   return data.pokemons ?? [];
 }

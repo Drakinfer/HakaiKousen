@@ -147,7 +147,7 @@ export default function PokemonsPage() {
     setOpenModal(false);
   };
 
-  const MAX_FILE_SIZE = 4.5 * 1024 * 1024; // 4,5 Mo
+  const MAX_FILE_SIZE = 4.5 * 1024 * 1024;
 
   function assertSize(file) {
     if (!file) return;

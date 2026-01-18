@@ -12,14 +12,20 @@ import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { fetchMembers, fetchUsers } from '@/lib/fetch';
 import TeamFormModal from '@/app/components/modal/TeamFormModal';
 
+import Table from '@/app/components/Table';
+
 export default function AdminTeamsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [openModal, setOpenModal] = useState(false);
   const [selectedMember, setSelectedMember] = useState(null);
+
   const [users, setUsers] = useState([]);
+
   const isAdmin = session?.user?.role == 'ADMIN';
 
   useEffect(() => {
@@ -28,7 +34,7 @@ export default function AdminTeamsPage() {
     if (!session || !isAdmin) {
       router.push('/');
     }
-  }, [status, session, router]);
+  }, [status, session, router, isAdmin]);
 
   useEffect(() => {
     if (!session || !isAdmin) return;
@@ -45,7 +51,7 @@ export default function AdminTeamsPage() {
       }
     };
     load();
-  }, [session]);
+  }, [session, isAdmin]);
 
   if (status === 'loading' || !session || loading) {
     return <Loading />;
@@ -117,52 +123,64 @@ export default function AdminTeamsPage() {
         ]}
       />
       <div className="flex-1 flex flex-col overflow-hidden px-8 py-6">
-        <div className="h-full overflow-y-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-red-500 text-white sticky top-0 z-10">
-              <tr>
-                <th className="border px-3 py-2 text-left">Pseudo</th>
-                <th className="border px-3 py-2 text-left">Role</th>
-                <th className="border px-3 py-2 text-left">Créé par/le</th>
-                <th className="border px-3 py-2 text-left">Modifié par/le</th>
-                <th className="border px-3 py-2 text-left">Action</th>
-              </tr>
-            </thead>
-            {teams.toString}
-            <tbody>
-              {teams.map((member) => (
-                <tr key={member.id}>
-                  <td className="border px-3 py-2">{member.pseudo.name}</td>
-                  <td className="border px-3 py-2">{member.role}</td>
-                  <td className="border px-3 py-2">
-                    Par {member.createdBy.name} le {member.createdAt}
-                  </td>
-                  <td className="border px-3 py-2">
-                    Par {member.updatedBy.name} le {member.updatedAt}
-                  </td>
-                  <td className="border px-3 py-2">
+        <Table
+          rows={teams}
+          rowKey={(member) => member.id}
+          containerClassName="h-full overflow-y-auto"
+          tableClassName="min-w-full text-sm"
+          headClassName="bg-red-500 text-white sticky top-0 z-10"
+          columns={[
+            {
+              key: 'pseudo',
+              header: 'Pseudo',
+              render: (member) => member.pseudo?.name ?? '—',
+            },
+            { key: 'role', header: 'Role' },
+            {
+              key: 'created',
+              header: 'Créé par/le',
+              render: (member) => (
+                <span>
+                  Par {member.createdBy?.name} le {member.createdAt}
+                </span>
+              ),
+            },
+            {
+              key: 'updated',
+              header: 'Modifié par/le',
+              render: (member) => (
+                <span>
+                  Par {member.updatedBy?.name} le {member.updatedAt}
+                </span>
+              ),
+            },
+            {
+              key: 'action',
+              header: 'Action',
+              render: (member) => (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleEditClick(member)}
+                    className="p-1 hover:scale-105 transition-transform"
+                  >
+                    <SquarePen color="red" />
+                  </button>
+
+                  {isAdmin && (
                     <button
                       type="button"
-                      onClick={() => handleEditClick(member)}
+                      onClick={() => handleDeleteMember(member.id)}
                       className="p-1 hover:scale-105 transition-transform"
                     >
-                      <SquarePen color="red" />
+                      <Trash color="red" />
                     </button>
-                    {isAdmin && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteMember(member.id)}
-                        className="p-1 hover:scale-105 transition-transform"
-                      >
-                        <Trash color="red" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
 
         {openModal && (
           <TeamFormModal

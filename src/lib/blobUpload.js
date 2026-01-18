@@ -19,10 +19,10 @@ export async function uploadImageToBlob(file, pathPrefix) {
   const pathname = `${pathPrefix}/${safeName}`;
 
   const blob = await put(pathname, file, {
-    access: 'public', // URL publique
+    access: 'public',
     contentType: file.type || undefined,
-    addRandomSuffix: false, // on gère déjà un nom quasi-unique
+    addRandomSuffix: false,
   });
 
-  return blob.url; // à stocker en DB
+  return blob.url;
 }

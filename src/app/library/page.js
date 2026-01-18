@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 import Footer from '../components/Footer';
 import Loading from '../components/Loading';
 import { fetchDocuments } from '@/lib/fetch';
-import LibraryTable from '../components/LibraryTable';
+import GridTable from '../components/GridTable';
+import LibraryGridItem from '../components/LibraryGridItem';
 
 export default function LibraryPage() {
   const [documents, setDocuments] = useState([]);
@@ -38,7 +39,12 @@ export default function LibraryPage() {
             </p>
           </header>
 
-          <LibraryTable documents={documents} />
+          <GridTable
+            items={documents}
+            GridItemComponent={LibraryGridItem}
+            emptyText="Aucun document pour le moment."
+            getKey={(d) => d.id}
+          />
         </div>
       </main>
       <Footer />

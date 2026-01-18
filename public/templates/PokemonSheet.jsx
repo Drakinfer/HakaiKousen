@@ -75,17 +75,11 @@ function typeLabel(t) {
 }
 
 export default function PokemonSheet({ generated, pokemon }) {
-  const p = pokemon ?? {};      // payload Prisma normalisé (pokemonGeneration)
-  const g = generated ?? {};    // tirage aléatoire
+  const p = pokemon ?? {};
+  const g = generated ?? {};
 
-  // =======================
-  // Valeurs utilisées (VIDE si introuvable)
-  // =======================
-
-  // Nom: d'abord BDD, sinon generated, sinon vide
   const pokemonName = p?.pokemon?.name ?? g?.name ?? '';
 
-  // Types : p.types.type1 / type2 -> "grass / poison"
   const t1 = p?.types?.type1 ?? null;
   const t2 = p?.types?.type2 ?? null;
   const typesText = [typeLabel(t1), typeLabel(t2)].filter(Boolean).join(' / ');
@@ -96,7 +90,6 @@ export default function PokemonSheet({ generated, pokemon }) {
 
   const chosenTalentDesc = chosenTalent?.desc ?? '';
 
-  // Taille / poids : p.height / p.weight
   const sizeWeightText = [
     p?.height !== undefined && p?.height !== null ? `${p.height} m` : '',
     p?.weight !== undefined && p?.weight !== null ? `${p.weight} kg` : '',
@@ -104,7 +97,6 @@ export default function PokemonSheet({ generated, pokemon }) {
     .filter(Boolean)
     .join(' / ');
 
-  // Stats du tirage
   const stats = g?.stats ?? {};
   const base = stats.base ?? {};
   const iv = stats.ivs ?? {};
@@ -140,7 +132,6 @@ export default function PokemonSheet({ generated, pokemon }) {
     };
   });
 
-  // Capacités connues : par défaut on tente attaques lvl (si structure compatible)
   const lvlAttacks = clampArr(p?.attaques?.lvl).slice(0, 10);
   const moveRows = Array.from({ length: 10 }).map((_, i) => {
     const a = lvlAttacks[i]?.attaque ?? null;
@@ -157,7 +148,6 @@ export default function PokemonSheet({ generated, pokemon }) {
     };
   });
 
-  // Sensibilités : si tu n’as pas l’info, vide
   const sens = p?.sensitivities ?? p?.sensibilites ?? {};
   const typeGrid = [
     ['Acier', 'Combat', 'Dragon', 'Eau'],
@@ -173,7 +163,7 @@ export default function PokemonSheet({ generated, pokemon }) {
         <meta charSet="utf-8" />
         <style>{`
           :root{
-            --accent-blue: #8faadc;   /* bleu proche des liserés de la fiche v3 */
+            --accent-blue: #8faadc;
             --accent-blue-dark: #5b7dbb;
             --ink: #111;
           }
@@ -343,7 +333,7 @@ export default function PokemonSheet({ generated, pokemon }) {
             border-radius: 6px;
               border-width: 2px;
   border-style: solid;
-  background: transparent; /* juste au cas où */
+  background: transparent;
             display: flex;
             justify-content: space-between;
             gap: 6px;
@@ -352,33 +342,28 @@ export default function PokemonSheet({ generated, pokemon }) {
           .sens-name { font-weight: 800; text-transform: uppercase; }
           .sens-val { font-weight: 800; }
 
-/* Ligne 1 : Acier, Combat, Dragon, Eau */
-.sens-grid:nth-of-type(1) .sens-item:nth-child(1){ border-color:#7f8c8d; } /* Acier */
-.sens-grid:nth-of-type(1) .sens-item:nth-child(2){ border-color:#a0522d; } /* Combat */
-.sens-grid:nth-of-type(1) .sens-item:nth-child(3){ border-color:#6d28d9; } /* Dragon */
-.sens-grid:nth-of-type(1) .sens-item:nth-child(4){ border-color:#2563eb; } /* Eau */
+.sens-grid:nth-of-type(1) .sens-item:nth-child(1){ border-color:#7f8c8d; }
+.sens-grid:nth-of-type(1) .sens-item:nth-child(2){ border-color:#a0522d; } 
+.sens-grid:nth-of-type(1) .sens-item:nth-child(3){ border-color:#6d28d9; } 
+.sens-grid:nth-of-type(1) .sens-item:nth-child(4){ border-color:#2563eb; } 
 
-/* Ligne 2 : Électrik, Fée, Feu, Glace */
-.sens-grid:nth-of-type(2) .sens-item:nth-child(1){ border-color:#f59e0b; } /* Électrik */
-.sens-grid:nth-of-type(2) .sens-item:nth-child(2){ border-color:#ec4899; } /* Fée */
-.sens-grid:nth-of-type(2) .sens-item:nth-child(3){ border-color:#ef4444; } /* Feu */
-.sens-grid:nth-of-type(2) .sens-item:nth-child(4){ border-color:#38bdf8; } /* Glace */
+.sens-grid:nth-of-type(2) .sens-item:nth-child(1){ border-color:#f59e0b; }
+.sens-grid:nth-of-type(2) .sens-item:nth-child(2){ border-color:#ec4899; } 
+.sens-grid:nth-of-type(2) .sens-item:nth-child(3){ border-color:#ef4444; } 
+.sens-grid:nth-of-type(2) .sens-item:nth-child(4){ border-color:#38bdf8; } 
 
-/* Ligne 3 : Insecte, Normal, Plante, Poison */
-.sens-grid:nth-of-type(3) .sens-item:nth-child(1){ border-color:#84cc16; } /* Insecte */
-.sens-grid:nth-of-type(3) .sens-item:nth-child(2){ border-color:#9ca3af; } /* Normal */
-.sens-grid:nth-of-type(3) .sens-item:nth-child(3){ border-color:#22c55e; } /* Plante */
-.sens-grid:nth-of-type(3) .sens-item:nth-child(4){ border-color:#a855f7; } /* Poison */
+.sens-grid:nth-of-type(3) .sens-item:nth-child(1){ border-color:#84cc16; } 
+.sens-grid:nth-of-type(3) .sens-item:nth-child(2){ border-color:#9ca3af; } 
+.sens-grid:nth-of-type(3) .sens-item:nth-child(3){ border-color:#22c55e; } 
+.sens-grid:nth-of-type(3) .sens-item:nth-child(4){ border-color:#a855f7; }
 
-/* Ligne 4 : Psy, Roche, Sol, Spectre */
-.sens-grid:nth-of-type(4) .sens-item:nth-child(1){ border-color:#fb7185; } /* Psy */
-.sens-grid:nth-of-type(4) .sens-item:nth-child(2){ border-color:#b45309; } /* Roche */
-.sens-grid:nth-of-type(4) .sens-item:nth-child(3){ border-color:#d97706; } /* Sol */
-.sens-grid:nth-of-type(4) .sens-item:nth-child(4){ border-color:#4f46e5; } /* Spectre */
+.sens-grid:nth-of-type(4) .sens-item:nth-child(1){ border-color:#fb7185; }
+.sens-grid:nth-of-type(4) .sens-item:nth-child(2){ border-color:#b45309; }
+.sens-grid:nth-of-type(4) .sens-item:nth-child(3){ border-color:#d97706; }
+.sens-grid:nth-of-type(4) .sens-item:nth-child(4){ border-color:#4f46e5; }
 
-/* Ligne 5 (grid--two) : Ténèbres, Vol */
-.sens-grid--two .sens-item:nth-child(1){ border-color:#111827; } /* Ténèbres */
-.sens-grid--two .sens-item:nth-child(2){ border-color:#60a5fa; } /* Vol */
+.sens-grid--two .sens-item:nth-child(1){ border-color:#111827; }
+.sens-grid--two .sens-item:nth-child(2){ border-color:#60a5fa; }
 
           .tbl--moves th:nth-child(1) { width: 15%; }
           .tbl--moves th:nth-child(2) { width: 15%; text-align:center; }

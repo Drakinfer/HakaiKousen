@@ -12,6 +12,8 @@ import GenerationFormModal from '@/app/components/modal/GenerationFormModal';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { fetchGenerations } from '@/lib/fetch';
 
+import Table from '@/app/components/Table';
+
 export default function AdminGenerationsPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -46,7 +48,6 @@ export default function AdminGenerationsPage() {
 
   useEffect(() => {
     if (!session || session.user?.role === 'USER') return;
-
     load();
   }, [session]);
 
@@ -119,43 +120,42 @@ export default function AdminGenerationsPage() {
         ]}
       />
       <div className="flex-1 flex flex-col overflow-hidden px-8 py-6">
-        <div className="h-full overflow-y-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-red-500 text-white sticky top-0 z-10">
-              <tr>
-                <th className="border px-3 py-2 text-left">Nom</th>
-                <th className="border px-3 py-2 text-left">Rang</th>
-                <th className="border px-3 py-2 text-left">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {generations.map((g) => (
-                <tr key={g.id}>
-                  <td className="border px-3 py-2">{g.name}</td>
-                  <td className="border px-3 py-2">{g.rank}</td>
-                  <td className="border px-3 py-2">
+        <Table
+          rows={generations}
+          rowKey={(g) => g.id}
+          containerClassName="h-full overflow-y-auto"
+          tableClassName="min-w-full text-sm"
+          headClassName="bg-red-500 text-white sticky top-0 z-10"
+          columns={[
+            { key: 'name', header: 'Nom' },
+            { key: 'rank', header: 'Rang' },
+            {
+              key: 'action',
+              header: 'Action',
+              render: (g) => (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleEditClick(g)}
+                    className="p-1 hover:scale-105 transition-transform"
+                  >
+                    <SquarePen color="red" />
+                  </button>
+
+                  {isAdmin && (
                     <button
                       type="button"
-                      onClick={() => handleEditClick(g)}
+                      onClick={() => handleDeleteGeneration(g.id)}
                       className="p-1 hover:scale-105 transition-transform"
                     >
-                      <SquarePen color="red" />
+                      <Trash color="red" />
                     </button>
-                    {isAdmin && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteGeneration(g.id)}
-                        className="p-1 hover:scale-105 transition-transform"
-                      >
-                        <Trash color="red" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
 
         {openModal && (
           <GenerationFormModal
