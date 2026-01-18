@@ -36,8 +36,8 @@ export async function PUT(req, { params }) {
 
   const nameRaw = formData.get('name');
   const iconRaw = formData.get('icon');
-  const file = formData.get('file'); // optionnel
-  const linkRaw = formData.get('link'); // optionnel
+  const file = formData.get('file');
+  const linkRaw = formData.get('link');
 
   const data = {};
   if (typeof nameRaw === 'string') data.name = nameRaw.trim();

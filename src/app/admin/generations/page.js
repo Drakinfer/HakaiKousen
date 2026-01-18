@@ -10,6 +10,9 @@ import { SquarePen, Trash } from '../../../../lib/lucide';
 import Aside from '@/app/components/Aside';
 import GenerationFormModal from '@/app/components/modal/GenerationFormModal';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { fetchGenerations } from '@/lib/fetch';
+
+import Table from '@/app/components/Table';
 
 export default function AdminGenerationsPage() {
   const { data: session, status } = useSession();
@@ -23,25 +26,6 @@ export default function AdminGenerationsPage() {
 
   const isAdmin = session?.user?.role == 'ADMIN';
 
-  const fetchGenerations = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch('/api/generations');
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(
-          data.error || 'Erreur lors du chargement des générations',
-        );
-      }
-      const data = await res.json();
-      setGenerations(data.generations || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (status === 'loading') return;
 
@@ -50,10 +34,21 @@ export default function AdminGenerationsPage() {
     }
   }, [status, session, router]);
 
+  const load = async () => {
+    try {
+      setLoading(true);
+      let g = await fetchGenerations();
+      setGenerations(g);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!session || session.user?.role === 'USER') return;
-
-    fetchGenerations();
+    load();
   }, [session]);
 
   if (
@@ -99,7 +94,8 @@ export default function AdminGenerationsPage() {
         return;
       }
 
-      await fetchGenerations();
+      let g = await fetchGenerations();
+      setGenerations(g);
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erreur inattendue lors de la suppression');
@@ -124,50 +120,49 @@ export default function AdminGenerationsPage() {
         ]}
       />
       <div className="flex-1 flex flex-col overflow-hidden px-8 py-6">
-        <div className="h-full overflow-y-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-red-500 text-white sticky top-0 z-10">
-              <tr>
-                <th className="border px-3 py-2 text-left">Nom</th>
-                <th className="border px-3 py-2 text-left">Rang</th>
-                <th className="border px-3 py-2 text-left">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {generations.map((g) => (
-                <tr key={g.id}>
-                  <td className="border px-3 py-2">{g.name}</td>
-                  <td className="border px-3 py-2">{g.rank}</td>
-                  <td className="border px-3 py-2">
+        <Table
+          rows={generations}
+          rowKey={(g) => g.id}
+          containerClassName="h-full overflow-y-auto"
+          tableClassName="min-w-full text-sm"
+          headClassName="bg-red-500 text-white sticky top-0 z-10"
+          columns={[
+            { key: 'name', header: 'Nom' },
+            { key: 'rank', header: 'Rang' },
+            {
+              key: 'action',
+              header: 'Action',
+              render: (g) => (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleEditClick(g)}
+                    className="p-1 hover:scale-105 transition-transform"
+                  >
+                    <SquarePen color="red" />
+                  </button>
+
+                  {isAdmin && (
                     <button
                       type="button"
-                      onClick={() => handleEditClick(g)}
+                      onClick={() => handleDeleteGeneration(g.id)}
                       className="p-1 hover:scale-105 transition-transform"
                     >
-                      <SquarePen color="red" />
+                      <Trash color="red" />
                     </button>
-                    {isAdmin && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteGeneration(g.id)}
-                        className="p-1 hover:scale-105 transition-transform"
-                      >
-                        <Trash color="red" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
 
         {openModal && (
           <GenerationFormModal
             isOpen={openModal}
             onClose={handleCloseModal}
             generation={selectedGeneration}
-            onSaved={fetchGenerations}
+            onSaved={load}
           />
         )}
       </div>

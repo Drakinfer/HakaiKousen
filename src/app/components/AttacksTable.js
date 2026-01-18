@@ -1,57 +1,38 @@
 'use client';
-import Link from 'next/link';
-import { TYPE_FR, toFr } from '@/lib/types';
-import { useRouter } from 'next/navigation';
-
-function ClickableRow({ href, ariaLabel, children }) {
-  const router = useRouter();
-  const go = () => router.push(href);
-
-  return (
-    <tr
-      role="link"
-      tabIndex={0}
-      aria-label={ariaLabel}
-      onClick={go}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && go()}
-      className="hover:bg-gray-100 cursor-pointer"
-    >
-      {children}
-    </tr>
-  );
-}
+import Table from '@/app/components/Table';
+import { toFr } from '@/lib/types';
 
 export default function AttacksTable({ attacks, basePath }) {
   return (
-    <div className="md:ml-6 max-w-2xl overflow-y-auto h-[450px] border border-gray-300 rounded-lg bg-white">
-      <table className="border-collapse text-center table-fixed w-full">
-        <thead>
-          <tr>
-            <th>Nom</th>
-            <th>Dernier Type</th>
-          </tr>
-        </thead>
-        <tbody className="[&>tr>td]:text-center [&>tr>td]:align-middle">
-          {attacks.map((a) => (
-            <ClickableRow
-              key={a.id}
-              href={`${basePath}/${a.id}`}
-              ariaLabel={`Voir ${a.name}`}
-            >
-              <td className="p-2 border-b">
-                <span className="text-gray-800 font-semibold">{a.name}</span>
-              </td>
-              <td className="p-2 border-b">
-                <span
-                  className={`inline-flex items-center justify-center font-bold px-1 rounded-md w-24 border-2 border-black ${a.lastType?.name?.toLowerCase()}`}
-                >
-                  {toFr(a.lastType?.name)}
-                </span>
-              </td>
-            </ClickableRow>
-          ))}
-        </tbody>
-      </table>
+    <div className="md:ml-6 max-w-2xl border border-gray-300 rounded-lg bg-white">
+      <Table
+        columns={[
+          {
+            key: 'name',
+            header: 'Nom',
+            render: (a) => (
+              <span className="text-gray-800 font-semibold">{a.name}</span>
+            ),
+          },
+          {
+            key: 'lastType',
+            header: 'Dernier Type',
+            render: (a) => (
+              <span
+                className={`inline-flex items-center justify-center font-bold px-1 rounded-md w-24 border-2 border-black ${a.lastType?.name?.toLowerCase()}`}
+              >
+                {toFr(a.lastType?.name)}
+              </span>
+            ),
+          },
+        ]}
+        rows={attacks}
+        rowHref={(a) => `${basePath}/${a.id}`}
+        containerClassName="overflow-y-auto h-[450px]"
+        tableClassName="border-collapse text-center table-fixed w-full"
+        headClassName="sticky top-0 z-10 bg-white"
+        rowClassName="hover:bg-gray-100"
+      />
     </div>
   );
 }

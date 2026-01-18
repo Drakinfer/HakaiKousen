@@ -25,10 +25,21 @@ export default function AdminAttacksPage() {
   const [openModal, setOpenModal] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    fetchAttacks(setAttacks, nameFilter, typeFilter);
-    fetchTypes(setTypes);
-    setLoading(false);
+    const load = async () => {
+      try {
+        setLoading(true);
+        let a = await fetchAttacks(nameFilter, typeFilter);
+        setAttacks(a);
+        let t = await fetchTypes();
+        setTypes(t);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, []);
 
   const handleAddClick = () => {
@@ -39,8 +50,9 @@ export default function AdminAttacksPage() {
     setOpenModal(false);
   };
 
-  const handleSearch = () => {
-    fetchAttacks(nameFilter, typeFilter);
+  const handleSearch = async () => {
+    let a = await fetchAttacks(nameFilter, typeFilter);
+    setAttacks(a);
   };
 
   useEffect(() => {
@@ -51,8 +63,9 @@ export default function AdminAttacksPage() {
     }
   }, [status, session, router]);
 
-  const handleAttackSaved = () => {
-    fetchAttacks(setAttacks, nameFilter, typeFilter);
+  const handleAttackSaved = async () => {
+    let a = await fetchAttacks(nameFilter, typeFilter);
+    setAttacks(a);
   };
 
   if (loading) {

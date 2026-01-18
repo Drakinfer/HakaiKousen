@@ -10,7 +10,9 @@ import { Icon, SquarePen, Trash } from '../../../../lib/lucide';
 import Aside from '@/app/components/Aside';
 import LocationFormModal from '@/app/components/modal/LocationFormModal';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
-import { fetchCompetences, fetchLocations } from '@/lib/fetch';
+import { fetchLocations } from '@/lib/fetch';
+
+import Table from '@/app/components/Table';
 
 export default function AdminLocationsPage() {
   const { data: session, status } = useSession();
@@ -38,7 +40,8 @@ export default function AdminLocationsPage() {
     const load = async () => {
       try {
         setLoading(true);
-        await fetchLocations(setLocations);
+        let l = await fetchLocations();
+        setLocations(l);
       } catch (e) {
         console.error('Erreur lors du chargement des habitats', e);
       } finally {
@@ -91,7 +94,8 @@ export default function AdminLocationsPage() {
         return;
       }
 
-      await fetchLocations(setLocations);
+      let l = await fetchLocations();
+      setLocations(l);
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erreur inattendue lors de la suppression');
@@ -101,7 +105,8 @@ export default function AdminLocationsPage() {
   const handleCloseModal = async () => {
     setOpenModal(false);
     setSelectedLocation(null);
-    await fetchLocations(setLocations);
+    let l = await fetchLocations();
+    setLocations(l);
   };
 
   return (
@@ -117,45 +122,46 @@ export default function AdminLocationsPage() {
         ]}
       />
       <div className="flex-1 flex flex-col overflow-hidden px-8 py-6">
-        <div className="h-full overflow-y-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-red-500 text-white sticky top-0 z-10">
-              <tr>
-                <th className="border px-3 py-2 text-left">Nom</th>
-                <th className="border px-3 py-2 text-left">Icon</th>
-                <th className="border px-3 py-2 text-left">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {locations.map((l) => (
-                <tr key={l.id}>
-                  <td className="border px-3 py-2">{l.name}</td>
-                  <td className="border px-3 py-2">
-                    <Icon name={l.icon} />
-                  </td>
-                  <td className="border px-3 py-2">
+        <Table
+          rows={locations}
+          rowKey={(l) => l.id}
+          containerClassName="h-full overflow-y-auto"
+          tableClassName="min-w-full text-sm"
+          headClassName="bg-red-500 text-white sticky top-0 z-10"
+          columns={[
+            { key: 'name', header: 'Nom' },
+            {
+              key: 'icon',
+              header: 'Icon',
+              render: (l) => <Icon name={l.icon} />,
+            },
+            {
+              key: 'action',
+              header: 'Action',
+              render: (l) => (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleEditClick(l)}
+                    className="p-1 hover:scale-105 transition-transform"
+                  >
+                    <SquarePen color="red" />
+                  </button>
+
+                  {isAdmin && (
                     <button
                       type="button"
-                      onClick={() => handleEditClick(l)}
+                      onClick={() => handleDeleteType(l.id)}
                       className="p-1 hover:scale-105 transition-transform"
                     >
-                      <SquarePen color="red" />
+                      <Trash color="red" />
                     </button>
-                    {isAdmin && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteType(l.id)}
-                        className="p-1 hover:scale-105 transition-transform"
-                      >
-                        <Trash color="red" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
 
         {openModal && (
           <LocationFormModal

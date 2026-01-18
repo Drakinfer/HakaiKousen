@@ -4,16 +4,26 @@ import { useEffect, useState } from 'react';
 import Footer from '../components/Footer';
 import Loading from '../components/Loading';
 import { fetchDocuments } from '@/lib/fetch';
-import LibraryTable from '../components/LibraryTable';
+import GridTable from '../components/GridTable';
+import LibraryGridItem from '../components/LibraryGridItem';
 
 export default function LibraryPage() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    fetchDocuments(setDocuments);
-    setLoading(false);
+    const load = async () => {
+      try {
+        setLoading(true);
+        let d = await fetchDocuments();
+        setDocuments(d);
+      } catch (e) {
+        console.error('Erreur lors du chargement des documents', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, []);
 
   return loading ? (
@@ -29,7 +39,12 @@ export default function LibraryPage() {
             </p>
           </header>
 
-          <LibraryTable documents={documents} />
+          <GridTable
+            items={documents}
+            GridItemComponent={LibraryGridItem}
+            emptyText="Aucun document pour le moment."
+            getKey={(d) => d.id}
+          />
         </div>
       </main>
       <Footer />

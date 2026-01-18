@@ -10,6 +10,9 @@ import { SquarePen, Trash } from '../../../../lib/lucide';
 import Aside from '@/app/components/Aside';
 import TypeFormModal from '@/app/components/modal/TypeFormModal';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
+import { fetchTypes } from '@/lib/fetch';
+
+import Table from '@/app/components/Table';
 
 export default function AdminTypesPage() {
   const { data: session, status } = useSession();
@@ -23,24 +26,6 @@ export default function AdminTypesPage() {
 
   const isAdmin = session?.user?.role == 'ADMIN';
 
-  const fetchTypes = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch('/api/types');
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || 'Erreur lors du chargement des types');
-      }
-      const data = await res.json();
-      console.log('Données reçues depuis /api/types :', data);
-      setTypes(data.types || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
     if (status === 'loading') return;
 
@@ -52,7 +37,19 @@ export default function AdminTypesPage() {
   useEffect(() => {
     if (!session || session.user?.role === 'USER') return;
 
-    fetchTypes();
+    const load = async () => {
+      try {
+        setLoading(true);
+        let t = await fetchTypes();
+        setTypes(t);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, [session]);
 
   if (
@@ -98,7 +95,8 @@ export default function AdminTypesPage() {
         return;
       }
 
-      await fetchTypes();
+      let t = await fetchTypes();
+      setTypes(t);
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erreur inattendue lors de la suppression');
@@ -123,43 +121,46 @@ export default function AdminTypesPage() {
         ]}
       />
       <div className="flex-1 flex flex-col overflow-hidden px-8 py-6">
-        <div className="h-full overflow-y-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-red-500 text-white sticky top-0 z-10">
-              <tr>
-                <th className="border px-3 py-2 text-left">Nom</th>
-                <th className="border px-3 py-2 text-left">Génération</th>
-                <th className="border px-3 py-2 text-left">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {types.map((t) => (
-                <tr key={t.id}>
-                  <td className="border px-3 py-2">{t.labelFr}</td>
-                  <td className="border px-3 py-2">{t.type.generation.name}</td>
-                  <td className="border px-3 py-2">
+        <Table
+          rows={types}
+          rowKey={(t) => t.id}
+          containerClassName="h-full overflow-y-auto"
+          tableClassName="min-w-full text-sm"
+          headClassName="bg-red-500 text-white sticky top-0 z-10"
+          columns={[
+            { key: 'labelFr', header: 'Nom' },
+            {
+              key: 'generation',
+              header: 'Génération',
+              render: (t) => t.type?.generation?.name ?? '—',
+            },
+            {
+              key: 'action',
+              header: 'Action',
+              render: (t) => (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleEditClick(t.type)}
+                    className="p-1 hover:scale-105 transition-transform"
+                  >
+                    <SquarePen color="red" />
+                  </button>
+
+                  {isAdmin && (
                     <button
                       type="button"
-                      onClick={() => handleEditClick(t.type)}
+                      onClick={() => handleDeleteType(t.id)}
                       className="p-1 hover:scale-105 transition-transform"
                     >
-                      <SquarePen color="red" />
+                      <Trash color="red" />
                     </button>
-                    {isAdmin && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteType(t.id)}
-                        className="p-1 hover:scale-105 transition-transform"
-                      >
-                        <Trash color="red" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
 
         {openModal && (
           <TypeFormModal

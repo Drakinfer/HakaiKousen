@@ -4,16 +4,26 @@ import { useEffect, useState } from 'react';
 import Footer from '../components/Footer';
 import Loading from '../components/Loading';
 import { fetchMembers } from '@/lib/fetch';
-import MemberTable from '../components/MemberTable';
+import GridTable from '../components/GridTable';
+import MemberGridItem from '../components/MemberGridItem';
 
 export default function LibraryPage() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    fetchMembers(setMembers);
-    setLoading(false);
+    const load = async () => {
+      try {
+        setLoading(true);
+        let m = await fetchMembers();
+        setMembers(m);
+      } catch (e) {
+        console.error('Erreur lors du chargement des membres', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, []);
 
   return loading ? (
@@ -28,7 +38,12 @@ export default function LibraryPage() {
             </h1>
           </header>
 
-          <MemberTable members={members} />
+          <GridTable
+            items={members}
+            GridItemComponent={MemberGridItem}
+            emptyText="Aucun membre pour le moment."
+            getKey={(m) => m.id}
+          />
         </div>
       </main>
       <Footer />

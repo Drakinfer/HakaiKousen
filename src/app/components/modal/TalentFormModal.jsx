@@ -26,7 +26,8 @@ export default function TalentFormModal({
 
     const loadGenerations = async () => {
       try {
-        await fetchGenerations(setGenerations, setLocalLoading);
+        let g= await fetchGenerations();
+        setGenerations(g)
       } catch (err) {
         console.error(err);
         alert("Erreur lors du chargement des générations");

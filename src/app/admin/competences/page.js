@@ -12,6 +12,8 @@ import CompetenceFormModal from '@/app/components/modal/CompetenceFormModal';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { fetchCompetences } from '@/lib/fetch';
 
+import Table from '@/app/components/Table';
+
 export default function AdminCompetencesPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -38,7 +40,8 @@ export default function AdminCompetencesPage() {
     const load = async () => {
       try {
         setLoading(true);
-        await fetchCompetences(setCompetences);
+        let c = await fetchCompetences();
+        setCompetences(c);
       } catch (e) {
         console.error('Erreur lors du chargement des compétences', e);
       } finally {
@@ -91,7 +94,8 @@ export default function AdminCompetencesPage() {
         return;
       }
 
-      await fetchCompetences(setCompetences);
+      let c = await fetchCompetences();
+      setCompetences(c);
     } catch (err) {
       console.error(err);
       alert(err.message || 'Erreur inattendue lors de la suppression');
@@ -101,7 +105,8 @@ export default function AdminCompetencesPage() {
   const handleCloseModal = async () => {
     setOpenModal(false);
     setSelectedCompetence(null);
-    await fetchCompetences(setCompetences);
+    let c = await fetchCompetences();
+    setCompetences(c);
   };
 
   return (
@@ -117,43 +122,42 @@ export default function AdminCompetencesPage() {
         ]}
       />
       <div className="flex-1 flex flex-col overflow-hidden px-8 py-6">
-        <div className="h-full overflow-y-auto">
-          <table className="min-w-full text-sm">
-            <thead className="bg-red-500 text-white sticky top-0 z-10">
-              <tr>
-                <th className="border px-3 py-2 text-left">Nom</th>
-                <th className="border px-3 py-2 text-left">Description</th>
-                <th className="border px-3 py-2 text-left">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {competences.map((c) => (
-                <tr key={c.id}>
-                  <td className="border px-3 py-2">{c.name}</td>
-                  <td className="border px-3 py-2">{c.description}</td>
-                  <td className="border px-3 py-2">
+        <Table
+          rows={competences}
+          rowKey={(c) => c.id}
+          containerClassName="h-full overflow-y-auto"
+          tableClassName="min-w-full text-sm"
+          headClassName="bg-red-500 text-white sticky top-0 z-10"
+          columns={[
+            { key: 'name', header: 'Nom' },
+            { key: 'description', header: 'Description' },
+            {
+              key: 'action',
+              header: 'Action',
+              render: (c) => (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => handleEditClick(c)}
+                    className="p-1 hover:scale-105 transition-transform"
+                  >
+                    <SquarePen color="red" />
+                  </button>
+
+                  {isAdmin && (
                     <button
                       type="button"
-                      onClick={() => handleEditClick(c)}
+                      onClick={() => handleDeleteCompetence(c.id)}
                       className="p-1 hover:scale-105 transition-transform"
                     >
-                      <SquarePen color="red" />
+                      <Trash color="red" />
                     </button>
-                    {isAdmin && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteCompetence(c.id)}
-                        className="p-1 hover:scale-105 transition-transform"
-                      >
-                        <Trash color="red" />
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
 
         {openModal && (
           <CompetenceFormModal

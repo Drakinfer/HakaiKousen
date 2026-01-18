@@ -187,7 +187,6 @@ export default function ProfilePage() {
     <div className="p-6 h-main md:overflow-hidden flex flex-col">
       <h1 className="text-2xl font-bold mb-4 flex-shrink-0">Profil</h1>
 
-      {/* Tabs */}
       <div className="flex gap-2 mb-4 flex-shrink-0">
         <button
           onClick={() => setActiveTab(TABS.INFO)}
@@ -211,7 +210,6 @@ export default function ProfilePage() {
       <div className="flex-1 md:overflow-hidden">
         {activeTab === TABS.INFO ? (
           <div className="h-full md:overflow-hidden flex flex-col gap-4">
-            {/* Infos + edit */}
             <section className="bg-white rounded-xl shadow p-4 flex-shrink-0">
               <h2 className="text-xl font-semibold mb-3">Mes informations</h2>
 

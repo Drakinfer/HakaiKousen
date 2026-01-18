@@ -63,8 +63,18 @@ export default function TypeFormModal({ isOpen, onClose, type, onSaved }) {
 
   useEffect(() => {
     if (!isOpen) return;
+    
+    const loadGenerations = async () => {
+      try {
+        let g= await fetchGenerations();
+        setGenerations(g)
+      } catch (err) {
+        console.error(err);
+        alert("Erreur lors du chargement des générations");
+      }
+    };
 
-    fetchGenerations(setGenerations);
+    loadGenerations();
   }, [isOpen]);
 
   useEffect(() => {

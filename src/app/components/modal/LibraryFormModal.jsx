@@ -138,7 +138,6 @@ export default function LibraryFormModal({ isOpen, onClose, document, onSaved })
       if (source === 'link') {
         fd.append('link', form.link.trim());
       } else {
-        // Ici on sait qu’il est <= MAX_API_UPLOAD_BYTES
         fd.append('file', file);
       }
 

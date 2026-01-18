@@ -51,11 +51,27 @@ export default function PokemonsPage() {
   }, [status, session, router]);
 
   useEffect(() => {
-    setLoading(true);
-    fetchTypes(setTypes);
-    fetchGenerations(setGenerations);
-    handleSearch();
-    setLoading(false);
+    const load = async () => {
+      try {
+        setLoading(true);
+        let t = await fetchTypes();
+        const uniqueSortedTypes = [
+          ...new Map(t.map((type) => [type.value, type])).values(),
+        ].sort((a, b) =>
+          a.labelFr.localeCompare(b.labelFr, 'fr', { numeric: true }),
+        );
+        setTypes(uniqueSortedTypes);
+        let g = await fetchGenerations();
+        setGenerations(g);
+        await handleSearch();
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, []);
 
   const toggleTypeSelection = (type) => {
@@ -102,9 +118,10 @@ export default function PokemonsPage() {
     return params.toString() ? `?${params.toString()}` : '';
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     const queryString = buildQueryString();
-    fetchPokemons(setPokemons, queryString);
+    let result = await fetchPokemons(queryString);
+    setPokemons(result);
   };
 
   const loadOptions = async () => {
@@ -114,10 +131,14 @@ export default function PokemonsPage() {
   };
 
   const handleAddClick = async () => {
-    fetchTalents(setTalents);
-    fetchAttacks(setAttacks);
-    fetchCompetences(setCompetences);
-    fetchLocations(setLocations);
+    let t = await fetchTalents();
+    setTalents(t);
+    let a = await fetchAttacks();
+    setAttacks(a);
+    let c = await fetchCompetences();
+    setCompetences(c);
+    let l = await fetchLocations();
+    setLocations(l);
     loadOptions();
     setOpenModal(true);
   };
@@ -126,7 +147,7 @@ export default function PokemonsPage() {
     setOpenModal(false);
   };
 
-  const MAX_FILE_SIZE = 4.5 * 1024 * 1024; // 4,5 Mo
+  const MAX_FILE_SIZE = 4.5 * 1024 * 1024;
 
   function assertSize(file) {
     if (!file) return;

@@ -12,11 +12,26 @@ export default function TalentsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchTalents(setTalents, setLoading);
+    const loadTalents = async () => {
+      try {
+        setLoading(true);
+        const talents = await fetchTalents();
+        setTalents(talents);
+      } catch (e) {
+        console.error('Erreur lors du chargement des talents', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadTalents();
   }, []);
 
-  const handleSearch = () => {
-    fetchTalents(setTalents, setLoading, nameFilter);
+  const handleSearch = async () => {
+    setLoading(true);
+    let t = await fetchTalents(nameFilter);
+    setTalents(t);
+    setLoading(false);
   };
   if (loading) {
     return <Loading />;

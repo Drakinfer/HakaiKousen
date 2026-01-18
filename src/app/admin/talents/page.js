@@ -30,8 +30,9 @@ export default function AdminTalentsPage() {
     setOpenModal(false);
   };
 
-  const handleSearch = () => {
-    fetchTalents(setTalents, setLoading, nameFilter);
+  const handleSearch = async () => {
+    let t = await fetchTalents(nameFilter);
+    setTalents(t);
   };
 
   const handleSubmitTalent = async (payload) => {
@@ -42,7 +43,9 @@ export default function AdminTalentsPage() {
     });
 
     handleCloseModal();
-    fetchTalents(setTalents, setLoading, nameFilter);
+
+    let t = await fetchTalents(nameFilter);
+    setTalents(t);
   };
 
   useEffect(() => {
@@ -57,14 +60,14 @@ export default function AdminTalentsPage() {
     if (!session || session.user?.role === 'USER') return;
 
     const loadData = async () => {
-      await fetchTalents(setTalents, setLoading, nameFilter);
-
       try {
-        const res = await fetch('/api/generations');
-        const data = await res.json();
-        setGenerations(data.generations || []);
+        setLoading(true);
+        let t = await fetchTalents(nameFilter);
+        setTalents(t);
       } catch (error) {
-        console.error('Erreur lors du chargement des générations', error);
+        console.error('Erreur lors du chargement des talents', error);
+      } finally {
+        setLoading(false);
       }
     };
 

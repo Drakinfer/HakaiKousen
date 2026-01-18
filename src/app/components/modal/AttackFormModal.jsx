@@ -24,8 +24,10 @@ export default function AttackFormModal({
     const loadData = async () => {
       try {
         setLocalLoading(true);
-        await fetchGenerations(setGenerations, () => {});
-        await fetchTypes(setTypes);
+        let g = await fetchGenerations();
+        setGenerations(g)
+        let t = await fetchTypes();
+        setTypes(t)
       } catch (err) {
         if (!cancelled) {
           console.error(err);

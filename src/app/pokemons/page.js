@@ -22,11 +22,26 @@ export default function PokemonsPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    fetchTypes(setTypes);
-    fetchGenerations(setGenerations);
-    handleSearch();
-    setLoading(false);
+    const load = async () => {
+      try {
+        await handleSearch();
+        let t = await fetchTypes();
+        const uniqueSortedTypes = [
+          ...new Map(t.map((type) => [type.value, type])).values(),
+        ].sort((a, b) =>
+          a.labelFr.localeCompare(b.labelFr, 'fr', { numeric: true }),
+        );
+        setTypes(uniqueSortedTypes);
+        let g = await fetchGenerations();
+        setGenerations(g);
+      } catch (e) {
+        console.error('Erreur lors du chargement des talents', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, []);
 
   const toggleTypeSelection = (type) => {
@@ -73,9 +88,10 @@ export default function PokemonsPage() {
     return params.toString() ? `?${params.toString()}` : '';
   };
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
     const queryString = buildQueryString();
-    fetchPokemons(setPokemons, queryString);
+    const result = await fetchPokemons(queryString);
+    setPokemons(result);
   };
 
   return loading ? (

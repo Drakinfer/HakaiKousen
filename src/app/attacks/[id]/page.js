@@ -18,9 +18,22 @@ export default function AttackPage() {
   useEffect(() => {
     if (!id) return;
 
-    setLoading(true);
-    fetchAttack(setAttack, setGenerations);
-    setLoading(false);
+    const load = async () => {
+      try {
+        setLoading(true);
+        const result = await fetchAttack(id);
+
+        setAttack(result.attack);
+        setGenerations(result.generations);
+        setSelectedGeneration(result.selectedGeneration);
+      } catch (e) {
+        console.error('Erreur lors du chargement de l’attaque', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, [id]);
 
   if (loading) {

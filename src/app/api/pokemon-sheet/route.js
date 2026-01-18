@@ -24,7 +24,6 @@ async function getBrowserLaunchOptions() {
     };
   }
 
-  // Local dev (Windows/macOS/Linux)
   const localPath = process.env.CHROME_EXECUTABLE_PATH;
   if (!localPath) {
     throw new Error(
@@ -114,7 +113,6 @@ export async function POST(req) {
       );
     }
 
-    // ✅ Prisma fetch (comme ton exemple)
     const pg = await prisma.pokemonGeneration.findUnique({
       where: { id },
       include: {
@@ -140,26 +138,18 @@ export async function POST(req) {
       );
     }
 
-    // Payload normalisé (comme ton endpoint)
     const payload = buildPokemonGenerationPayload(pg);
 
-    // Render JSX -> HTML
     const React = (await import('react')).default;
     const { renderToStaticMarkup } = await import('react-dom/server');
 
     const html = renderToStaticMarkup(
       React.createElement(PokemonSheet, {
-        // ⚠️ Ton template peut consommer ce que tu veux.
-        // Je te passe :
-        // - generated : ce que tu envoies dans data
-        // - pokemonGeneration : payload normalisé identique à ton API
         generated: data,
         pokemon: payload.pokemonGeneration,
-        // si ton template attend "pokemon" au lieu de "pokemonGeneration", adapte ici
       }),
     );
 
-    // Puppeteer
     const browser = await puppeteer.launch(await getBrowserLaunchOptions());
 
     const page = await browser.newPage();
