@@ -1,5 +1,6 @@
 import prisma from '../../../../lib/prisma';
 import { requireApiRole } from '../../../../lib/apiAuth';
+import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
@@ -10,10 +11,13 @@ export async function GET() {
       },
       orderBy: [{ isNotification: 'desc' }, { rank: 'asc' }],
     });
-    return Response.json({ items }, { status: 200 });
+    return NextResponse.json({ items: items }, { status: 200 });
   } catch (e) {
     console.error('[GET /api/homepage-paragraphs]', e);
-    return serverError('Internal error');
+    return NextResponse.json(
+      { error: 'failed to fetch paragraphs' },
+      { status: 500 },
+    );
   }
 }
 
@@ -25,7 +29,7 @@ export async function POST(req) {
   try {
     body = await req.json();
   } catch {
-    return badRequest('Invalid JSON');
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
   const title = body?.title ?? null;
@@ -37,10 +41,14 @@ export async function POST(req) {
       : Number(body.rank);
 
   if (Number.isNaN(rank))
-    return Response.json('rank must be a number', { status: 400 });
+    return NextResponse.json(
+      { error: 'rank must be a number' },
+      { status: 400 },
+    );
 
   const userId = user?.id;
-  if (!userId) return Response.json('userID missing', { status: 400 });
+  if (!userId)
+    return NextResponse.json({ error: 'userID missing' }, { status: 400 });
 
   try {
     const created = await prisma.homePageParagraph.create({
@@ -56,6 +64,6 @@ export async function POST(req) {
     return Response.json({ item: created }, { status: 201 });
   } catch (e) {
     console.error('[POST /api/homepage-paragraphs]', e);
-    return Response.json('API error', { status: 500 });
+    return NextResponse.json({ error: 'API error' }, { status: 500 });
   }
 }
