@@ -20,9 +20,13 @@ export default function AttacksPage() {
         setLoading(true);
         let a = await fetchAttacks(nameFilter, typeFilter);
         setAttacks(a);
-
         let t = await fetchTypes();
-        setTypes(t);
+        const uniqueSortedTypes = [
+          ...new Map(t.map((type) => [type.value, type])).values(),
+        ].sort((a, b) =>
+          a.labelFr.localeCompare(b.labelFr, 'fr', { numeric: true }),
+        );
+        setTypes(uniqueSortedTypes);
       } catch (e) {
         console.error(e);
       } finally {

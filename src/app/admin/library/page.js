@@ -29,13 +29,13 @@ export default function AdminLibraryPage() {
   useEffect(() => {
     if (status === 'loading') return;
 
-    if (!session || session.user?.role === 'USER') {
+    if (!session || !isAdmin) {
       router.push('/');
     }
   }, [status, session, router]);
 
   useEffect(() => {
-    if (!session || session.user?.role === 'USER') return;
+    if (!session || !isAdmin) return;
 
     const load = async () => {
       try {
@@ -51,12 +51,7 @@ export default function AdminLibraryPage() {
     load();
   }, [session]);
 
-  if (
-    status === 'loading' ||
-    !session ||
-    session.user?.role === 'USER' ||
-    loading
-  ) {
+  if (status === 'loading' || !session || !isAdmin || loading) {
     return <Loading />;
   }
 

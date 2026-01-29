@@ -1,3 +1,4 @@
+import { requireApiRole } from '../../../../../lib/apiAuth';
 import prisma from '../../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 

@@ -11,15 +11,27 @@ import Aside from '@/app/components/Aside';
 import AttackDetails from '@/app/components/attacks/AttackDetails';
 import AttackFormModal from '@/app/components/modal/AttackFormModal';
 import { fetchAttack } from '@/lib/fetch';
+import { useSession } from 'next-auth/react';
 
 export default function AttackPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   const [attack, setAttack] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generations, setGenerations] = useState([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const isAdmin = session?.user?.role == 'ADMIN';
+
+  useEffect(() => {
+    if (status === 'loading') return;
+
+    if (!session || session.user?.role === 'USER') {
+      router.push('/');
+    }
+  }, [status, session, router]);
 
   useEffect(() => {
     if (!id) return;
@@ -137,7 +149,12 @@ export default function AttackPage() {
   const actions = [
     { href: '/admin/attacks', icon: faArrowLeft, title: 'Retour' },
     { onClick: handleEditClick, icon: faSquarePen, title: 'Modifier' },
-    { onClick: handleDeleteClick, icon: faTrash, title: 'Supprimer' },
+    {
+      onClick: handleDeleteClick,
+      icon: faTrash,
+      title: 'Supprimer',
+      adminOnly: true,
+    },
   ];
 
   if (loading) {
@@ -147,7 +164,7 @@ export default function AttackPage() {
   if (!attack) {
     return (
       <div className="flex h-main">
-        <Aside actions={actions} />
+        <Aside actions={actions} isAdmin={isAdmin} />
         <div className="w-full p-1 overflow-hidden">
           <p className="text-center mt-4 text-red-600">Attaque introuvable.</p>
         </div>

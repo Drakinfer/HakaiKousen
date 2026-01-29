@@ -735,10 +735,10 @@ function EvolutionsSection({ evolutions, onChange, pokemons }) {
             <select
               className="w-full border rounded px-2 py-1"
               value={e.pokemonId ?? ''}
-              onChange={(e) =>
+              onChange={(ev) =>
                 updateEvolution(index, {
                   ...e,
-                  pokemonId: e.target.value,
+                  pokemonId: ev.target.value === '' ? null : Number(ev.target.value),
                 })
               }
             >

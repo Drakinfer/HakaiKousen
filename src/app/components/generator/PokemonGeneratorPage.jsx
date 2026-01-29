@@ -142,6 +142,7 @@ async function loadPokemonGenerationBySelection() {
       setLoading(true);
       let pg = null
       let result = null
+      let gen = null
       try {
         const tasks = [result = await fetchPokemons(), setPokemons(result), gen = await fetchGenerations(), setGenerations(gen)];
         if (initialPokemonGenerationId) {
