@@ -11,15 +11,27 @@ import Aside from '@/app/components/Aside';
 import TalentDetails from '@/app/components/talents/TalentDetails';
 import { fetchTalent } from '@/lib/fetch';
 import TalentFormModal from '@/app/components/modal/TalentFormModal';
+import { useSession } from 'next-auth/react';
 
 export default function AdminTalentPage() {
   const { id } = useParams();
   const router = useRouter();
+  const { data: session, status } = useSession();
 
   const [talent, setTalent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [generations, setGenerations] = useState([]);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  const isAdmin = session?.user?.role == 'ADMIN';
+
+  useEffect(() => {
+    if (status === 'loading') return;
+
+    if (!session || session.user?.role === 'USER') {
+      router.push('/');
+    }
+  }, [status, session, router]);
 
   useEffect(() => {
     if (!id) return;
@@ -136,12 +148,17 @@ export default function AdminTalentPage() {
   const actions = [
     { href: '/admin/talents', icon: faArrowLeft, title: 'Retour' },
     { onClick: handleEditClick, icon: faSquarePen, title: 'Modifier' },
-    { onClick: handleDeleteClick, icon: faTrash, title: 'Supprimer' },
+    {
+      onClick: handleDeleteClick,
+      icon: faTrash,
+      title: 'Supprimer',
+      adminOnly: true,
+    },
   ];
 
   return (
     <div className="flex h-main">
-      <Aside actions={actions} />
+      <Aside actions={actions} isAdmin={isAdmin} />
       <div className="w-full p-1 overflow-hidden">
         <h1 className="w-full text-center font-bold text-2xl">{talent.name}</h1>
         <TalentDetails talent={talent} generations={generations} />

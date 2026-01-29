@@ -28,7 +28,7 @@ export default function Modal({
     >
       <div
         className={clsx(
-          'relative w-full rounded-lg bg-white p-1 shadow-lg dark:bg-slate-800',
+          'relative w-full rounded-lg bg-white p-1 shadow-lg',
           SIZE_CLASSES[size]
         )}
         onClick={(e) => e.stopPropagation()}
@@ -42,7 +42,7 @@ export default function Modal({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full px-3 py-1 text-sm text-white hover:bg-slate-100 hover:text-slate-800 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+            className="rounded-full px-3 py-1 text-sm text-white hover:bg-slate-100 hover:text-slate-800"
           >
             ✕
           </button>

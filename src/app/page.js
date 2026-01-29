@@ -2,6 +2,7 @@
 import Footer from './components/Footer';
 import { useState, useEffect } from 'react';
 import { fetchParagraphs } from '@/lib/fetch';
+import Loading from './components/Loading';
 
 export default function Home() {
   const [paragraphs, setParagraphs] = useState([]);
@@ -36,6 +37,10 @@ export default function Home() {
     setAnnouncements(paragraphs.filter((p) => p.isNotification));
     setDescriptions(paragraphs.filter((p) => !p.isNotification));
   }, [paragraphs]);
+
+  if (loading) {
+    return <Loading />;
+  }
 
   return (
     <>

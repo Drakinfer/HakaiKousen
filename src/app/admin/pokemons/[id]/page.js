@@ -25,9 +25,11 @@ import {
   fetchLocations,
   fetchGenerations,
 } from '@/lib/fetch';
+import { useSession } from 'next-auth/react';
 
 export default function PokemonPage() {
   const { id } = useParams();
+  const { data: session, status } = useSession();
   const router = useRouter();
   const [pokemon, setPokemon] = useState(null);
   const [previousPokemon, setPreviousPokemon] = useState(null);
@@ -48,6 +50,16 @@ export default function PokemonPage() {
   const [attacks, setAttacks] = useState([]);
   const [competences, setCompetences] = useState([]);
   const [locations, setLocations] = useState([]);
+
+  const isAdmin = session?.user?.role == 'ADMIN';
+
+  useEffect(() => {
+    if (status === 'loading') return;
+
+    if (!session || session.user?.role === 'USER') {
+      router.push('/');
+    }
+  }, [status, session, router]);
 
   useEffect(() => {
     if (!id) return;
@@ -194,24 +206,15 @@ export default function PokemonPage() {
       });
 
       const rawText = await res.text();
+      console.log(res);
 
       if (!res.ok) {
         console.error('Erreur API PUT /api/pokemons/[id] :', rawText);
-        try {
-          const j = JSON.parse(rawText);
-          alert(
-            j?.error
-              ? `${j.error}${j.details ? ` - ${j.details}` : ''}`
-              : rawText,
-          );
-        } catch {
-          alert('Erreur lors de la mise à jour du pokemon');
-        }
+        alert('Erreur lors de la mise à jour du pokemon');
         return;
       }
 
       const result = await fetchPokemon(id);
-      if (cancelled) return;
 
       setPokemon(result.pokemon);
       setGenerations(result.generations);
@@ -221,7 +224,7 @@ export default function PokemonPage() {
       setNextPokemon(result.nextPokemon);
     } catch (error) {
       console.error('Erreur lors de la mise à jour du pokemon', error);
-      alert(error);
+      alert('Erreur lors de la mise à jour du pokemon');
     } finally {
       setIsEditModalOpen(false);
     }
@@ -256,7 +259,12 @@ export default function PokemonPage() {
   const actions = [
     { href: '/admin/pokemons', icon: faArrowLeft, title: 'Retour' },
     { onClick: handleEditClick, icon: faSquarePen, title: 'Modifier' },
-    { onClick: handleDeleteClick, icon: faTrash, title: 'Supprimer' },
+    {
+      onClick: handleDeleteClick,
+      icon: faTrash,
+      title: 'Supprimer',
+      adminOnly: true,
+    },
   ];
 
   if (loading) {
@@ -266,7 +274,7 @@ export default function PokemonPage() {
   return (
     <>
       <div className="flex h-main overflow-hidden">
-        <Aside actions={actions} />
+        <Aside actions={actions} isAdmin={isAdmin} />
 
         <div className="flex flex-col flex-1 p-1 w-full h-full overflow-auto">
           <div className="flex justify-between items-center mx-1">
@@ -304,8 +312,8 @@ export default function PokemonPage() {
                 nextPokemon && previousPokemon
                   ? 'w-2/3'
                   : previousPokemon || nextPokemon
-                  ? 'w-3/4'
-                  : 'w-full'
+                    ? 'w-3/4'
+                    : 'w-full'
               } text-center rounded-lg border-${
                 pokemon.type
                   ? pokemon.type?.name.toLowerCase()

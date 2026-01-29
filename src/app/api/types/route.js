@@ -1,6 +1,7 @@
 import prisma from '../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 import { toFr } from '../../../lib/types';
+import { requireApiRole } from '../../../../lib/apiAuth';
 
 export async function GET(req) {
   try {

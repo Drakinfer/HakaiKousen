@@ -79,10 +79,10 @@ const NavBar = () => {
                 <Link href="/admin/generations">Générations</Link>
                 <Link href="/admin/competences">Compétences</Link>
                 <Link href="/admin/locations">Habitats</Link>
-                <Link href="/admin/library">Livres</Link>
 
                 {isAdmin && (
                   <>
+                    <Link href="/admin/library">Livres</Link>
                     <Link href="/admin/homePage">Page d'accueil</Link>
                     <Link href="/admin/users">Utilisateurs</Link>
                     <Link href="/admin/teams">L'équipe HK</Link>
