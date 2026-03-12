@@ -1,6 +1,7 @@
 import prisma from '../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 import { toFr } from '../../../lib/types';
+import { requireApiRole } from '../../../../lib/apiAuth';
 
 export async function GET(req) {
   try {
@@ -13,7 +14,7 @@ export async function GET(req) {
 
     const payload = types.map((t) => ({
       id: t.id,
-      name: t.name,
+      type: t,
       labelFr: toFr(t.name),
     }));
 
@@ -28,69 +29,35 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  try {
-    const data = await req.json();
-    const {
-      name,
-      bug,
-      dark,
-      dragon,
-      electric,
-      fairy,
-      fighting,
-      fire,
-      flying,
-      ghost,
-      grass,
-      ground,
-      ice,
-      normal,
-      poison,
-      psychic,
-      rock,
-      steel,
-      water,
-      generation_id,
-    } = data.type;
+  const { ok, res } = await requireApiRole(req, 'EDITOR');
+  if (!ok) return res;
 
-    // Validation des données nécessaires
-    if (!name || !generation_id) {
+  try {
+    const body = await req.json();
+
+    const { name, generationId, ...multipliers } = body;
+
+    if (!name || !generationId) {
       return NextResponse.json(
-        { error: 'Name and generation_id are required for creating a type' },
+        { error: 'Nom et génération obligatoires' },
         { status: 400 },
       );
     }
 
-    // Création du type avec les relations vers la génération
-    const newType = await prisma.types.create({
+    const type = await prisma.type.create({
       data: {
-        name: name,
-        bug: bug,
-        dark: dark,
-        dragon: dragon,
-        electric: electric,
-        fairy: fairy,
-        fighting: fighting,
-        fire: fire,
-        flying: flying,
-        ghost: ghost,
-        grass: grass,
-        ground: ground,
-        ice: ice,
-        normal: normal,
-        poison: poison,
-        psychic: psychic,
-        rock: rock,
-        steel: steel,
-        water: water,
-        generations: {
-          connect: { id: parseInt(generation_id) },
-        },
+        name,
+        generationId,
+        ...multipliers,
       },
     });
 
-    return NextResponse.json({ type: newType }, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ type }, { status: 201 });
+  } catch (err) {
+    console.error('Erreur POST /api/types :', err);
+    return NextResponse.json(
+      { error: 'Erreur lors de la création du type' },
+      { status: 500 },
+    );
   }
 }

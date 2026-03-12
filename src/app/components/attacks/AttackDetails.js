@@ -1,28 +1,55 @@
 import { useState, useEffect } from 'react';
-import { TYPE_FR, toFr } from '@/lib/types';
+import { toFr } from '@/lib/types';
 import { CATEGORY } from '@/lib/category';
 import { RANGE } from '@/lib/range';
 
 export default function AttackDetails({ attack, generations = [] }) {
-  const [selectedGeneration, setSelectedGeneration] = useState(
-    generations[0] ?? null,
-  );
-
-  useEffect(() => {
-    if (!selectedGeneration && generations.length) {
-      setSelectedGeneration(generations[0]);
-    }
-  }, [generations, selectedGeneration]);
-
   const agList = Array.isArray(attack?.attaqueGenerations)
     ? attack.attaqueGenerations
     : [];
 
-  const selectedAttackGeneration =
-    agList.find(
-      (gen) =>
-        (gen?.generation?.name ?? gen?.generation?.name) === selectedGeneration,
-    ) || null;
+  const [selectedGeneration, setSelectedGeneration] = useState(
+    generations.length ? generations[generations.length - 1] : null,
+  );
+
+  useEffect(() => {
+    if (!generations.length) {
+      setSelectedGeneration(null);
+      return;
+    }
+
+    if (!selectedGeneration || !generations.includes(selectedGeneration)) {
+      setSelectedGeneration(generations[generations.length - 1]);
+    }
+  }, [generations, selectedGeneration, attack?.id]);
+
+  let selectedAttackGeneration =
+    agList.find((gen) => {
+      const genName = gen.generation?.name ?? gen.Generation?.name;
+      return genName === selectedGeneration;
+    }) || null;
+
+  if (!selectedAttackGeneration && agList.length) {
+    const withGen = agList.filter((g) => g.generation || g.Generation);
+
+    if (withGen.length) {
+      const best = withGen.reduce((best, g) => {
+        const gen = g.generation || g.Generation;
+        const currentRank = gen?.rank ?? 0;
+
+        if (!best) return g;
+
+        const bestGen = best.generation || best.Generation;
+        const bestRank = bestGen?.rank ?? 0;
+
+        return currentRank > bestRank ? g : best;
+      }, null);
+
+      selectedAttackGeneration = best;
+    } else {
+      selectedAttackGeneration = agList[0];
+    }
+  }
 
   return (
     <div className="w-full bg-white">
@@ -44,72 +71,65 @@ export default function AttackDetails({ attack, generations = [] }) {
 
       <div className="w-full p-4 bg-white">
         {selectedAttackGeneration ? (
-          <>
-            <table className="w-full p-4 bg-white">
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Énergie Système de base</th>
-                  <th>Énergie Système remanié</th>
-                  <th>Précision</th>
-                  <th>Portée</th>
-                  <th>Catégorie</th>
-                  <th>Dégâts</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td className="p-2 text-center">
-                    <span
-                      className={`px-2 py-1 rounded-md ${
-                        selectedAttackGeneration?.type?.name?.toLowerCase() ||
-                        ''
-                      } border-2 border-black`}
-                    >
-                      {toFr(selectedAttackGeneration?.type?.name) || ''}
-                    </span>
-                  </td>
+          <table className="w-full p-4 bg-white">
+            <thead>
+              <tr>
+                <th>Type</th>
+                <th>Énergie Système de base</th>
+                <th>Énergie Système remanié</th>
+                <th>Précision</th>
+                <th>Portée</th>
+                <th>Catégorie</th>
+                <th>Dégâts</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="p-2 text-center">
+                  <span
+                    className={`px-2 py-1 rounded-md ${
+                      selectedAttackGeneration?.type?.name?.toLowerCase() || ''
+                    } border-2 border-black`}
+                  >
+                    {toFr(selectedAttackGeneration?.type?.name) || ''}
+                  </span>
+                </td>
 
-                  <td className="p-2 text-center">
-                    {selectedAttackGeneration?.energie1}
-                  </td>
-                  <td className="p-2 text-center">
-                    {selectedAttackGeneration?.energie2}
-                  </td>
+                <td className="p-2 text-center">
+                  {selectedAttackGeneration?.energie1}
+                </td>
+                <td className="p-2 text-center">
+                  {selectedAttackGeneration?.energie2}
+                </td>
 
-                  <td className="p-2 text-center">
-                    <p className="font-bold"></p>
-                    {selectedAttackGeneration?.precision ?? '-'}
-                  </td>
+                <td className="p-2 text-center">
+                  {selectedAttackGeneration?.precision ?? '-'}
+                </td>
 
-                  <td className="p-2 text-center">
-                    <p className="font-bold"></p>
-                    {RANGE[selectedAttackGeneration?.range] ?? ''}
-                  </td>
+                <td className="p-2 text-center">
+                  {RANGE[selectedAttackGeneration?.range] ?? ''}
+                </td>
 
-                  <td className="p-2 text-center">
-                    <p className="font-bold"></p>
-                    {CATEGORY[selectedAttackGeneration?.category] ?? ''}
-                  </td>
+                <td className="p-2 text-center">
+                  {CATEGORY[selectedAttackGeneration?.category] ?? ''}
+                </td>
 
-                  <td className="p-2 text-center">
-                    <p className="font-bold"></p>
-                    {selectedAttackGeneration?.damage_base ?? 0}
-                  </td>
-                </tr>
-                <tr>
-                  <th className="p-2 text-center" colSpan={7}>
-                    Description
-                  </th>
-                </tr>
-                <tr>
-                  <td className="p-2 text-center" colSpan={7}>
-                    {selectedAttackGeneration.description}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </>
+                <td className="p-2 text-center">
+                  {selectedAttackGeneration?.damage_base ?? 0}
+                </td>
+              </tr>
+              <tr>
+                <th className="p-2 text-center" colSpan={7}>
+                  Description
+                </th>
+              </tr>
+              <tr>
+                <td className="p-2 text-center" colSpan={7}>
+                  {selectedAttackGeneration.description}
+                </td>
+              </tr>
+            </tbody>
+          </table>
         ) : (
           "Pas d'information disponible"
         )}

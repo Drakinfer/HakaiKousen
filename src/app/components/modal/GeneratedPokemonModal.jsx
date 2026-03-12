@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import Modal from '@/app/components//Modal';
+import Modal from '@/app/components/Modal';
 
 const STAT_KEYS = ['VITA', 'DEX', 'FOR', 'CONC', 'END', 'VOL'];
 
-export default function GeneratedPokemonModal({ isOpen, onClose, data, canSave = false }) {
+export default function GeneratedPokemonModal({ isOpen, onClose, data, pokemonGeneration, canSave = false }) {
   if (!data) return null;
 
   const { name, lvl, sex, nature, subNature, talent, breedingMove, shiny, baron, stats } =
@@ -16,10 +16,33 @@ export default function GeneratedPokemonModal({ isOpen, onClose, data, canSave =
   const evs = stats?.evs ?? {};
   const evsLevel = stats?.evsLevel ?? {};
 
-  const handleDownloadPdf = () => {
-    const payload = JSON.stringify(data);
-    window.open(`/api/pokemon-sheet?data=${payload}`, '_blank');
-  };
+const downloadPokemonSheet = async () => {
+   const res = await fetch('/api/pokemon-sheet', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ pgId: String(pokemonGeneration.id), data: data }),
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    console.error('PDF error:', txt);
+    alert('Erreur génération PDF');
+    return;
+  }
+
+  const blob = await res.blob();
+  const filename = res.headers.get('X-Filename') || 'fiche_pokemon.pdf';
+
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(url);
+}
+
 
 const handleSaveGeneratedPokemon = async () => {
   if (!data) return;
@@ -60,21 +83,21 @@ const handleSaveGeneratedPokemon = async () => {
     >
       <section className="mb-4 space-y-2">
         <div className="flex flex-wrap items-center gap-3">
-          <span className="rounded bg-slate-100 px-3 py-1 text-sm font-medium text-slate-800 dark:bg-slate-700 dark:text-slate-100">
+          <span className="rounded bg-slate-100 px-3 py-1 text-sm font-medium text-slate-800">
             Nv. {lvl ?? '?'}
           </span>
           {sex && (
-            <span className="rounded bg-slate-100 px-3 py-1 text-sm font-medium text-slate-800 dark:bg-slate-700 dark:text-slate-100">
+            <span className="rounded bg-slate-100 px-3 py-1 text-sm font-medium text-slate-800">
               Sexe : {sex}
             </span>
           )}
           {nature && (
-            <span className="rounded bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">
+            <span className="rounded bg-blue-100 px-3 py-1 text-sm font-medium text-blue-800">
               Nature : {nature}
             </span>
           )}
           {subNature && (
-            <span className="rounded bg-purple-100 px-3 py-1 text-sm font-medium text-purple-800 dark:bg-purple-900/40 dark:text-purple-200">
+            <span className="rounded bg-purple-100 px-3 py-1 text-sm font-medium text-purple-800">
               Sous-nature : {subNature}
             </span>
           )}
@@ -82,35 +105,35 @@ const handleSaveGeneratedPokemon = async () => {
 
         <div className="flex flex-wrap gap-3">
           {talent && (
-            <span className="rounded bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200">
+            <span className="rounded bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-800">
               Talent : {String(talent)}
             </span>
           )}
           {breedingMove && (
-            <span className="rounded bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+            <span className="rounded bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">
               Attaque de naissance : {String(breedingMove)}
             </span>
           )}
           {shiny && (
-            <span className="rounded bg-yellow-200 px-3 py-1 text-xs font-semibold text-yellow-900 dark:bg-yellow-500/20 dark:text-yellow-200">
+            <span className="rounded bg-yellow-200 px-3 py-1 text-xs font-semibold text-yellow-900">
               ✨ Shiny
             </span>
           )}
           {baron && (
-            <span className="rounded bg-red-200 px-3 py-1 text-xs font-semibold text-red-900 dark:bg-red-500/20 dark:text-red-200">
+            <span className="rounded bg-red-200 px-3 py-1 text-xs font-semibold text-red-900">
               🟥 Baron
             </span>
           )}
         </div>
       </section>
       <section className="space-y-3">
-        <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <h3 className="text-lg font-semibold text-slate-900 ">
           Détails des stats
         </h3>
 
-        <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
+        <div className="overflow-x-auto rounded-lg border border-slate-200">
           <table className="min-w-full border-collapse text-sm">
-            <thead className="bg-slate-100 text-xs uppercase text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+            <thead className="bg-slate-100 text-xs uppercase text-slate-600">
               <tr>
                 <th className="px-3 py-2 text-left">Stat</th>
                 <th className="px-3 py-2 text-right">Base</th>
@@ -123,7 +146,7 @@ const handleSaveGeneratedPokemon = async () => {
               {STAT_KEYS.map((key) => (
                 <tr
                   key={key}
-                  className="border-t border-slate-100 odd:bg-white even:bg-slate-50 dark:border-slate-700 dark:odd:bg-slate-900 dark:even:bg-slate-800/60"
+                  className="border-t border-slate-100 odd:bg-white even:bg-slate-50"
                 >
                   <td className="px-3 py-2 font-medium">{key}</td>
                   <td className="px-3 py-2 text-right">
@@ -147,7 +170,7 @@ const handleSaveGeneratedPokemon = async () => {
   <button
     type="button"
     className="mt-4 mr-2 bg-red-500 text-white p-2 rounded-lg"
-    onClick={handleDownloadPdf}
+    onClick={downloadPokemonSheet}
   >
     Télécharger la fiche PDF
   </button>

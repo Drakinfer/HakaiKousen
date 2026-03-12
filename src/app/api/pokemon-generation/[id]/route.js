@@ -12,7 +12,6 @@ export async function GET(_req, { params }) {
       );
     }
 
-    // 🔍 Cherche le PokemonGeneration et son Pokémon associé
     const pg = await prisma.pokemonGeneration.findUnique({
       where: { id },
       include: {
@@ -32,7 +31,6 @@ export async function GET(_req, { params }) {
       );
     }
 
-    // ✅ Prépare la réponse avec uniquement les infos demandées
     const payload = {
       pokemonGeneration: {
         id: pg.id,
@@ -58,14 +56,14 @@ export async function GET(_req, { params }) {
           lvl: pg.attaquesLvl,
         },
         talentsLinks: pg.talentsLinks,
-      },
-      pokemon: {
-        id: pg.pokemon.id,
-        name: pg.pokemon.name,
-        category: pg.pokemon.category,
-        dexNumber: pg.pokemon.dexNumber,
-        mainPicture: pg.pokemon.mainPicture,
-        miniPicture: pg.pokemon.miniPicture,
+        pokemon: {
+          id: pg.pokemon.id,
+          name: pg.pokemon.name,
+          category: pg.pokemon.category,
+          dexNumber: pg.pokemon.dexNumber,
+          mainPicture: pg.pokemon.mainPicture,
+          miniPicture: pg.pokemon.miniPicture,
+        },
       },
     };
 

@@ -5,6 +5,7 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Loading from '@/app/components/Loading';
 import Aside from '@/app/components/Aside';
 import AttackDetails from '@/app/components/attacks/AttackDetails';
+import { fetchAttack } from '@/lib/fetch';
 
 export default function AttackPage() {
   const { id } = useParams();
@@ -17,54 +18,22 @@ export default function AttackPage() {
   useEffect(() => {
     if (!id) return;
 
-    let cancelled = false;
-
-    async function fetchAttack() {
-      setLoading(true);
+    const load = async () => {
       try {
-        const res = await fetch(`/api/attacks/${id}`, { cache: 'no-store' });
-        const data = await res.json();
+        setLoading(true);
+        const result = await fetchAttack(id);
 
-        if (!res.ok) {
-          throw new Error(
-            data?.error || "Erreur lors du chargement de l'attack",
-          );
-        }
-
-        const a = data.attaque;
-        const list = Array.isArray(a?.attaqueGenerations)
-          ? a.attaqueGenerations
-          : [];
-
-        const uniqueGenerations = [
-          ...new Set(
-            list
-              .map((g) => g?.Generation?.name ?? g?.generation?.name)
-              .filter(Boolean),
-          ),
-        ].sort((a, b) => a.localeCompare(b, 'fr', { numeric: true }));
-
-        if (!cancelled) {
-          setAttack(a);
-          setGenerations(uniqueGenerations);
-          if (
-            typeof setSelectedGeneration === 'function' &&
-            uniqueGenerations.length
-          ) {
-            setSelectedGeneration(uniqueGenerations[0]);
-          }
-        }
-      } catch (err) {
-        if (!cancelled) setError(err?.message || "Erreur de connexion à l'API");
+        setAttack(result.attack);
+        setGenerations(result.generations);
+        setSelectedGeneration(result.selectedGeneration);
+      } catch (e) {
+        console.error('Erreur lors du chargement de l’attaque', e);
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
-    }
-
-    fetchAttack();
-    return () => {
-      cancelled = true;
     };
+
+    load();
   }, [id]);
 
   if (loading) {

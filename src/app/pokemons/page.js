@@ -4,12 +4,14 @@ import Footer from '../components/Footer';
 import PokemonTable from '../components/PokemonTable';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
-import { toFr } from '@/lib/types';
 import Loading from '../components/Loading';
 import PokemonFilters from '../components/filters/PokemonFilters';
+import { fetchGenerations, fetchTypes, fetchPokemons } from '@/lib/fetch';
 
 export default function PokemonsPage() {
   const [pokemons, setPokemons] = useState([]);
+  const [pokemonsForm, setPokemonsForm] = useState([]);
+
   const [types, setTypes] = useState([]);
   const [generations, setGenerations] = useState([]);
   const [selectedTypes, setSelectedTypes] = useState([]);
@@ -17,84 +19,29 @@ export default function PokemonsPage() {
   const [nameFilter, setNameFilter] = useState('');
   const [firstGen, setFirstGen] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [showFilters, setShowFilters] = useState(false);
 
-  async function fetchPokemons() {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const params = new URLSearchParams();
-
-      if (selectedTypes.length > 0) {
-        params.set('types', selectedTypes.join(','));
-        params.set('mode', searchMode);
-      }
-
-      if (nameFilter.trim() !== '') {
-        params.set('name', nameFilter.trim());
-      }
-
-      if (firstGen !== '') {
-        params.set('firstGen', firstGen);
-      }
-
-      const queryString = params.toString() ? `?${params.toString()}` : '';
-      const response = await fetch(`/api/pokemons${queryString}`);
-      const data = await response.json();
-
-      if (response.ok) {
-        setPokemons(data.pokemons);
-      } else {
-        setError(data.error || 'Erreur lors du chargement');
-      }
-    } catch (err) {
-      setError("Erreur de connexion à l'API");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function fetchTypes() {
-    try {
-      const res = await fetch('/api/types', { cache: 'no-store' });
-      if (!res.ok) throw new Error('Bad response');
-      const { types = [] } = await res.json();
-
-      const byValue = new Map();
-      for (const t of types) {
-        const value = t.name;
-        const labelFr = t.labelFr ?? toFr(t.name);
-        if (!byValue.has(value)) byValue.set(value, { value, labelFr });
-      }
-
-      const list = [...byValue.values()].sort((a, b) =>
-        a.labelFr.localeCompare(b.labelFr, 'fr', { numeric: true }),
-      );
-
-      setTypes(list);
-    } catch (err) {
-      console.error('Erreur lors de la récupération des types', err);
-    }
-  }
-
-  async function fetchGenerations() {
-    try {
-      const res = await fetch('/api/generations', { cache: 'no-store' });
-      if (!res.ok) throw new Error('Bad response');
-      const { generations = [] } = await res.json();
-      console.log(generations);
-      setGenerations(generations);
-    } catch (err) {
-      console.error('Erreur lors de la récupération des générations', err);
-    }
-  }
-
   useEffect(() => {
-    fetchPokemons();
-    fetchTypes();
-    fetchGenerations();
+    const load = async () => {
+      try {
+        await handleSearch();
+        let t = await fetchTypes();
+        const uniqueSortedTypes = [
+          ...new Map(t.map((type) => [type.value, type])).values(),
+        ].sort((a, b) =>
+          a.labelFr.localeCompare(b.labelFr, 'fr', { numeric: true }),
+        );
+        setTypes(uniqueSortedTypes);
+        let g = await fetchGenerations();
+        setGenerations(g);
+      } catch (e) {
+        console.error('Erreur lors du chargement des talents', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
   }, []);
 
   const toggleTypeSelection = (type) => {
@@ -121,7 +68,32 @@ export default function PokemonsPage() {
     }
     setSearchMode(value);
   };
-  
+
+  const buildQueryString = () => {
+    const params = new URLSearchParams();
+
+    if (selectedTypes.length > 0) {
+      params.set('types', selectedTypes.join(','));
+      params.set('mode', searchMode);
+    }
+
+    if (nameFilter.trim() !== '') {
+      params.set('name', nameFilter.trim());
+    }
+
+    if (firstGen !== '') {
+      params.set('firstGen', firstGen);
+    }
+
+    return params.toString() ? `?${params.toString()}` : '';
+  };
+
+  const handleSearch = async () => {
+    const queryString = buildQueryString();
+    const result = await fetchPokemons(queryString);
+    setPokemons(result);
+  };
+
   return loading ? (
     <Loading />
   ) : (
@@ -131,8 +103,6 @@ export default function PokemonsPage() {
           <h1 className="text-3xl font-bold text-gray-800 mb-1 text-center">
             Liste des Pokémon
           </h1>
-
-          {error && <p className="text-red-500">{error}</p>}
 
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -157,10 +127,10 @@ export default function PokemonsPage() {
               onFirstGenChange={setFirstGen}
               onSearchModeChange={changeMode}
               onToggleType={toggleTypeSelection}
-              onSubmit={fetchPokemons}
+              onSubmit={handleSearch}
             />
 
-            <PokemonTable pokemons={pokemons} />
+            <PokemonTable pokemons={pokemons} basePath={'/pokemons'} />
           </div>
         </div>
       </main>

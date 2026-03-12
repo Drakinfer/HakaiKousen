@@ -1,5 +1,10 @@
 import prisma from '../../../../../lib/prisma';
 import { NextResponse } from 'next/server';
+import { requireApiRole } from '../../../../../lib/apiAuth';
+import { uploadImageToBlob } from '@/lib/blobUpload';
+import { del } from '@vercel/blob';
+
+export const runtime = 'nodejs';
 
 export async function GET(_req, { params }) {
   const id = Number(params?.id);
@@ -132,515 +137,435 @@ export async function GET(_req, { params }) {
   }
 }
 
-export async function POST(req, { params }) {
+function badRequest(message, details = null) {
+  return NextResponse.json({ error: message, details }, { status: 400 });
+}
+
+function isVercelBlobUrl(url) {
+  return typeof url === 'string' && url.includes('.blob.vercel-storage.com/');
+}
+
+export async function PUT(req, { params }) {
+  const { ok, res, user } = await requireApiRole(req, 'EDITOR');
+  if (!ok) return res;
+
+  const pokemonId = Number(params.id);
+  if (Number.isNaN(pokemonId)) return badRequest('Invalid pokemon id');
+
+  const previous = await prisma.pokemon.findUnique({
+    where: { id: pokemonId },
+    select: { mainPicture: true, miniPicture: true },
+  });
+
+  let form;
   try {
-    const id = params.id; // Récupère l'ID depuis l'URL dynamique
+    form = await req.formData();
+  } catch (e) {
+    console.error('formData error:', e);
+    return badRequest('Invalid multipart form data');
+  }
 
-    const data = await req.json();
+  const payloadRaw = form.get('payload');
+  if (!payloadRaw || typeof payloadRaw !== 'string') {
+    return badRequest('Missing "payload" in formData');
+  }
 
-    const {
-      name,
-      category,
-      dex_number,
-      main_picture,
-      mini_picture,
-      first_generation,
-      pokemons_generations,
-    } = data;
+  let body;
+  try {
+    body = JSON.parse(payloadRaw);
+  } catch {
+    return badRequest('Invalid JSON in "payload"');
+  }
 
-    // Validation des données essentielles
-    if (!id) {
-      return NextResponse.json(
-        { error: 'Id is required for creating an attaque' },
-        { status: 400 },
-      );
+  const {
+    pokemon,
+    pokemonGenerations = [],
+    competences = [],
+    locations = [],
+  } = body || {};
+  if (!pokemon) return badRequest('Missing "pokemon" in body');
+
+  const mainFile = form.get('mainPictureFile');
+  const miniFile = form.get('miniPictureFile');
+
+  let mainPictureUrl = pokemon.mainPicture
+    ? String(pokemon.mainPicture).trim()
+    : '';
+  let miniPictureUrl = pokemon.miniPicture
+    ? String(pokemon.miniPicture).trim()
+    : '';
+
+  try {
+    if (mainFile && typeof mainFile === 'object' && mainFile.name) {
+      mainPictureUrl = await uploadImageToBlob(mainFile, 'pokemons/main');
     }
+    if (miniFile && typeof miniFile === 'object' && miniFile.name) {
+      miniPictureUrl = await uploadImageToBlob(miniFile, 'pokemons/mini');
+    }
+  } catch (e) {
+    return badRequest('Image upload failed', String(e.message || e));
+  }
 
-    const updatedPokemon = await prisma.pokemons.update({
-      where: { id: parseInt(id) },
+  const result = await prisma.$transaction(async (tx) => {
+    const existing = await tx.pokemon.findUnique({
+      where: { id: pokemonId },
+      select: { id: true },
+    });
+    if (!existing) return { notFound: true };
+
+    const updatedPokemon = await tx.pokemon.update({
+      where: { id: pokemonId },
       data: {
-        ...(name !== undefined && { name: name }),
-        ...(category !== undefined && { category: category }),
-        ...(dex_number !== undefined && { dex_number: dex_number }),
-        ...(main_picture !== undefined && { main_picture: main_picture }),
-        ...(mini_picture !== undefined && { mini_picture: mini_picture }),
-        ...(first_generation !== undefined && {
-          first_generation: first_generation,
-        }),
+        name: String(pokemon.name ?? '').trim(),
+        category: String(pokemon.category ?? '').trim(),
+        dexNumber: String(pokemon.dexNumber ?? '').trim(),
+        mainPicture: mainPictureUrl,
+        miniPicture: miniPictureUrl,
+        updatedBy: { connect: { id: user.id } },
+        updatedAt: new Date(),
+
+        ...(pokemon.firstGenerationId == null ||
+        pokemon.firstGenerationId === ''
+          ? { firstGeneration: { disconnect: true } }
+          : {
+              firstGeneration: {
+                connect: { id: Number(pokemon.firstGenerationId) },
+              },
+            }),
+
+        ...(pokemon.typeId == null || pokemon.typeId === ''
+          ? { type: { disconnect: true } }
+          : { type: { connect: { id: Number(pokemon.typeId) } } }),
       },
     });
-    if (pokemons_generations) {
-      for (const pg of pokemons_generations) {
-        const existingPokemonsGenerations =
-          await prisma.pokemons_generations.findMany({
-            where: { pokemon_id: parseInt(id) },
-          });
 
-        const idsFromInput = pg
-          .map((p) => p.id)
-          .filter((id) => id !== undefined);
+    const existingPGs = await tx.pokemonGeneration.findMany({
+      where: { pokemonId },
+      select: { id: true },
+    });
+    const pgIds = existingPGs.map((x) => x.id);
 
-        const pokemonsToDelete = existingPokemonsGenerations.filter(
-          (existingPg) => !idsFromInput.includes(existingPg.id),
-        );
+    if (pgIds.length > 0) {
+      await tx.attaqueBreeding.deleteMany({
+        where: { pokemonGenerationId: { in: pgIds } },
+      });
+      await tx.attaqueCt.deleteMany({
+        where: { pokemonGenerationId: { in: pgIds } },
+      });
+      await tx.attaqueDt.deleteMany({
+        where: { pokemonGenerationId: { in: pgIds } },
+      });
+      await tx.attaqueLvl.deleteMany({
+        where: { pokemonGenerationId: { in: pgIds } },
+      });
+      await tx.attaqueTutoring.deleteMany({
+        where: { pokemonGenerationId: { in: pgIds } },
+      });
 
-        await prisma.pokemons_generations.deleteMany({
-          where: {
-            id: { in: pokemonsToDelete.map((p) => p.id) },
-          },
+      await tx.pokemonGenerationHasTalents.deleteMany({
+        where: { pokemonGenerationId: { in: pgIds } },
+      });
+
+      await tx.evolution.deleteMany({
+        where: { pokemonGenerationId: { in: pgIds } },
+      });
+      await tx.forme.deleteMany({
+        where: { pokemonGenerationId: { in: pgIds } },
+      });
+
+      await tx.pokemonGeneration.deleteMany({ where: { id: { in: pgIds } } });
+    }
+
+    await tx.pokemonHasCompetences.deleteMany({ where: { pokemonId } });
+    await tx.pokemonHasLocations.deleteMany({ where: { pokemonId } });
+
+    const createdPokemonGenerations = [];
+
+    for (const pg of pokemonGenerations) {
+      if (!pg?.generationId)
+        throw new Error('Each pokemonGeneration must have generationId');
+      if (!pg?.type1Id)
+        throw new Error('Each pokemonGeneration must have type1Id');
+
+      const createdPg = await tx.pokemonGeneration.create({
+        data: {
+          pokemonId,
+          generationId: Number(pg.generationId),
+          type1Id: Number(pg.type1Id),
+          type2Id:
+            pg.type2Id == null || pg.type2Id === '' ? null : Number(pg.type2Id),
+
+          height: pg.height == null ? 0 : Number(pg.height),
+          weight: pg.weight == null ? 0 : Number(pg.weight),
+          breedRating: pg.breedRating || 'MALE',
+
+          vita: pg.vita == null ? 0 : Number(pg.vita),
+          dex: pg.dex == null ? 0 : Number(pg.dex),
+          for: pg.for == null ? 0 : Number(pg.for),
+          conc: pg.conc == null ? 0 : Number(pg.conc),
+          end: pg.end == null ? 0 : Number(pg.end),
+          vol: pg.vol == null ? 0 : Number(pg.vol),
+
+          preEvolutionId:
+            pg.preEvolutionId == null || pg.preEvolutionId === ''
+              ? null
+              : Number(pg.preEvolutionId),
+          preEvolutionWay: pg.preEvolutionWay
+            ? String(pg.preEvolutionWay).trim()
+            : null,
+          description: pg.description ? String(pg.description).trim() : null,
+        },
+      });
+
+      const pgId = createdPg.id;
+
+      if (Array.isArray(pg.talents) && pg.talents.length) {
+        const data = pg.talents
+          .filter((t) => t?.talentId)
+          .map((t) => ({
+            pokemonGenerationId: pgId,
+            talentId: Number(t.talentId),
+            hidden: Boolean(t.hidden),
+          }));
+        if (data.length)
+          await tx.pokemonGenerationHasTalents.createMany({ data });
+      }
+
+      const attaques = pg.attaques || {};
+
+      if (Array.isArray(attaques.breeding) && attaques.breeding.length) {
+        const data = attaques.breeding
+          .filter((a) => a?.attaqueId)
+          .map((a) => ({
+            pokemonGenerationId: pgId,
+            attaqueId: Number(a.attaqueId),
+          }));
+        if (data.length) await tx.attaqueBreeding.createMany({ data });
+      }
+
+      if (Array.isArray(attaques.ct) && attaques.ct.length) {
+        const data = attaques.ct
+          .filter((a) => a?.attaqueId != null && a?.number != null)
+          .map((a) => ({
+            pokemonGenerationId: pgId,
+            attaqueId: Number(a.attaqueId),
+            number: Number(a.number),
+          }));
+        if (data.length) await tx.attaqueCt.createMany({ data });
+      }
+
+      if (Array.isArray(attaques.dt) && attaques.dt.length) {
+        const data = attaques.dt
+          .filter((a) => a?.attaqueId != null && a?.number != null)
+          .map((a) => ({
+            pokemonGenerationId: pgId,
+            attaqueId: Number(a.attaqueId),
+            number: Number(a.number),
+          }));
+        if (data.length) await tx.attaqueDt.createMany({ data });
+      }
+
+      if (Array.isArray(attaques.lvl) && attaques.lvl.length) {
+        const data = attaques.lvl
+          .filter((a) => a?.attaqueId != null && a?.learningWay)
+          .map((a) => ({
+            pokemonGenerationId: pgId,
+            attaqueId: Number(a.attaqueId),
+            learningWay: String(a.learningWay).trim(),
+          }));
+        if (data.length) await tx.attaqueLvl.createMany({ data });
+      }
+
+      if (Array.isArray(attaques.tutoring) && attaques.tutoring.length) {
+        const data = attaques.tutoring
+          .filter((a) => a?.attaqueId)
+          .map((a) => ({
+            pokemonGenerationId: pgId,
+            attaqueId: Number(a.attaqueId),
+          }));
+        if (data.length) await tx.attaqueTutoring.createMany({ data });
+      }
+
+      if (Array.isArray(pg.evolutions) && pg.evolutions.length) {
+        const data = pg.evolutions
+          .filter((e) => e?.pokemonId && e?.evolutionWay)
+          .map((e) => ({
+            pokemonGenerationId: pgId,
+            pokemonId: Number(e.pokemonId),
+            evolutionWay: String(e.evolutionWay).trim(),
+          }));
+        if (data.length) await tx.evolution.createMany({ data });
+      }
+
+      if (Array.isArray(pg.formes) && pg.formes.length) {
+        const data = pg.formes
+          .filter((f) => f?.form)
+          .map((f) => ({
+            pokemonGenerationId: pgId,
+            pokemonId,
+            form: String(f.form).trim(),
+          }));
+        if (data.length) await tx.forme.createMany({ data });
+      }
+
+      createdPokemonGenerations.push(createdPg);
+    }
+
+    if (Array.isArray(competences) && competences.length) {
+      const data = competences
+        .filter((c) => c?.competenceId != null)
+        .map((c) => ({
+          pokemonId,
+          competenceId: Number(c.competenceId),
+          points: c.points == null ? 0 : Number(c.points),
+        }));
+      if (data.length) await tx.pokemonHasCompetences.createMany({ data });
+    }
+
+    if (Array.isArray(locations) && locations.length) {
+      const data = locations
+        .filter((l) => l?.locationId != null)
+        .map((l) => ({
+          pokemonId,
+          locationId: Number(l.locationId),
+        }));
+      if (data.length) await tx.pokemonHasLocations.createMany({ data });
+    }
+
+    return {
+      pokemon: updatedPokemon,
+      pokemonGenerations: createdPokemonGenerations,
+    };
+  });
+
+  if (result?.notFound) {
+    return NextResponse.json({ error: 'Pokemon not found' }, { status: 404 });
+  }
+
+  const toDelete = [];
+  if (
+    previous?.mainPicture &&
+    previous.mainPicture !== result.pokemon.mainPicture &&
+    isVercelBlobUrl(previous.mainPicture)
+  ) {
+    toDelete.push(previous.mainPicture);
+  }
+  if (
+    previous?.miniPicture &&
+    previous.miniPicture !== result.pokemon.miniPicture &&
+    isVercelBlobUrl(previous.miniPicture)
+  ) {
+    toDelete.push(previous.miniPicture);
+  }
+
+  if (toDelete.length) {
+    try {
+      await del(toDelete);
+    } catch (e) {
+      console.error('[PUT] blob delete failed:', e);
+    }
+  }
+
+  return NextResponse.json(result, { status: 200 });
+}
+
+export async function DELETE(req, { params }) {
+  const { ok, res } = await requireApiRole(req, 'ADMIN');
+  if (!ok) return res;
+
+  const pokemonId = Number(params.id);
+  if (Number.isNaN(pokemonId)) return badRequest('Invalid pokemon id');
+
+  let pictures = null;
+  try {
+    pictures = await prisma.pokemon.findUnique({
+      where: { id: pokemonId },
+      select: { mainPicture: true, miniPicture: true },
+    });
+  } catch (e) {
+    console.error('[DELETE /api/pokemons/[id]] prefetch error:', e);
+  }
+
+  try {
+    const deleted = await prisma.$transaction(async (tx) => {
+      const existing = await tx.pokemon.findUnique({
+        where: { id: pokemonId },
+        select: { id: true },
+      });
+      if (!existing) return { notFound: true };
+
+      const pgs = await tx.pokemonGeneration.findMany({
+        where: { pokemonId },
+        select: { id: true },
+      });
+      const pgIds = pgs.map((x) => x.id);
+
+      if (pgIds.length > 0) {
+        await tx.attaqueBreeding.deleteMany({
+          where: { pokemonGenerationId: { in: pgIds } },
+        });
+        await tx.attaqueCt.deleteMany({
+          where: { pokemonGenerationId: { in: pgIds } },
+        });
+        await tx.attaqueDt.deleteMany({
+          where: { pokemonGenerationId: { in: pgIds } },
+        });
+        await tx.attaqueLvl.deleteMany({
+          where: { pokemonGenerationId: { in: pgIds } },
+        });
+        await tx.attaqueTutoring.deleteMany({
+          where: { pokemonGenerationId: { in: pgIds } },
         });
 
-        await prisma.pokemons_generations.upsert({
-          where: {
-            id: pg.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
-          },
-          update: {
-            ...(pg.generation_id !== undefined && {
-              generation_id: pg.generation_id,
-            }),
-            ...(pg.type1 !== undefined && { type1: pg.type1 }),
-            ...(pg.type2 !== undefined && { type2: pg.type2 }),
-            ...(pg.height !== undefined && { height: pg.height }),
-            ...(pg.weight !== undefined && { weight: pg.weight }),
-            ...(pg.breed_rating !== undefined && {
-              breed_rating: pg.breed_rating,
-            }),
-            ...(pg.vita !== undefined && { vita: pg.vita }),
-            ...(pg.dex !== undefined && { dex: pg.dex }),
-            ...(pg.for !== undefined && { for: pg.for }),
-            ...(pg.conc !== undefined && { conc: pg.conc }),
-            ...(pg.end !== undefined && { end: pg.end }),
-            ...(pg.vol !== undefined && { vol: pg.vol }),
-            ...(pg.pre_evolution_id !== undefined && {
-              pre_evolution_id: pg.pre_evolution_id,
-            }),
-            ...(pg.pre_evolution_way !== undefined && {
-              pre_evolution_way: pg.pre_evolution_way,
-            }),
-            ...(pg.description !== undefined && {
-              description: pg.description,
-            }),
-          },
-          create: {
-            generation_id: pg.generation_id,
-            type1: pg.type1,
-            type2: pg.type2,
-            height: pg.height,
-            weight: pg.weight,
-            breed_rating: pg.breed_rating,
-            vita: pg.vita,
-            dex: pg.dex,
-            for: pg.for,
-            conc: pg.conc,
-            end: pg.end,
-            vol: pg.vol,
-            pre_evolution_id: pg.pre_evolution_id,
-            pre_evolution_way: pg.pre_evolution_way,
-            description: pg.description,
-          },
+        await tx.pokemonGenerationHasTalents.deleteMany({
+          where: { pokemonGenerationId: { in: pgIds } },
+        });
+        await tx.evolution.deleteMany({
+          where: { pokemonGenerationId: { in: pgIds } },
+        });
+        await tx.forme.deleteMany({
+          where: { pokemonGenerationId: { in: pgIds } },
         });
 
-        if (pg.evolutions) {
-          const existingEvolutions = await prisma.evolutions.findMany({
-            where: { pokemon_generation_id: parseInt(pg.id) },
-          });
+        await tx.pokemonGeneration.deleteMany({ where: { id: { in: pgIds } } });
+      }
 
-          const idsFromInput = pg.evolutions
-            .map((evo) => evo.id)
-            .filter((id) => id !== undefined);
+      await tx.pokemonHasCompetences.deleteMany({ where: { pokemonId } });
+      await tx.pokemonHasLocations.deleteMany({ where: { pokemonId } });
 
-          const evolutionsToDelete = existingEvolutions.filter(
-            (existingEvo) => !idsFromInput.includes(existingEvo.id),
-          );
+      await tx.pokemon.delete({ where: { id: pokemonId } });
 
-          await prisma.evolutions.deleteMany({
-            where: {
-              id: { in: evolutionsToDelete.map((evo) => evo.id) },
-            },
-          });
+      return { ok: true };
+    });
 
-          for (const evo in pg.evolutions) {
-            await prisma.evolutions.upsert({
-              where: {
-                id: evo.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
-              },
-              update: {
-                ...(evo.pokemon_id !== undefined && {
-                  pokemon_id: evo.pokemon_id,
-                }),
-                ...(evo.evolution_way !== undefined && {
-                  evolution_way: evo.evolution_way,
-                }),
-              },
-              create: {
-                pokemon_id: evo.pokemon_id,
-                evolution_way: evo.evolution_way,
-              },
-            });
-          }
-        }
+    if (deleted?.notFound) {
+      return NextResponse.json({ error: 'Pokemon not found' }, { status: 404 });
+    }
 
-        if (pg.forms) {
-          const existingForms = await prisma.formes.findMany({
-            where: { pokemon_generation_id: parseInt(pg.id) },
-          });
+    const toDelete = new Set();
+    if (pictures?.mainPicture && isVercelBlobUrl(pictures.mainPicture))
+      toDelete.add(pictures.mainPicture);
+    if (pictures?.miniPicture && isVercelBlobUrl(pictures.miniPicture))
+      toDelete.add(pictures.miniPicture);
 
-          const idsFromInput = pg.forms
-            .map((f) => f.id)
-            .filter((id) => id !== undefined);
-
-          const formsToDelete = existingForms.filter(
-            (existingForm) => !idsFromInput.includes(existingForm.id),
-          );
-
-          await prisma.formes.deleteMany({
-            where: {
-              id: { in: formsToDelete.map((f) => f.id) },
-            },
-          });
-
-          for (const f in pg.forms) {
-            await prisma.formes.upsert({
-              where: {
-                id: f.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
-              },
-              update: {
-                ...(f.pokemon_id !== undefined && { pokemon_id: f.pokemon_id }),
-                ...(f.form !== undefined && { form: f.form }),
-              },
-              create: {
-                pokemon_id: f.pokemon_id,
-                form: f.form,
-              },
-            });
-          }
-        }
-
-        if (pg.talents) {
-          const existingPokemonTalents =
-            await prisma.pokemons_generations_has_talents.findMany({
-              where: { pokemon_generation_id: parseInt(pg.id) },
-            });
-
-          const idsFromInput = pg.pokemon_generations_has_talents
-            .map((pght) => pght.id)
-            .filter((id) => id !== undefined);
-
-          const PGHTToDelete = existingPokemonTalents.filter(
-            (existingPGHT) => !idsFromInput.includes(existingPGHT.id),
-          );
-
-          await prisma.pokemon_generations_has_talents.deleteMany({
-            where: {
-              id: { in: PGHTToDelete.map((evo) => evo.id) },
-            },
-          });
-
-          for (const talent in pg.pokemon_generations_has_talents) {
-            await prisma.pokemon_generations_has_talents.upsert({
-              where: {
-                id: talent.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
-              },
-              update: {
-                ...(talent.talent_id !== undefined && {
-                  talent_id: talent.talent_id,
-                }),
-                ...(talent.hidden !== undefined && { hidden: talent.hidden }),
-              },
-              create: {
-                talent_id: talent.talent_id,
-                hidden: talent.hidden,
-              },
-            });
-          }
-        }
-
-        if (pg.attaques_lvl) {
-          const existingAttaquesLvl = await prisma.attaques_lvl.findMany({
-            where: { pokemon_generation_id: parseInt(pg.id) },
-          });
-
-          const idsFromInput = pg.attaques_lvl
-            .map((att_lvl) => att_lvl.id)
-            .filter((id) => id !== undefined);
-
-          const attaquesLvlToDelete = existingAttaquesLvl.filter(
-            (existingAttLvl) => !idsFromInput.includes(existingAttLvl.id),
-          );
-
-          await prisma.attaques_lvl.deleteMany({
-            where: {
-              id: { in: attaquesLvlToDelete.map((att_lvl) => att_lvl.id) },
-            },
-          });
-
-          for (const att_lvl in pg.attaques_lvl) {
-            await prisma.attaques_lvl.upsert({
-              where: {
-                id: att_lvl.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
-              },
-              update: {
-                ...(att_lvl.attaque_id !== undefined && {
-                  attaque_id: att_lvl.attaque_id,
-                }),
-                ...(att_lvl.learning_way !== undefined && {
-                  learning_way: att_lvl.learning_way,
-                }),
-              },
-              create: {
-                attaque_id: att_lvl.attaque_id,
-                learning_way: att_lvl.learning_way,
-              },
-            });
-          }
-        }
-
-        if (pg.attaques_ct) {
-          const existingAttaquesCt = await prisma.attaques_ct.findMany({
-            where: { pokemon_generation_id: parseInt(pg.id) },
-          });
-
-          const idsFromInput = pg.attaques_ct
-            .map((att_ct) => att_ct.id)
-            .filter((id) => id !== undefined);
-
-          const attaquesCtToDelete = existingAttaquesCt.filter(
-            (existingAttCt) => !idsFromInput.includes(existingAttCt.id),
-          );
-
-          await prisma.attaques_ct.deleteMany({
-            where: {
-              id: { in: attaquesCtToDelete.map((att_ct) => att_ct.id) },
-            },
-          });
-
-          for (const att_ct in pg.attaques_ct) {
-            await prisma.attaques_ct.upsert({
-              where: {
-                id: att_ct.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
-              },
-              update: {
-                ...(att_ct.attaque_id !== undefined && {
-                  attaque_id: att_ct.attaque_id,
-                }),
-                ...(att_ct.number !== undefined && { number: att_ct.number }),
-              },
-              create: {
-                attaque_id: att_ct.attaque_id,
-                number: att_ct.number,
-              },
-            });
-          }
-        }
-
-        if (pg.attaques_dt) {
-          const existingAttaquesDT = await prisma.attaques_dt.findMany({
-            where: { pokemon_generation_id: parseInt(pg.id) },
-          });
-
-          const idsFromInput = pg.attaques_dt
-            .map((att_dt) => att_dt.id)
-            .filter((id) => id !== undefined);
-
-          const attaquesDtToDelete = existingAttaquesDt.filter(
-            (existingAttDt) => !idsFromInput.includes(existingAttDt.id),
-          );
-
-          await prisma.attaques_dt.deleteMany({
-            where: {
-              id: { in: attaquesDtToDelete.map((att_dt) => att_dt.id) },
-            },
-          });
-
-          for (const att_dt in pg.attaques_dt) {
-            await prisma.attaques_dt.upsert({
-              where: {
-                id: att_dt.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
-              },
-              update: {
-                ...(att_dt.attaque_id !== undefined && {
-                  attaque_id: att_dt.attaque_id,
-                }),
-                ...(att_dt.number !== undefined && { number: att_dt.number }),
-              },
-              create: {
-                attaque_id: att_dt.attaque_id,
-                number: att_dt.number,
-              },
-            });
-          }
-        }
-
-        if (pg.attaques_breeding) {
-          const existingAttaquesBreeding =
-            await prisma.attaques_breeding.findMany({
-              where: { pokemon_generation_id: parseInt(pg.id) },
-            });
-
-          const idsFromInput = pg.attaques_breeding
-            .map((att_breed) => att_breed.id)
-            .filter((id) => id !== undefined);
-
-          const attaquesBreedingToDelete = existingAttaquesBreeding.filter(
-            (existingAttBreed) => !idsFromInput.includes(existingAttBreed.id),
-          );
-
-          await prisma.attaques_breeding.deleteMany({
-            where: {
-              id: {
-                in: attaquesBreedingToDelete.map((att_breed) => att_breed.id),
-              },
-            },
-          });
-
-          for (const att_breed in pg.attaques_breeding) {
-            await prisma.attaques_breed.upsert({
-              where: {
-                id: att_breed.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
-              },
-              update: {
-                ...(att_breed.attaque_id !== undefined && {
-                  attaque_id: att_breed.attaque_id,
-                }),
-              },
-              create: {
-                attaque_id: att_breed.attaque_id,
-              },
-            });
-          }
-        }
-
-        if (pg.attaques_tutoring) {
-          const existingAttaquesTutoring =
-            await prisma.attaques_tutoring.findMany({
-              where: { pokemon_generation_id: parseInt(pg.id) },
-            });
-
-          const idsFromInput = pg.attaques_tutoring
-            .map((att_tuto) => att_tuto.id)
-            .filter((id) => id !== undefined);
-
-          const attaquesTutoToDelete = existingAttaquesTutoring.filter(
-            (existingAttTuto) => !idsFromInput.includes(existingAttTuto.id),
-          );
-
-          await prisma.attaques_tutoring.deleteMany({
-            where: {
-              id: { in: attaquesTutoToDelete.map((att_tuto) => att_tuto.id) },
-            },
-          });
-
-          for (const att_tuto in pg.attaques_tutoring) {
-            await prisma.attaques_tutoring.upsert({
-              where: {
-                id: att_tuto.id || 0, // `id` est utilisé pour vérifier l'existence de l'enregistrement
-              },
-              update: {
-                ...(att_tuto.attaque_id !== undefined && {
-                  attaque_id: att_tuto.attaque_id,
-                }),
-              },
-              create: {
-                attaque_id: att_tuto.attaque_id,
-              },
-            });
-          }
-        }
+    const urls = [...toDelete];
+    if (urls.length) {
+      try {
+        await del(urls);
+      } catch (e) {
+        console.error('[DELETE /api/pokemons/[id]] blob del error:', e);
       }
     }
 
-    const pokemon = await prisma.pokemons.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        generations: true,
-        pokemons_generations_pokemons_generations_pokemon_idTopokemons: {
-          include: {
-            generations: true,
-            types_pokemons_generations_type1Totypes: true,
-            types_pokemons_generations_type2Totypes: true,
-            pokemons_pokemons_generations_pre_evolution_idTopokemons: true,
-            attaques_breeding: {
-              include: {
-                attaques: {
-                  include: {
-                    attaques_generations: {
-                      include: {
-                        types: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            attaques_ct: {
-              include: {
-                attaques: {
-                  include: {
-                    attaques_generations: {
-                      include: {
-                        types: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            attaques_dt: {
-              include: {
-                attaques: {
-                  include: {
-                    attaques_generations: {
-                      include: {
-                        types: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            attaques_lvl: {
-              include: {
-                attaques: {
-                  include: {
-                    attaques_generations: {
-                      include: {
-                        types: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            attaques_tutoring: {
-              include: {
-                attaques: {
-                  include: {
-                    attaques_generations: {
-                      include: {
-                        types: true,
-                      },
-                    },
-                  },
-                },
-              },
-            },
-            evolutions: {
-              include: {
-                pokemons: true,
-              },
-            },
-            formes: {
-              include: {
-                pokemons: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    return NextResponse.json({ attaque: pokemon }, { status: 201 });
+    return NextResponse.json({ ok: true }, { status: 200 });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[DELETE /api/pokemons/[id]] error:', error);
+    return NextResponse.json(
+      {
+        error: 'Failed to delete pokemon',
+        details: String(error.message || error),
+      },
+      { status: 500 },
+    );
   }
 }

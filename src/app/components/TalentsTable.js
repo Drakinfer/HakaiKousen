@@ -1,27 +1,30 @@
 'use client';
-import Link from 'next/link';
+import Table from '@/app/components/Table';
 
-export default function TalentTable({ talents }) {
+export default function TalentTable({ talents, basePath }) {
   return (
-    <div className="md:ml-6 max-w-2xl overflow-y-auto h-[450px] border border-gray-300 rounded-lg bg-white">
-      <table className="border-collapse text-center table-fixed w-full">
-        <tbody>
-          {talents.map((talent) => (
-            <tr
-              key={talent.id}
-              className="hover:bg-gray-100 cursor-pointer text-center"
-            >
-              <Link href={`/talents/${talent.id}`} className="contents">
-                <td className="p-2 border-b flex justify-start items-center space-x-4">
-                  <span className="text-gray-800 font-semibold">
-                    {talent.name}
-                  </span>
-                </td>
-              </Link>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="md:ml-6 max-w-2xl border border-gray-300 rounded-lg bg-white">
+      <Table
+        columns={[
+          {
+            key: 'name',
+            header: null,
+            thClassName: 'hidden',
+            tdClassName: 'border-b',
+            render: (t) => (
+              <div className="flex justify-start items-center space-x-4">
+                <span className="text-gray-800 font-semibold">{t.name}</span>
+              </div>
+            ),
+          },
+        ]}
+        rows={talents}
+        rowHref={(t) => `${basePath}/${t.id}`}
+        containerClassName="overflow-y-auto h-[450px]"
+        tableClassName="border-collapse table-fixed w-full"
+        headClassName="hidden"
+        rowClassName="hover:bg-gray-100"
+      />
     </div>
   );
 }

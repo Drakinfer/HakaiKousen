@@ -43,7 +43,7 @@ const NavBar = () => {
             </div>
           )}
         </div>
-        <Link href="/livres" className="navbar-item">
+        <Link href="/library" className="navbar-item">
           Livres
         </Link>
         {isAuth && (
@@ -77,12 +77,15 @@ const NavBar = () => {
                 <Link href="/admin/talents">Talents</Link>
                 <Link href="/admin/types">Types</Link>
                 <Link href="/admin/generations">Générations</Link>
-                <Link href="/admin/livres">Livres</Link>
+                <Link href="/admin/competences">Compétences</Link>
+                <Link href="/admin/locations">Habitats</Link>
 
                 {isAdmin && (
                   <>
-                    <Link href="/admin/site">Site</Link>
+                    <Link href="/admin/library">Livres</Link>
+                    <Link href="/admin/homePage">Page d'accueil</Link>
                     <Link href="/admin/users">Utilisateurs</Link>
+                    <Link href="/admin/teams">L'équipe HK</Link>
                   </>
                 )}
               </div>

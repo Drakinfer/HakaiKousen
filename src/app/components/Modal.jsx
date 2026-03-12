@@ -28,21 +28,21 @@ export default function Modal({
     >
       <div
         className={clsx(
-          'relative w-full rounded-lg bg-white p-6 shadow-lg dark:bg-slate-800',
+          'relative w-full rounded-lg bg-white p-1 shadow-lg',
           SIZE_CLASSES[size]
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="mb-4 flex items-center justify-between gap-4">
+        <div className="mb-4 flex items-center justify-between gap-4 bg-red-500 text-white rounded-lg w-full p-1">
           {title && (
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
+            <h2 className="text-xl font-semibold text-white">
               {title}
             </h2>
           )}
           <button
             type="button"
             onClick={onClose}
-            className="rounded-full px-3 py-1 text-sm text-slate-500 hover:bg-slate-100 hover:text-slate-800 dark:hover:bg-slate-700 dark:hover:text-slate-100"
+            className="rounded-full px-3 py-1 text-sm text-white hover:bg-slate-100 hover:text-slate-800"
           >
             ✕
           </button>

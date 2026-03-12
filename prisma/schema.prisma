@@ -25,9 +25,16 @@ model User {
   accounts Account[]
   sessions Session[]
 
-  // createdPokemons Pokemon[] @relation("CreatedBy")
-  // updatedPokemons Pokemon[] @relation("UpdatedBy")
+  createdPokemons   Pokemon[]           @relation("CreatedBy")
+  updatedPokemons   Pokemon[]           @relation("UpdatedBy")
   generatedPokemons GeneratedPokemon[]
+  documentsCreated  Document[]          @relation("DocumentsCreated")
+  documentsUpdated  Document[]          @relation("DocumentsUpdated")
+  ParagraphsCreated HomePageParagraph[] @relation("ParagraphsCreated")
+  ParagraphsUpdated HomePageParagraph[] @relation("ParagraphsUpdated")
+  teamsCreated      Team[]              @relation("TeamsCreated")
+  teamsUpdated      Team[]              @relation("TeamsUpdated")
+  teamsAsPseudo     Team[]              @relation("TeamPseudo")
 }
 
 model Account {
@@ -94,7 +101,7 @@ model AttaqueGeneration {
   attaque   Attaque @relation(fields: [attaqueId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   generationId Int
-  generation   Generation @relation(fields: [generationId], references: [id])
+  generation   Generation @relation(fields: [generationId], references: [id], onDelete: Restrict)
 
   typeId Int
   type   Type @relation(fields: [typeId], references: [id])
@@ -250,7 +257,7 @@ model PokemonGenerationHasTalents {
   id                  Int               @id @default(autoincrement())
   talentId            Int
   pokemonGenerationId Int
-  hidden              Boolean
+  hidden              Boolean           @default(false)
   pokemonGeneration   PokemonGeneration @relation(fields: [pokemonGenerationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   talent              Talent            @relation(fields: [talentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
@@ -271,12 +278,12 @@ model Pokemon {
   typeId                Int?
   evolutions            Evolution[]
   formes                Forme[]
-  // createdAt         DateTime    @default(now())
-  // createdBy         User        @relation("CreatedBy", fields: [createdById], references: [id])
-  // updatedAt         DateTime    @updatedAt
-  // createdById       Int
-  // updatedById       Int
-  // updatedBy         User        @relation("UpdatedBy", fields: [updatedById], references: [id])
+  createdAt             DateTime                @default(now())
+  createdBy             User                    @relation("CreatedBy", fields: [createdById], references: [id])
+  updatedAt             DateTime                @default(now())
+  createdById           Int
+  updatedById           Int
+  updatedBy             User                    @relation("UpdatedBy", fields: [updatedById], references: [id])
   pokemonGenerations    PokemonGeneration[]
   preEvolutionsOf       PokemonGeneration[]     @relation("PreEvolution")
   pokemonHasCompetences PokemonHasCompetences[]
@@ -286,7 +293,7 @@ model Pokemon {
 model PokemonGeneration {
   id              Int         @id @default(autoincrement())
   pokemonId       Int
-  pokemon         Pokemon     @relation(fields: [pokemonId], references: [id])
+  pokemon         Pokemon     @relation(fields: [pokemonId], references: [id], onDelete: Restrict)
   generationId    Int
   generation      Generation  @relation(fields: [generationId], references: [id])
   type1Id         Int
@@ -353,7 +360,7 @@ model TalentGeneration {
   talentId     Int
   generationId Int
   description  String     @db.Text
-  generation   Generation @relation(fields: [generationId], references: [id])
+  generation   Generation @relation(fields: [generationId], references: [id], onDelete: Restrict)
   talent       Talent     @relation(fields: [talentId], references: [id])
 
   @@index([talentId])
@@ -384,7 +391,7 @@ model Type {
   water    Float
 
   generationId Int
-  generation   Generation @relation(fields: [generationId], references: [id])
+  generation   Generation @relation(fields: [generationId], references: [id], onDelete: Restrict)
 
   attaqueGenerations AttaqueGeneration[]
   attaques           Attaque[]
@@ -426,4 +433,66 @@ model PokemonHasLocations {
   pokemon    Pokemon  @relation(fields: [pokemonId], references: [id])
   locationId Int
   location   Location @relation(fields: [locationId], references: [id])
+}
+
+model Document {
+  id Int @id @default(autoincrement())
+
+  name String
+  icon String?
+  link String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById Int
+  updatedById Int?
+
+  createdBy User  @relation("DocumentsCreated", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy User? @relation("DocumentsUpdated", fields: [updatedById], references: [id], onDelete: Restrict)
+
+  @@index([createdById])
+  @@index([updatedById])
+}
+
+model HomePageParagraph {
+  id Int @id @default(autoincrement())
+
+  title          String?
+  text           String?
+  isNotification Boolean @default(false)
+  rank           Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById Int
+  updatedById Int?
+
+  createdBy User  @relation("ParagraphsCreated", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy User? @relation("ParagraphsUpdated", fields: [updatedById], references: [id], onDelete: Restrict)
+
+  @@index([createdById])
+  @@index([updatedById])
+}
+
+model Team {
+  id Int @id @default(autoincrement())
+
+  role String
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  pseudoId    Int
+  createdById Int
+  updatedById Int?
+
+  createdBy User  @relation("TeamsCreated", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy User? @relation("TeamsUpdated", fields: [updatedById], references: [id], onDelete: Restrict)
+  pseudo    User  @relation("TeamPseudo", fields: [pseudoId], references: [id], onDelete: Restrict)
+
+  @@unique([pseudoId])
+  @@index([pseudoId])
+  @@index([createdById])
+  @@index([updatedById])
 }

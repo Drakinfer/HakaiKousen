@@ -11,6 +11,7 @@ import Locations from '../../components/pokemon/Locations';
 import Loading from '@/app/components/Loading';
 import Aside from '../../components/Aside';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+import { fetchPokemon } from '@/lib/fetch';
 
 export default function PokemonPage() {
   const { id } = useParams();
@@ -19,7 +20,6 @@ export default function PokemonPage() {
   const [previousPokemon, setPreviousPokemon] = useState(null);
   const [nextPokemon, setNextPokemon] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('Informations');
   const [generations, setGenerations] = useState([]);
   const [selectedGeneration, setSelectedGeneration] = useState(null);
@@ -29,67 +29,36 @@ export default function PokemonPage() {
   const actions = [{ href: '/pokemons', icon: faArrowLeft, title: 'Retour' }];
 
   useEffect(() => {
-    async function fetchPokemon() {
+    if (!id) return;
+
+    let cancelled = false;
+
+    const load = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`/api/pokemons/${id}`, { cache: 'no-store' });
-        const data = await res.json();
+        const result = await fetchPokemon(id);
+        if (cancelled) return;
 
-        if (!res.ok) {
-          setError(data?.error || 'Erreur lors du chargement du Pokémon');
-          return;
-        }
-
-        const p = data.pokemon;
-
-        const uniqueGenerations = [
-          ...new Set(
-            p.pokemonGenerations
-              .map((g) => g?.generation?.name)
-              .filter(Boolean),
-          ),
-        ];
-
-        const firstGenData = p.pokemonGenerations[0] ?? null;
-
-        setPokemon(p);
-        setGenerations(uniqueGenerations);
-        setSelectedGeneration(uniqueGenerations[0] || null);
-        setSelectedPokemonGeneration(firstGenData);
-
-        const dexNum = Number.parseInt(p.dexNumber, 10);
-        if (!Number.isNaN(dexNum)) {
-          const [prevRes, nextRes] = await Promise.allSettled([
-            fetch(`/api/pokemons/dex_number/${dexNum - 1}`, {
-              cache: 'no-store',
-            }),
-            fetch(`/api/pokemons/dex_number/${dexNum + 1}`, {
-              cache: 'no-store',
-            }),
-          ]);
-
-          if (prevRes.status === 'fulfilled' && prevRes.value.ok) {
-            const prevData = await prevRes.value.json();
-            setPreviousPokemon(prevData.pokemon);
-          } else {
-            setPreviousPokemon(null);
-          }
-
-          if (nextRes.status === 'fulfilled' && nextRes.value.ok) {
-            const nextData = await nextRes.value.json();
-            setNextPokemon(nextData.pokemon);
-          } else {
-            setNextPokemon(null);
-          }
-        }
-      } catch (err) {
-        setError("Erreur de connexion à l'API");
+        setPokemon(result.pokemon);
+        setGenerations(result.generations);
+        setSelectedGeneration(result.selectedGeneration);
+        setSelectedPokemonGeneration(result.selectedPokemonGeneration);
+        setPreviousPokemon(result.previousPokemon);
+        setNextPokemon(result.nextPokemon);
+      } catch (e) {
+        console.error(e);
+        if (cancelled) return;
+        setError(e.message || 'Erreur lors du chargement');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    }
+    };
 
-    if (id) fetchPokemon();
+    load();
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   useEffect(() => {
@@ -99,7 +68,6 @@ export default function PokemonPage() {
       !Array.isArray(pokemon.pokemonGenerations)
     )
       return;
-
     const genData =
       pokemon.pokemonGenerations.find(
         (gen) => gen?.generation?.name === selectedGeneration,
@@ -242,16 +210,18 @@ export default function PokemonPage() {
                   {energySystem ? 'Système remanié' : 'Système de base'}
                 </button>
               </div>
-              <div id="tools" className="mt-2">
-                <Link
-                  href={`/generators/pokemon/${selectedPokemonGeneration.id}`}
-                  className="text-white mb-4 mx-auto flex flex-col items-center"
-                >
-                  <button className="bg-red-500 rounded-lg text-white p-1">
-                    Générateur de fiche
-                  </button>
-                </Link>
-              </div>
+              {selectedPokemonGeneration && (
+                <div id="tools" className="mt-2">
+                  <Link
+                    href={`/generators/pokemon/${selectedPokemonGeneration.id}`}
+                    className="text-white mb-4 mx-auto flex flex-col items-center"
+                  >
+                    <button className="bg-red-500 rounded-lg text-white p-1">
+                      Générateur de fiche
+                    </button>
+                  </Link>
+                </div>
+              )}
             </div>
 
             <div className="flex-1 p-1 bg-white rounded-lg ml-3 overflow-hidden">
