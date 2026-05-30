@@ -62,11 +62,15 @@
 }
 
 @media (max-width: 768px) {
+    .navbar {
+    height: 7vh;
+}
+
     .navbar-links {
         display: none;
         flex-direction: column;
         position: absolute;
-        top: 9vh;
+        top: 7vh;
         right: 0;
         background-color: rgb(var(--principal-color));
         width: 100%;

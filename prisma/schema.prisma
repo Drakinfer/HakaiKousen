@@ -1,275 +1,498 @@
-generator client {
-  provider      = "prisma-client-js"
-  binaryTargets = ["native", "debian-openssl-1.1.x", "linux-musl"]
-}
-
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-model attaques {
-  id                   Int                    @id @default(autoincrement())
-  name                 String                 @db.VarChar(50)
-  attaques_breeding    attaques_breeding[]
-  attaques_ct          attaques_ct[]
-  attaques_dt          attaques_dt[]
-  attaques_generations attaques_generations[]
-  attaques_lvl         attaques_lvl[]
-  attaques_tutoring    attaques_tutoring[]
-
-  @@index([id], map: "attaques_index_24")
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
-model attaques_breeding {
-  id                      Int                  @id @default(autoincrement())
-  attaque_id              Int
-  pokemons_generations_id Int
-  attaques                attaques             @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_breeding_ibfk_1")
-  pokemons_generations    pokemons_generations @relation(fields: [pokemons_generations_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_breeding_ibfk_2")
+model User {
+  id            Int       @id @default(autoincrement())
+  createdAt     DateTime  @default(now())
+  email         String    @unique
+  name          String?
+  image         String?
+  emailVerified DateTime?
+  role          Role      @default(USER)
 
-  @@index([id], map: "attaques_breeding_index_40")
-  @@index([attaque_id], map: "attaques_breeding_index_41")
-  @@index([pokemons_generations_id], map: "attaques_breeding_index_42")
+  passwordHash String?
+
+  resetTokenHash      String?   @db.VarChar(64)
+  resetTokenExpiresAt DateTime?
+
+  accounts Account[]
+  sessions Session[]
+
+  createdPokemons   Pokemon[]           @relation("CreatedBy")
+  updatedPokemons   Pokemon[]           @relation("UpdatedBy")
+  generatedPokemons GeneratedPokemon[]
+  documentsCreated  Document[]          @relation("DocumentsCreated")
+  documentsUpdated  Document[]          @relation("DocumentsUpdated")
+  ParagraphsCreated HomePageParagraph[] @relation("ParagraphsCreated")
+  ParagraphsUpdated HomePageParagraph[] @relation("ParagraphsUpdated")
+  teamsCreated      Team[]              @relation("TeamsCreated")
+  teamsUpdated      Team[]              @relation("TeamsUpdated")
+  teamsAsPseudo     Team[]              @relation("TeamPseudo")
 }
 
-model attaques_ct {
-  id                      Int                  @id @default(autoincrement())
-  attaque_id              Int
-  pokemons_generations_id Int
-  number                  Int
-  attaques                attaques             @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_ct_ibfk_1")
-  pokemons_generations    pokemons_generations @relation(fields: [pokemons_generations_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_ct_ibfk_2")
+model Account {
+  id                 Int     @id @default(autoincrement())
+  userId             Int
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
+  oauth_token_secret String?
+  oauth_token        String?
 
-  @@index([id], map: "attaques_ct_index_31")
-  @@index([attaque_id], map: "attaques_ct_index_32")
-  @@index([pokemons_generations_id], map: "attaques_ct_index_33")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
 }
 
-model attaques_dt {
-  id                      Int                  @id @default(autoincrement())
-  attaque_id              Int
-  pokemons_generations_id Int
-  number                  Int
-  attaques                attaques             @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_dt_ibfk_1")
-  pokemons_generations    pokemons_generations @relation(fields: [pokemons_generations_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_dt_ibfk_2")
-
-  @@index([id], map: "attaques_dt_index_34")
-  @@index([attaque_id], map: "attaques_dt_index_35")
-  @@index([pokemons_generations_id], map: "attaques_dt_index_36")
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model attaques_generations {
-  id            Int         @id @default(autoincrement())
-  attaque_id    Int
-  generation_id Int
-  type_id       Int
-  energie1      Int
-  energie2      Int
-  category      String      @db.VarChar(20)
-  range         String      @db.VarChar(20)
-  precision     Int
-  damage_base   Int
-  description   String      @db.Text
-  attaques      attaques    @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_generations_ibfk_1")
-  generations   generations @relation(fields: [generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_generations_ibfk_2")
-  types         types       @relation(fields: [type_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_generations_ibfk_3")
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
 
-  @@index([id], map: "attaques_generations_index_25")
-  @@index([attaque_id], map: "attaques_generations_index_26")
-  @@index([generation_id], map: "attaques_generations_index_27")
-  @@index([type_id], map: "type_id")
+  @@unique([identifier, token])
 }
 
-model attaques_lvl {
-  id                      Int                  @id @default(autoincrement())
-  attaque_id              Int
-  pokemons_generations_id Int
-  learning_way            String               @db.VarChar(50)
-  attaques                attaques             @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_lvl_ibfk_1")
-  pokemons_generations    pokemons_generations @relation(fields: [pokemons_generations_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_lvl_ibfk_2")
-
-  @@index([id], map: "attaques_lvl_index_28")
-  @@index([attaque_id], map: "attaques_lvl_index_29")
-  @@index([pokemons_generations_id], map: "attaques_lvl_index_30")
+enum Role {
+  USER
+  EDITOR
+  ADMIN
 }
 
-model attaques_tutoring {
-  id                      Int                  @id @default(autoincrement())
-  attaque_id              Int
-  pokemons_generations_id Int
-  attaques                attaques             @relation(fields: [attaque_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_tutoring_ibfk_1")
-  pokemons_generations    pokemons_generations @relation(fields: [pokemons_generations_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "attaques_tutoring_ibfk_2")
+model Attaque {
+  id                 Int                 @id @default(autoincrement())
+  name               String              @db.VarChar(50)
+  lastTypeId         Int?
+  lastType           Type?               @relation(fields: [lastTypeId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  attaquesBreeding   AttaqueBreeding[]
+  attaquesCt         AttaqueCt[]
+  attaquesDt         AttaqueDt[]
+  attaqueGenerations AttaqueGeneration[]
+  attaquesLvl        AttaqueLvl[]
+  attaqueTutoring    AttaqueTutoring[]
 
-  @@index([id], map: "attaques_tutoring_index_37")
-  @@index([attaque_id], map: "attaques_tutoring_index_38")
-  @@index([pokemons_generations_id], map: "attaques_tutoring_index_39")
+  @@index([lastTypeId])
 }
 
-model evolutions {
-  id                    Int                  @id @default(autoincrement())
-  pokemon_id            Int
-  pokemon_generation_id Int
-  evolution_way         String               @db.VarChar(50)
-  pokemons_generations  pokemons_generations @relation(fields: [pokemon_generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "evolutions_ibfk_2")
-  pokemons              pokemons             @relation(fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "evolutions_ibfk_1")
+model AttaqueGeneration {
+  id        Int     @id @default(autoincrement())
+  attaqueId Int
+  attaque   Attaque @relation(fields: [attaqueId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([id], map: "evolutions_index_11")
-  @@index([pokemon_id], map: "evolutions_index_12")
-  @@index([pokemon_generation_id], map: "evolutions_index_13")
+  generationId Int
+  generation   Generation @relation(fields: [generationId], references: [id], onDelete: Restrict)
+
+  typeId Int
+  type   Type @relation(fields: [typeId], references: [id])
+
+  energie1    Int
+  energie2    Int?
+  category    PokemonCategory @default(PHYSIQUE)
+  range       Range           @default(CIBLE)
+  precision   Int
+  damage_base Int
+  description String          @db.Text
+
+  @@index([attaqueId])
+  @@index([generationId])
+  @@index([typeId])
 }
 
-model formes {
-  id                    Int                  @id @default(autoincrement())
-  pokemon_id            Int
-  pokemon_generation_id Int
-  form                  String?              @db.VarChar(50)
-  pokemons_generations  pokemons_generations @relation(fields: [pokemon_generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "formes_ibfk_2")
-  pokemons              pokemons             @relation(fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "formes_ibfk_1")
-
-  @@index([pokemon_generation_id], map: "formes_index_10")
-  @@index([id], map: "formes_index_8")
-  @@index([pokemon_id], map: "formes_index_9")
+enum PokemonCategory {
+  PHYSIQUE @map("Physique")
+  SPECIAL  @map("Spéciale")
+  OTHER    @map("Autre")
 }
 
-model generations {
-  id                   Int                    @id @default(autoincrement())
-  name                 String                 @db.VarChar(20)
-  rank                 Int
-  attaques_generations attaques_generations[]
-  pokemons             pokemons[]
-  pokemons_generations pokemons_generations[]
-  talents_generations  talents_generations[]
-  types                types[]
-
-  @@index([id], map: "generations_index_1")
+enum Range {
+  CIBLE           @map("Cible")
+  MULTIPLE_CIBLES @map("Cibles")
+  ALLY            @map("Cible Alliée")
+  RANDOM          @map("Cible Aléatoire")
+  BLAST           @map("Rayon")
+  ZONE            @map("Zone")
+  ALLYZONE        @map("Zone Alliée")
+  ENNEMIZONE      @map("Zone Ennemie")
+  PERSONNAL       @map("Personnel")
+  SOUND           @map("Sonore")
 }
 
-model pokemon_generations_has_talents {
-  id                   Int                  @id @default(autoincrement())
-  talent_id            Int
-  pokemon_id           Int
-  hidden               Boolean?
-  pokemons_generations pokemons_generations @relation(fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemon_generations_has_talents_ibfk_2")
-  talents              talents              @relation(fields: [talent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemon_generations_has_talents_ibfk_1")
+model AttaqueBreeding {
+  id                  Int               @id @default(autoincrement())
+  attaqueId           Int
+  attaque             Attaque           @relation(fields: [attaqueId], references: [id])
+  pokemonGenerationId Int
+  pokemonGeneration   PokemonGeneration @relation(fields: [pokemonGenerationId], references: [id])
 
-  @@index([id], map: "pokemon_generations_has_talents_index_21")
-  @@index([talent_id], map: "pokemon_generations_has_talents_index_22")
-  @@index([pokemon_id], map: "pokemon_generations_has_talents_index_23")
+  @@index([attaqueId])
+  @@index([pokemonGenerationId])
 }
 
-model pokemons {
-  id                                                                   Int                    @id @default(autoincrement())
-  name                                                                 String                 @db.VarChar(50)
-  category                                                             String                 @db.VarChar(50)
-  dex_number                                                           String?                @db.VarChar(10)
-  main_picture                                                         String                 @db.Text
-  mini_picture                                                         String                 @db.Text
-  first_generation                                                     Int?
-  type                                                                 String?                @db.VarChar(255)
-  generations                                                          generations?           @relation(fields: [first_generation], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_first_generation")
-  evolutions                                                           evolutions[]
-  formes                                                               formes[]
-  pokemons_generations_pokemons_generations_pokemon_idTopokemons       pokemons_generations[] @relation("pokemons_generations_pokemon_idTopokemons")
-  pokemons_generations_pokemons_generations_pre_evolution_idTopokemons pokemons_generations[] @relation("pokemons_generations_pre_evolution_idTopokemons")
+model AttaqueCt {
+  id                  Int               @id @default(autoincrement())
+  attaqueId           Int
+  attaque             Attaque           @relation(fields: [attaqueId], references: [id])
+  pokemonGenerationId Int
+  pokemonGeneration   PokemonGeneration @relation(fields: [pokemonGenerationId], references: [id])
+  number              Int
 
-  @@index([first_generation], map: "fk_first_generation")
-  @@index([id], map: "pokemons_index_0")
+  @@index([attaqueId])
+  @@index([pokemonGenerationId])
 }
 
-model pokemons_generations {
-  id                                                       Int                               @id @default(autoincrement())
-  pokemon_id                                               Int
-  generation_id                                            Int
-  type1                                                    Int
-  type2                                                    Int?
-  height                                                   Float                             @db.Float
-  weight                                                   Float                             @db.Float
-  breed_rating                                             String                            @db.VarChar(10)
-  vita                                                     Int
-  dex                                                      Int
-  for                                                      Int
-  conc                                                     Int
-  end                                                      Int
-  vol                                                      Int
-  pre_evolution_id                                         Int?
-  pre_evolution_way                                        String?                           @db.VarChar(50)
-  description                                              String?                           @db.Text
-  generations                                              generations                       @relation(fields: [generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_2")
-  pokemons_pokemons_generations_pokemon_idTopokemons       pokemons                          @relation("pokemons_generations_pokemon_idTopokemons", fields: [pokemon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_1")
-  pokemons_pokemons_generations_pre_evolution_idTopokemons pokemons?                         @relation("pokemons_generations_pre_evolution_idTopokemons", fields: [pre_evolution_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_5")
-  types_pokemons_generations_type1Totypes                  types                             @relation("pokemons_generations_type1Totypes", fields: [type1], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_3")
-  types_pokemons_generations_type2Totypes                  types?                            @relation("pokemons_generations_type2Totypes", fields: [type2], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pokemons_generations_ibfk_4")
-  attaques_breeding                                        attaques_breeding[]
-  attaques_ct                                              attaques_ct[]
-  attaques_dt                                              attaques_dt[]
-  attaques_lvl                                             attaques_lvl[]
-  attaques_tutoring                                        attaques_tutoring[]
-  evolutions                                               evolutions[]
-  formes                                                   formes[]
-  pokemon_generations_has_talents                          pokemon_generations_has_talents[]
+model AttaqueDt {
+  id                  Int               @id @default(autoincrement())
+  attaqueId           Int
+  attaque             Attaque           @relation(fields: [attaqueId], references: [id])
+  pokemonGenerationId Int
+  pokemonGeneration   PokemonGeneration @relation(fields: [pokemonGenerationId], references: [id])
+  number              Int
 
-  @@index([id], map: "pokemons_generations_index_2")
-  @@index([pokemon_id], map: "pokemons_generations_index_3")
-  @@index([generation_id], map: "pokemons_generations_index_4")
-  @@index([type1], map: "pokemons_generations_index_5")
-  @@index([type2], map: "pokemons_generations_index_6")
-  @@index([pre_evolution_id], map: "pokemons_generations_index_7")
+  @@index([attaqueId])
+  @@index([pokemonGenerationId])
 }
 
-model talents {
-  id                              Int                               @id @default(autoincrement())
-  name                            String                            @db.VarChar(50)
-  old_name                        Int?
-  talents                         talents?                          @relation("talentsTotalents", fields: [old_name], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "talents_ibfk_1")
-  pokemon_generations_has_talents pokemon_generations_has_talents[]
-  other_talents                   talents[]                         @relation("talentsTotalents")
-  talents_generations             talents_generations[]
+model AttaqueLvl {
+  id                  Int               @id @default(autoincrement())
+  attaqueId           Int
+  attaque             Attaque           @relation(fields: [attaqueId], references: [id])
+  pokemonGenerationId Int
+  pokemonGeneration   PokemonGeneration @relation(fields: [pokemonGenerationId], references: [id])
+  learningWay         String            @db.VarChar(50)
 
-  @@index([id], map: "talents_index_16")
-  @@index([old_name], map: "talents_index_17")
+  @@index([attaqueId])
+  @@index([pokemonGenerationId])
 }
 
-model talents_generations {
-  id            Int         @id @default(autoincrement())
-  talent_id     Int
-  generation_id Int
-  description   String      @db.Text
-  generations   generations @relation(fields: [generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "talents_generations_ibfk_2")
-  talents       talents     @relation(fields: [talent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "talents_generations_ibfk_1")
+model AttaqueTutoring {
+  id                  Int               @id @default(autoincrement())
+  attaqueId           Int
+  attaque             Attaque           @relation(fields: [attaqueId], references: [id])
+  pokemonGenerationId Int
+  pokemonGeneration   PokemonGeneration @relation(fields: [pokemonGenerationId], references: [id])
 
-  @@index([id], map: "talents_generations_index_18")
-  @@index([talent_id], map: "talents_generations_index_19")
-  @@index([generation_id], map: "talents_generations_index_20")
+  @@index([attaqueId])
+  @@index([pokemonGenerationId])
 }
 
-model types {
-  id                                                     Int                    @id @default(autoincrement())
-  name                                                   String                 @db.VarChar(20)
-  bug                                                    Float                  @db.Float
-  dark                                                   Float                  @db.Float
-  dragon                                                 Float                  @db.Float
-  electric                                               Float                  @db.Float
-  fairy                                                  Float                  @db.Float
-  fighting                                               Float                  @db.Float
-  fire                                                   Float                  @db.Float
-  flying                                                 Float                  @db.Float
-  ghost                                                  Float                  @db.Float
-  grass                                                  Float                  @db.Float
-  ground                                                 Float                  @db.Float
-  ice                                                    Float                  @db.Float
-  normal                                                 Float                  @db.Float
-  poison                                                 Float                  @db.Float
-  psychic                                                Float                  @db.Float
-  rock                                                   Float                  @db.Float
-  steel                                                  Float                  @db.Float
-  water                                                  Float                  @db.Float
-  generation_id                                          Int
-  generations                                            generations            @relation(fields: [generation_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "types_ibfk_1")
-  attaques_generations                                   attaques_generations[]
-  pokemons_generations_pokemons_generations_type1Totypes pokemons_generations[] @relation("pokemons_generations_type1Totypes")
-  pokemons_generations_pokemons_generations_type2Totypes pokemons_generations[] @relation("pokemons_generations_type2Totypes")
+model Evolution {
+  id                  Int               @id @default(autoincrement())
+  pokemonId           Int
+  pokemon             Pokemon           @relation(fields: [pokemonId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pokemonGenerationId Int
+  pokemonGeneration   PokemonGeneration @relation(fields: [pokemonGenerationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@index([id], map: "types_index_14")
-  @@index([generation_id], map: "types_index_15")
+  evolutionWay String @db.VarChar(50)
+
+  @@index([pokemonId])
+  @@index([pokemonGenerationId])
+}
+
+model Forme {
+  id                  Int               @id @default(autoincrement())
+  pokemonId           Int
+  pokemon             Pokemon           @relation(fields: [pokemonId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pokemonGenerationId Int
+  pokemonGeneration   PokemonGeneration @relation(fields: [pokemonGenerationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  form                String?           @db.VarChar(50)
+
+  @@index([pokemonGenerationId])
+  @@index([pokemonId])
+}
+
+model GeneratedPokemon {
+  id     Int  @id @default(autoincrement())
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
+
+  name         String
+  lvl          Int
+  sex          String?
+  nature       String?
+  subNature    String?
+  talent       String?
+  breedingMove String?
+  shiny        Boolean @default(false)
+  baron        Boolean @default(false)
+
+  stats Json
+  hash  String
+
+  createdAt DateTime @default(now())
+}
+
+model Generation {
+  id                 Int                 @id @default(autoincrement())
+  name               String              @db.VarChar(20)
+  rank               Int
+  attaqueGenerations AttaqueGeneration[]
+  pokemons           Pokemon[]
+  pokemonGenerations PokemonGeneration[]
+  talentGenerations  TalentGeneration[]
+  types              Type[]
+}
+
+model PokemonGenerationHasTalents {
+  id                  Int               @id @default(autoincrement())
+  talentId            Int
+  pokemonGenerationId Int
+  hidden              Boolean           @default(false)
+  pokemonGeneration   PokemonGeneration @relation(fields: [pokemonGenerationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  talent              Talent            @relation(fields: [talentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([pokemonGenerationId])
+  @@index([talentId])
+}
+
+model Pokemon {
+  id                    Int                     @id @default(autoincrement())
+  name                  String
+  category              String
+  dexNumber             String
+  mainPicture           String
+  miniPicture           String
+  firstGeneration       Generation?             @relation(fields: [firstGenerationId], references: [id])
+  firstGenerationId     Int?
+  type                  Type?                   @relation("type", fields: [typeId], references: [id])
+  typeId                Int?
+  evolutions            Evolution[]
+  formes                Forme[]
+  createdAt             DateTime                @default(now())
+  createdBy             User                    @relation("CreatedBy", fields: [createdById], references: [id])
+  updatedAt             DateTime                @default(now())
+  createdById           Int
+  updatedById           Int
+  updatedBy             User                    @relation("UpdatedBy", fields: [updatedById], references: [id])
+  pokemonGenerations    PokemonGeneration[]
+  preEvolutionsOf       PokemonGeneration[]     @relation("PreEvolution")
+  pokemonHasCompetences PokemonHasCompetences[]
+  pokemonHasLocations   PokemonHasLocations[]
+}
+
+model PokemonGeneration {
+  id              Int         @id @default(autoincrement())
+  pokemonId       Int
+  pokemon         Pokemon     @relation(fields: [pokemonId], references: [id], onDelete: Restrict)
+  generationId    Int
+  generation      Generation  @relation(fields: [generationId], references: [id])
+  type1Id         Int
+  type1           Type        @relation("type1", fields: [type1Id], references: [id])
+  type2Id         Int?
+  type2           Type?       @relation("type2", fields: [type2Id], references: [id])
+  height          Float
+  weight          Float
+  breedRating     BreedRating @default(MALE)
+  vita            Int
+  dex             Int
+  for             Int
+  conc            Int
+  end             Int
+  vol             Int
+  preEvolutionId  Int?
+  preEvolution    Pokemon?    @relation("PreEvolution", fields: [preEvolutionId], references: [id])
+  preEvolutionWay String?
+  description     String?     @db.Text
+
+  attaquesBreeding AttaqueBreeding[]
+  attaquesCt       AttaqueCt[]
+  attaquesDt       AttaqueDt[]
+  attaquesLvl      AttaqueLvl[]
+  attaquesTutoring AttaqueTutoring[]
+  evolutions       Evolution[]
+  formes           Forme[]
+  talentsLinks     PokemonGenerationHasTalents[]
+
+  @@index([pokemonId])
+  @@index([generationId])
+  @@index([type1Id])
+  @@index([type2Id])
+  @@index([preEvolutionId])
+}
+
+enum BreedRating {
+  MALE    @map("♂ uniquement")
+  R7M1F   @map("7♂:1♀")
+  R6M2F   @map("6♂:2♀")
+  R5M3F   @map("5♂:3♀")
+  R4M4F   @map("4♂:4♀")
+  R3M5F   @map("3♂:5♀")
+  R2M6F   @map("2♂:6♀")
+  R1M7F   @map("1♂:7♀")
+  FEMALE  @map("♀ uniquement")
+  UNBREED @map("Asexué")
+
+  @@map("breed_rating")
+}
+
+model Talent {
+  id                          Int                           @id @default(autoincrement())
+  name                        String                        @db.VarChar(50)
+  oldNameId                   Int?                          @unique
+  oldName                     Talent?                       @relation("TalentRenaming", fields: [oldNameId], references: [id])
+  renamedTo                   Talent?                       @relation("TalentRenaming")
+  pokemonGenerationHasTalents PokemonGenerationHasTalents[]
+  talentGenerations           TalentGeneration[]
+}
+
+model TalentGeneration {
+  id           Int        @id @default(autoincrement())
+  talentId     Int
+  generationId Int
+  description  String     @db.Text
+  generation   Generation @relation(fields: [generationId], references: [id], onDelete: Restrict)
+  talent       Talent     @relation(fields: [talentId], references: [id])
+
+  @@index([talentId])
+  @@index([generationId])
+}
+
+model Type {
+  id   Int    @id @default(autoincrement())
+  name String @db.VarChar(20)
+
+  bug      Float
+  dark     Float?
+  dragon   Float
+  electric Float
+  fairy    Float?
+  fighting Float
+  fire     Float
+  flying   Float
+  ghost    Float
+  grass    Float
+  ground   Float
+  ice      Float
+  normal   Float
+  poison   Float
+  psychic  Float
+  rock     Float
+  steel    Float?
+  water    Float
+
+  generationId Int
+  generation   Generation @relation(fields: [generationId], references: [id], onDelete: Restrict)
+
+  attaqueGenerations AttaqueGeneration[]
+  attaques           Attaque[]
+
+  pokemons Pokemon[] @relation("type")
+
+  pokemonGenerationsAsType1 PokemonGeneration[] @relation("type1")
+  pokemonGenerationsAsType2 PokemonGeneration[] @relation("type2")
+
+  @@index([generationId])
+}
+
+model Competence {
+  id                    Int                     @id @default(autoincrement())
+  name                  String
+  description           String                  @db.Text
+  pokemonHasCompetences PokemonHasCompetences[]
+}
+
+model PokemonHasCompetences {
+  id           Int        @id @default(autoincrement())
+  pokemonId    Int
+  pokemon      Pokemon    @relation(fields: [pokemonId], references: [id])
+  competenceId Int
+  competence   Competence @relation(fields: [competenceId], references: [id])
+  points       Int
+}
+
+model Location {
+  id                  Int                   @id @default(autoincrement())
+  name                String
+  icon                String?
+  pokemonHasLocations PokemonHasLocations[]
+}
+
+model PokemonHasLocations {
+  id         Int      @id @default(autoincrement())
+  pokemonId  Int
+  pokemon    Pokemon  @relation(fields: [pokemonId], references: [id])
+  locationId Int
+  location   Location @relation(fields: [locationId], references: [id])
+}
+
+model Document {
+  id Int @id @default(autoincrement())
+
+  name String
+  icon String?
+  link String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById Int
+  updatedById Int?
+
+  createdBy User  @relation("DocumentsCreated", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy User? @relation("DocumentsUpdated", fields: [updatedById], references: [id], onDelete: Restrict)
+
+  @@index([createdById])
+  @@index([updatedById])
+}
+
+model HomePageParagraph {
+  id Int @id @default(autoincrement())
+
+  title          String?
+  text           String?
+  isNotification Boolean @default(false)
+  rank           Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById Int
+  updatedById Int?
+
+  createdBy User  @relation("ParagraphsCreated", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy User? @relation("ParagraphsUpdated", fields: [updatedById], references: [id], onDelete: Restrict)
+
+  @@index([createdById])
+  @@index([updatedById])
+}
+
+model Team {
+  id Int @id @default(autoincrement())
+
+  role String
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  pseudoId    Int
+  createdById Int
+  updatedById Int?
+
+  createdBy User  @relation("TeamsCreated", fields: [createdById], references: [id], onDelete: Restrict)
+  updatedBy User? @relation("TeamsUpdated", fields: [updatedById], references: [id], onDelete: Restrict)
+  pseudo    User  @relation("TeamPseudo", fields: [pseudoId], references: [id], onDelete: Restrict)
+
+  @@unique([pseudoId])
+  @@index([pseudoId])
+  @@index([createdById])
+  @@index([updatedById])
 }

@@ -2,25 +2,26 @@ import prisma from '../../../../../../lib/prisma';
 import { NextResponse } from 'next/server';
 
 export async function GET(req, { params }) {
-  const dex_number = params.dex_number;
+  const dexNumber = params.dex_number;
 
-  if (!dex_number) {
+  if (!dexNumber) {
     return NextResponse.json(
-      { error: 'Pokemon dex_number is required' },
+      { error: 'Pokemon dexNumber is required' },
       { status: 400 },
     );
   }
 
   try {
-    const pokemons = await prisma.pokemons.findMany({
-      where: { dex_number: dex_number },
+    const pokemon = await prisma.pokemon.findFirst({
+      where: { dexNumber: dexNumber },
+      include: {
+        type: true,
+      },
     });
 
-    if (!pokemons) {
+    if (!pokemon) {
       return NextResponse.json({ error: 'Pokemon not found' }, { status: 404 });
     }
-
-    const pokemon = pokemons[0];
 
     return NextResponse.json({ pokemon }, { status: 200 });
   } catch (error) {

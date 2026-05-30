@@ -1,63 +1,76 @@
+import { requireApiRole } from '../../../../lib/apiAuth';
 import prisma from '../../../../lib/prisma';
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
 export async function GET(req) {
-    try{
-      const talents = await prisma.talents.findMany({})
-  
-      return NextResponse.json(
-        { talents },
-        {status: 200});
-    }catch(error) {
-      return NextResponse.json(
-        { error: 'failed to fetch attaques' },
-        {status: 500});
+  try {
+    const { searchParams } = new URL(req.url);
+    const name = (searchParams.get('name') ?? '').trim();
+
+    const where = {};
+
+    if (name) {
+      where.name = {
+        contains: name,
+        mode: 'insensitive',
+      };
     }
+
+    const talents = await prisma.talent.findMany({
+      where,
+      orderBy: { name: 'asc' },
+    });
+
+    return NextResponse.json({ talents }, { status: 200 });
+  } catch (error) {
+    console.error('Erreur Prisma talents :', error);
+    return NextResponse.json(
+      { error: 'failed to fetch talents' },
+      { status: 500 },
+    );
+  }
 }
 
 export async function POST(req) {
+  const { ok, res } = await requireApiRole(req, 'EDITOR');
+  if (!ok) return res;
+
   try {
-      const data = await req.json();
+    const body = await req.json();
+    const { name, talentGenerations = [] } = body;
 
-      const { name, old_name, talents_generations } = data.talent;
+    if (!name || typeof name !== 'string') {
+      return NextResponse.json(
+        { error: 'Le nom du talent est requis' },
+        { status: 400 },
+      );
+    }
 
-      if (!name || !talents_generations) {
-          return NextResponse.json(
-              { error: 'Name and talents by generation required for creating a talent' },
-              { status: 400 }
-          );
-      }
-
-      const newTalent = await prisma.talents.create({
-          data: {
-              name,
-              old_name: old_name || null,
-              talents_generations: {
-                  create: talents_generations.map((tg) => ({
-                    generations : {
-                        connect: { id: parseInt(tg.generation_id) },
-                    },
-                    description: tg.description,
-                  })),
-              },
+    const talent = await prisma.talent.create({
+      data: {
+        name,
+        talentGenerations: {
+          create: talentGenerations.map((tg) => ({
+            generationId: tg.generationId,
+            description: tg.description,
+          })),
+        },
+      },
+      include: {
+        talentGenerations: {
+          include: {
+            generation: true,
           },
-          include:{
-            talents_generations: {
-              include: {
-                  generations: true,
-              },
-            },
-          }
-      });
+        },
+      },
+    });
 
-      return NextResponse.json(
-          { talent: newTalent },
-          { status: 201 }
-      );
+    return NextResponse.json({ talent }, { status: 201 });
   } catch (error) {
-      return NextResponse.json(
-          { error: error.message },
-          { status: 500 }
-      );
+    console.error('Error creating talent:', error);
+    return NextResponse.json(
+      { error: 'Failed to create talent' },
+      { status: 500 },
+    );
   }
 }

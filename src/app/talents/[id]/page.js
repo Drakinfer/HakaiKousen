@@ -5,55 +5,56 @@ import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 import Loading from '@/app/components/Loading';
 import Aside from '@/app/components/Aside';
 import TalentDetails from '@/app/components/talents/TalentDetails';
+import { fetchTalent } from '@/lib/fetch';
 
 export default function TalentPage() {
   const { id } = useParams();
+  const router = useRouter();
   const [talent, setTalent] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [generations, setGenerations] = useState([]);
   const actions = [{ href: '/talents', icon: faArrowLeft, title: 'Retour' }];
 
   useEffect(() => {
-    async function fetchTalent() {
+    if (!id) return;
+
+    let cancelled = false;
+
+    const loadTalent = async () => {
       try {
-        const response = await fetch(`/api/talents/${id}`);
-        const data = await response.json();
+        setLoading(true);
 
-        if (response.ok) {
-          const talentData = data.talent;
+        const { talent, generations } = await fetchTalent(id);
+        if (cancelled) return;
 
-          const uniqueGenerations = Array.from(
-            new Set(
-              talentData.talents_generations.map((gen) => gen.generations.name),
-            ),
-          ).sort();
+        setTalent(talent);
+        setGenerations(generations);
 
-          setTalent(talentData);
-          setGenerations(uniqueGenerations);
-        } else {
-          setError(data.error || 'Erreur lors du chargement du Talent');
+        if (!talent) {
+          router.push('/talents');
+          return;
         }
-      } catch (err) {
-        setError("Erreur de connexion à l'API");
+      } catch (e) {
+        console.error(e);
+        if (cancelled) return;
       } finally {
         setLoading(false);
       }
-    }
+    };
 
-    if (id) {
-      fetchTalent();
-    }
-  }, [id]);
+    loadTalent();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, router]);
 
   if (loading) {
     return <Loading />;
   }
 
-  if (error) return <p className="text-red-500">{error}</p>;
-
   return (
-    <div className="flex h-[calc(100vh-4rem)]  ">
+    <div className="flex h-main">
       <Aside actions={actions} />
       <div className="w-full p-1 overflow-hidden">
         <h1 className="w-full text-center font-bold text-2xl">{talent.name}</h1>
