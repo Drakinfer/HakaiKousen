@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import puppeteer from 'puppeteer-core';
-import chromium from '@sparticuz/chromium';
-import path from 'path';
+import chromium from '@sparticuz/chromium-min';
 
 import prisma from '../../../../lib/prisma';
 import PokemonSheet from '../../../../public/templates/PokemonSheet';
@@ -17,14 +16,16 @@ async function getBrowserLaunchOptions() {
   const isVercel = !!process.env.VERCEL;
 
   if (isVercel) {
-    const executablePath = await chromium.executablePath(
-      path.join(process.cwd(), 'node_modules', '@sparticuz', 'chromium', 'bin'),
-    );
+    if (!process.env.CHROMIUM_PACK_URL) {
+      throw new Error('Missing CHROMIUM_PACK_URL env variable on Vercel.');
+    }
 
     return {
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
-      executablePath,
+      executablePath: await chromium.executablePath(
+        process.env.CHROMIUM_PACK_URL,
+      ),
       headless: chromium.headless,
     };
   }
