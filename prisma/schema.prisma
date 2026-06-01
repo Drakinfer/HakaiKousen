@@ -112,7 +112,7 @@ model AttaqueGeneration {
   range       Range           @default(CIBLE)
   precision   Int
   damage_base Int
-  description String          @db.Text
+  description String?         @db.Text
 
   @@index([attaqueId])
   @@index([generationId])
