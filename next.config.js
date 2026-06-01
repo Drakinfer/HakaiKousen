@@ -6,7 +6,7 @@ const nextConfig = {
     appDir: true,
     outputFileTracingIncludes: {
       'src/app/api/pokemon-sheet/route.js': [
-        './node_modules/@sparticuz/chromium-min/**',
+        './node_modules/@sparticuz/chromium/**',
       ],
     },
   },
