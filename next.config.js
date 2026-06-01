@@ -1,14 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  serverExternalPackages: ['@sparticuz/chromium'],
-  experimental: {
-    appDir: true,
-    outputFileTracingIncludes: {
-      'src/app/api/pokemon-sheet/route.js': [
-        './node_modules/@sparticuz/chromium/**',
-      ],
-    },
+
+  serverExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
+
+  outputFileTracingIncludes: {
+    '/api/pokemon-sheet': [
+      './node_modules/@sparticuz/chromium/bin/**',
+      './node_modules/@sparticuz/chromium/build/**',
+    ],
   },
 };
 
