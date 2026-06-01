@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import puppeteer from 'puppeteer-core';
 import chromium from '@sparticuz/chromium';
+import path from 'path';
 
 import prisma from '../../../../lib/prisma';
 import PokemonSheet from '../../../../public/templates/PokemonSheet';
@@ -16,10 +17,14 @@ async function getBrowserLaunchOptions() {
   const isVercel = !!process.env.VERCEL;
 
   if (isVercel) {
+    const executablePath = await chromium.executablePath(
+      path.join(process.cwd(), 'node_modules', '@sparticuz', 'chromium', 'bin'),
+    );
+
     return {
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
+      executablePath,
       headless: chromium.headless,
     };
   }
