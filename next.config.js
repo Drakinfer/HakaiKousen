@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  serverExternalPackages: ['@sparticuz/chromium'],
   experimental: {
     appDir: true,
     outputFileTracingIncludes: {
