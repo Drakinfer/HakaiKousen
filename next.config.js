@@ -1,14 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  experimental: {
-    appDir: true,
-    outputFileTracingIncludes: {
-      'src/app/api/pokemon-sheet/route.js': [
-        './node_modules/@sparticuz/chromium-min/**',
-      ],
-    },
-  },
+  serverExternalPackages: ['@sparticuz/chromium-min', 'puppeteer-core'],
 };
 
 export default nextConfig;

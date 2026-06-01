@@ -16,10 +16,16 @@ async function getBrowserLaunchOptions() {
   const isVercel = !!process.env.VERCEL;
 
   if (isVercel) {
+    if (!process.env.CHROMIUM_PACK_URL) {
+      throw new Error('Missing CHROMIUM_PACK_URL env variable on Vercel.');
+    }
+
     return {
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
-      executablePath: await chromium.executablePath(),
+      executablePath: await chromium.executablePath(
+        process.env.CHROMIUM_PACK_URL,
+      ),
       headless: chromium.headless,
     };
   }
