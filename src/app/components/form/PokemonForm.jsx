@@ -37,7 +37,6 @@ export default function PokemonForm({
 
   useEffect(() => {
     if (!initialData) return;
-
     if (initialData.pokemon) {
       setPokemon({
         id: initialData.pokemon.id,
@@ -113,9 +112,9 @@ export default function PokemonForm({
       );
     }
 
-    if (initialData.competences) {
+    if (initialData.pokemon.pokemonHasCompetences) {
       setCompetences(
-        initialData.competences.map((c) => ({
+        initialData.pokemon.pokemonHasCompetences.map((c) => ({
           id: c.id,
           competenceId: c.competenceId,
           points: c.points,
@@ -123,9 +122,9 @@ export default function PokemonForm({
       );
     }
 
-    if (initialData.locations) {
+    if (initialData.pokemon.pokemonHasLocations) {
       setLocations(
-        initialData.locations.map((l) => ({
+        initialData.pokemon.pokemonHasLocations.map((l) => ({
           id: l.id,
           locationId: l.locationId,
         })),
