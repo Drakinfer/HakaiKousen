@@ -12,6 +12,7 @@ Icon library: **lucide-react**.
 - **npm** (or **pnpm** / **yarn**)
 - **Git**
 - **PostgreSQL 14+**
+- **NextJS 14.2.3**
 
 ---
 
@@ -27,6 +28,7 @@ npm install      # or pnpm install / yarn
 
 # 3) Copy environment file
 cp .env.example .env
+see admin for some of the environment variable
 
 # 4) Create the PostgreSQL database/user (see below)
 #    then update DATABASE_URL in .env
@@ -56,8 +58,26 @@ No data import is available at the moment.
 Create `.env` at the project root (copied from `.env.example`):
 
 ```ini
+# Application
+APP_URL="http://localhost:3000"
+
 # Database
 DATABASE_URL="postgresql://hakai:hakai@localhost:5432/hakai_db?schema=public"
+
+# Authentication
+AUTH_SECRET="your-super-secret-auth-key-change-me"
+API_JWT_SECRET="your-jwt-secret-key-at-least-32-chars-long"
+
+# Storage
+BLOB_READ_WRITE_TOKEN="vercel_blob_rw_0123456789abcdef_ghijklmnopqrstuvwxyz"
+
+# Emailing
+RESEND_API_KEY="re_123456789_AbCdEfGhIjKlMnOpQrStUvWx"
+MAIL_FROM="Acme <onboarding@resend.dev>"
+
+# Puppeteer / PDF Generation (Optional)
+CHROME_EXECUTABLE_PATH="/usr/bin/google-chrome"
+CHROMIUM_PACK_URL="[https://github.com/Sparticuz/chromium/releases/download/v123.0.0/chromium-v123.0.0-pack.tar](https://github.com/Sparticuz/chromium/releases/download/v123.0.0/chromium-v123.0.0-pack.tar)"
 ```
 
 > Keep **.env.example** up to date for new contributors.
@@ -214,14 +234,8 @@ npm run prisma:deploy
 
 ---
 
-## 🤝 Contributing
-
-- Target **`dev`** with your PRs.
-- Keep PRs atomic and well-described.
-- Document any migration or environment change.
-
----
-
 ## 📄 License
 
-Add your license information here (e.g., MIT).
+This project is open-source and licensed under the [GNU General Public License v3.0](LICENSE).
+
+You are free to use, modify, and distribute this software, provided that any derivative work or integrated project is also released under the GPLv3 license with open source code.
