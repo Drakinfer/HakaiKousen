@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 function cx(...parts) {
   return parts.filter(Boolean).join(' ');
@@ -29,8 +29,17 @@ export default function Table({
   onRowClick,
   emptyLabel = 'Aucune donnée',
 }) {
+  const router = useRouter();
   const isLinkRow = typeof rowHref === 'function';
   const isClickableRow = typeof onRowClick === 'function';
+
+  const handleRowClick = (row, href) => {
+    if (href) {
+      router.push(href);
+    } else if (isClickableRow) {
+      onRowClick(row);
+    }
+  };
 
   return (
     <div className={containerClassName}>
@@ -64,50 +73,25 @@ export default function Table({
             rows.map((row) => {
               const key = rowKey(row);
               const href = isLinkRow ? rowHref(row) : null;
-
-              if (href) {
-                return (
-                  <tr key={key} className={cx('cursor-pointer', rowClassName)}>
-                    <Link href={href} className="contents">
-                      {columns.map((c) => (
-                        <td
-                          key={c.key}
-                          className={cx('border px-3 py-2', c.tdClassName)}
-                        >
-                          {c.render ? c.render(row) : row?.[c.key]}
-                        </td>
-                      ))}
-                    </Link>
-                  </tr>
-                );
-              }
-
-              if (isClickableRow) {
-                return (
-                  <tr
-                    key={key}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => onRowClick(row)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' || e.key === ' ') onRowClick(row);
-                    }}
-                    className={cx('cursor-pointer', rowClassName)}
-                  >
-                    {columns.map((c) => (
-                      <td
-                        key={c.key}
-                        className={cx('border px-3 py-2', c.tdClassName)}
-                      >
-                        {c.render ? c.render(row) : row?.[c.key]}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              }
+              const isInteractive = href || isClickableRow;
 
               return (
-                <tr key={key} className={rowClassName}>
+                <tr
+                  key={key}
+                  role={isInteractive ? 'button' : undefined}
+                  tabIndex={isInteractive ? 0 : undefined}
+                  onClick={() => isInteractive && handleRowClick(row, href)}
+                  onKeyDown={(e) => {
+                    if (isInteractive && (e.key === 'Enter' || e.key === ' ')) {
+                      e.preventDefault();
+                      handleRowClick(row, href);
+                    }
+                  }}
+                  className={cx(
+                    isInteractive && 'cursor-pointer',
+                    rowClassName
+                  )}
+                >
                   {columns.map((c) => (
                     <td
                       key={c.key}

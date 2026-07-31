@@ -1,9 +1,10 @@
+@use "sass:list";
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@debug "✅ SCSS chargé !";
 
+@debug "✅ SCSS chargé !";
 
 :root {
   --foreground-rgb: 0, 0, 0;
@@ -51,6 +52,8 @@ $types: (
   vol: (flying)
 );
 
+$light-backgrounds: poison, spectre, tenebres, combat, dragon;
+
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
@@ -64,7 +67,17 @@ body {
   background: white;
 }
 
+/* --- Génération automatique des classes de types Pokémon --- */
 @each $type, $aliases in $types {
+  // Déterminer la couleur du texte (blanc ou noir) selon le type
+  $text-color: if(list.index($light-backgrounds, $type), white, black);
+
+  // 1. Classes principales (.insecte, .border-insecte)
+  .#{$type} {
+    background-color: var(--#{$type});
+    color: $text-color;
+  }
+
   .border-#{$type} {
     border: solid 2px var(--#{$type});
 
@@ -75,7 +88,13 @@ body {
     }
   }
 
+  // 2. Classes alias (.bug, .border-bug, .electric, etc.)
   @each $alias in $aliases {
+    .#{$alias} {
+      background-color: var(--#{$type});
+      color: $text-color;
+    }
+
     .border-#{$alias} {
       border: solid 2px var(--#{$type});
 
@@ -88,50 +107,18 @@ body {
   }
 }
 
-@each $type in $types {
-  #{$type} {
-    border: solid 2px var(--#{$type});
-
-    &:focus {
-      outline: none;
-      box-shadow: none;
-      -webkit-focus-ring-color: transparent;
-    }
-  }
-}
-
-.main-content {
-  flex: 1;
-  padding-bottom: 80px;
-}
-
+/* --- Utilities --- */
 .main-content {
   flex: 1;
   padding-bottom: 80px;
 }
 
 .h-main {
-    height: calc(100dvh - 4rem);
-  }
+  height: calc(100dvh - 4rem);
+}
 
 .h-main-footer {
   height: calc(100dvh - 4rem - 100px);
-}
-
-$light-backgrounds: poison, spectre, tenebres, combat, dragon;
-
-@each $type, $aliases in $types {
-  .#{$type} {
-    background-color: var(--#{$type});
-    color: if(index($light-backgrounds, $type), white, black);
-  }
-
-  @each $alias in $aliases {
-    .#{$alias} {
-      background-color: var(--#{$type});
-      color: if(index($light-backgrounds, $type), white, black);
-    }
-  }
 }
 
 @layer utilities {
