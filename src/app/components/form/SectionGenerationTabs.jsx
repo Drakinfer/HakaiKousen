@@ -778,7 +778,7 @@ function EvolutionsSection({ evolutions, onChange, pokemons }) {
 
 function FormesSection({ formes, onChange, pokemons }) {
   const addForme = () => {
-    onChange([...formes, { id: undefined, form: '' }]);
+    onChange([...formes, { id: undefined, pokemonId: null, form: '' }]);
   };
 
   const updateForme = (index, newForme) => {
@@ -808,48 +808,54 @@ function FormesSection({ formes, onChange, pokemons }) {
         </p>
       )}
 
-      {formes.map((f, index) => (
-        <div
-          key={index}
-          className="grid grid-cols-1 md:grid-cols-[2fr_1fr_auto] gap-2 items-center"
+      {formes.map((f, index) => {
+  console.log(f); // Placé ici avant le return
+  
+  return (
+    <div
+      key={index}
+      className="grid grid-cols-1 md:grid-cols-[2fr_1fr_auto] gap-2 items-center"
+    >
+      <div>
+        <label className="block text-xs mb-1">
+          Pokémon
+        </label>
+        <select
+          className="w-full border rounded px-2 py-1"
+          value={f.pokemonId ?? ''}
+          onChange={(e) =>
+            updateForme(index, {
+              ...f,
+              pokemonId: e.target.value === '' ? null : Number(e.target.value),
+            })
+          }
         >
-          <div>
-            <label className="block text-xs mb-1">
-              Pokémon
-            </label>
-            <select
-              className="w-full border rounded px-2 py-1"
-              value={f.pokemonId ?? ''}
-              onChange={(e) =>
-                updateForme(index, { ...f, pokemonId: e.target.value })
-              }
-            >
-              <option value="">— Aucun —</option>
-              {pokemons.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs mb-1">
-              Forme
-            </label>
-            <input
-            type="text"
-            className="w-full border rounded px-2 py-1 text-sm"
-            value={f.form ?? ''}
-            onChange={(e) =>
-              updateForme(index, { ...f, form: e.target.value })
-            }
-            placeholder="Méga, Alola, Galar, etc."
-          />
-          
-          </div>
-          <Trash onClick={() => removeForme(index)} color="red" />
-        </div>
-      ))}
+          <option value="">— Aucun —</option>
+          {pokemons.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div>
+        <label className="block text-xs mb-1">
+          Forme
+        </label>
+        <input
+          type="text"
+          className="w-full border rounded px-2 py-1 text-sm"
+          value={f.form ?? ''}
+          onChange={(e) =>
+            updateForme(index, { ...f, form: e.target.value })
+          }
+          placeholder="Régionale, Conditionnelle, Fakemon..."
+        />
+      </div>
+      <Trash onClick={() => removeForme(index)} color="red" />
+    </div>
+  );
+})}
     </div>
   );
 }
