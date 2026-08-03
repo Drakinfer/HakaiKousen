@@ -402,7 +402,7 @@ export async function PUT(req, { params }) {
           .filter((f) => f?.form)
           .map((f) => ({
             pokemonGenerationId: pgId,
-            pokemonId,
+            pokemonId: f.pokemonId ? Number(f.pokemonId) : pokemonId,
             form: String(f.form).trim(),
           }));
         if (data.length) await tx.forme.createMany({ data });

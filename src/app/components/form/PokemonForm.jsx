@@ -106,6 +106,7 @@ export default function PokemonForm({
           })) ?? [],
           formes: pg.formes?.map((f) => ({
             id: f.id,
+            pokemonId: f.pokemonId,
             form: f.form,
           })) ?? [],
         })),
