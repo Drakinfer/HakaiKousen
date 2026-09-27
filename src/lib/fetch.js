@@ -197,6 +197,32 @@ export async function fetchTypes() {
         type: t?.type,
       };
     })
+    .filter(
+      (type, index, array) =>
+        index === array.findIndex((t) => t.value === type.value),
+    )
+    .sort((a, b) =>
+      a.labelFr.localeCompare(b.labelFr, 'fr', { numeric: true }),
+    );
+}
+
+export async function fetchAllTypes() {
+  const data = await fetchJson('/api/types', { cache: 'no-store' });
+  const types = data.types ?? [];
+
+  return types
+    .map((t) => {
+      const id = Number(t?.type?.id);
+      const value = String(t?.type?.name ?? '');
+      const labelFr = t?.labelFr ?? toFr(value);
+
+      return {
+        id,
+        value,
+        labelFr,
+        type: t?.type,
+      };
+    })
     .sort((a, b) =>
       a.labelFr.localeCompare(b.labelFr, 'fr', { numeric: true }),
     );
