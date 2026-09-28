@@ -296,6 +296,9 @@ export default function PokemonPage() {
                     src={previousPokemon.miniPicture}
                     alt={previousPokemon.name}
                     className="w-12 h-12 mx-auto"
+                    onError={(e) => {
+                    e.currentTarget.src = '/images/pokeball.png';
+                  }}
                   />
                   <p>
                     #{previousPokemon.dexNumber}{' '}
@@ -325,6 +328,9 @@ export default function PokemonPage() {
                 src={pokemon.miniPicture}
                 alt={pokemon.name}
                 className="w-12 h-12 mx-auto"
+                onError={(e) => {
+                    e.currentTarget.src = '/images/pokeball.png';
+                  }}
               />
               <p className="font-bold">
                 #{pokemon.dexNumber} {pokemon.name}
@@ -350,6 +356,9 @@ export default function PokemonPage() {
                     src={nextPokemon.miniPicture}
                     alt={nextPokemon.name}
                     className="w-12 h-12 mx-auto"
+                    onError={(e) => {
+                    e.currentTarget.src = '/images/pokeball.png';
+                  }}
                   />
                   <p>
                     #{nextPokemon.dexNumber}{' '}
@@ -368,6 +377,9 @@ export default function PokemonPage() {
                 className={`border-${
                   pokemon.type ? pokemon.type?.name.toLowerCase() : 'red'
                 } rounded-lg w-2/3 md:w-full max-w-xs h-1/2`}
+                onError={(e) => {
+                    e.currentTarget.src = '/images/pokeball.png';
+                  }}
               />
               <div className="flex justify-around items-center mt-2">
                 <select

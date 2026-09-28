@@ -10,7 +10,7 @@ import { SquarePen, Trash } from '../../../../lib/lucide';
 import Aside from '@/app/components/Aside';
 import TypeFormModal from '@/app/components/modal/TypeFormModal';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
-import { fetchTypes } from '@/lib/fetch';
+import { fetchAllTypes } from '@/lib/fetch';
 
 import Table from '@/app/components/Table';
 
@@ -40,7 +40,7 @@ export default function AdminTypesPage() {
     const load = async () => {
       try {
         setLoading(true);
-        let t = await fetchTypes();
+        let t = await fetchAllTypes();
         setTypes(t);
       } catch (e) {
         console.error(e);
@@ -95,7 +95,7 @@ export default function AdminTypesPage() {
         return;
       }
 
-      let t = await fetchTypes();
+      let t = await fetchAllTypes();
       setTypes(t);
     } catch (err) {
       console.error(err);
@@ -167,7 +167,7 @@ export default function AdminTypesPage() {
             isOpen={openModal}
             onClose={handleCloseModal}
             type={selectedType}
-            onSaved={fetchTypes}
+            onSaved={fetchAllTypes}
           />
         )}
       </div>

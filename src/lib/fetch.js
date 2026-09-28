@@ -53,21 +53,31 @@ export async function fetchPokemon(id) {
   const selectedGeneration = generations[0] ?? null;
   const selectedPokemonGeneration = pokemonGenerations[0] ?? null;
 
-  const dexNum = Number.parseInt(p.dexNumber, 10);
+  const isForm = p.dexNumber.startsWith('F-');
+const dexNum = Number.parseInt(p.dexNumber.replace('F-', ''), 10);
 
-  let previousPokemon = null;
-  let nextPokemon = null;
+let previousPokemon = null;
+let nextPokemon = null;
 
-  if (!Number.isNaN(dexNum)) {
-    const [prev, next] = await Promise.allSettled([
-      fetchJson(`/api/pokemons/dex_number/${dexNum - 1}`),
-      fetchJson(`/api/pokemons/dex_number/${dexNum + 1}`),
-    ]);
+if (!Number.isNaN(dexNum)) {
+  const prefix = isForm ? 'F-' : '';
 
-    if (prev.status === 'fulfilled')
-      previousPokemon = prev.value?.pokemon ?? null;
-    if (next.status === 'fulfilled') nextPokemon = next.value?.pokemon ?? null;
+  const previousDexNumber = `${prefix}${dexNum - 1}`;
+  const nextDexNumber = `${prefix}${dexNum + 1}`;
+
+  const [prev, next] = await Promise.allSettled([
+    fetchJson(`/api/pokemons/dex_number/${previousDexNumber}`),
+    fetchJson(`/api/pokemons/dex_number/${nextDexNumber}`),
+  ]);
+
+  if (prev.status === 'fulfilled') {
+    previousPokemon = prev.value?.pokemon ?? null;
   }
+
+  if (next.status === 'fulfilled') {
+    nextPokemon = next.value?.pokemon ?? null;
+  }
+}
 
   return {
     pokemon: p,
@@ -181,6 +191,32 @@ export async function fetchAttack(id) {
 /* ---------------------------------- */
 
 export async function fetchTypes() {
+  const data = await fetchJson('/api/types', { cache: 'no-store' });
+  const types = data.types ?? [];
+
+  return types
+    .map((t) => {
+      const id = Number(t?.type?.id);
+      const value = String(t?.type?.name ?? '');
+      const labelFr = t?.labelFr ?? toFr(value);
+
+      return {
+        id,
+        value,
+        labelFr,
+        type: t?.type,
+      };
+    })
+    .filter(
+      (type, index, array) =>
+        index === array.findIndex((t) => t.value === type.value),
+    )
+    .sort((a, b) =>
+      a.labelFr.localeCompare(b.labelFr, 'fr', { numeric: true }),
+    );
+}
+
+export async function fetchAllTypes() {
   const data = await fetchJson('/api/types', { cache: 'no-store' });
   const types = data.types ?? [];
 
