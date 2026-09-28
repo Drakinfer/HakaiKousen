@@ -63,10 +63,32 @@ export default function AdminAttacksPage() {
     }
   }, [status, session, router]);
 
-  const handleAttackSaved = async () => {
+  const handleAttackSaved = async (payload) => {
+    try {
+      const res = await fetch(`/api/attacks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const rawText = await res.text();
+
+      if (!res.ok) {
+        console.error('Erreur API PATCH /api/attacks/[id] :', rawText);
+        alert("Erreur lors de la création de l'attaque");
+        return;
+      }
+
     let a = await fetchAttacks(nameFilter, typeFilter);
     setAttacks(a);
-  };
+    }catch (e) {
+        console.error(
+          'Réponse JSON invalide pour PATCH /api/attacks :',
+          rawText,
+        );
+        alert("Réponse serveur invalide lors de la création de l'attaque");
+        return;
+  }};
 
   if (loading) {
     return <Loading />;

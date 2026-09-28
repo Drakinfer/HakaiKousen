@@ -17,6 +17,9 @@ export default function PokemonTable({ pokemons, basePath }) {
                   src={p.miniPicture}
                   alt={p.name}
                   className="w-12 h-12 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/pokeball.png';
+                  }}
                 />
                 <span className="text-gray-800 font-semibold">
                   #{p.dexNumber} {p.name}
