@@ -18,6 +18,9 @@ export default function Forms({ forms }) {
                   src={form.pokemon.mainPicture}
                   alt={form.pokemon.name}
                   className="w-[200px] h-[200px] mx-auto"
+                  onError={(e) => {
+                    e.currentTarget.src = '/images/pokeball.png';
+                  }}
                 />
                 <p className="inline-block max-w-[200px] whitespace-normal break-words [overflow-wrap:anywhere] hyphens-auto text-center">
                   {form.pokemon.name}
